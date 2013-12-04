@@ -26,12 +26,12 @@ process.out = cms.OutputModule("PoolOutputModule",
         *patEventContentNoCleaning
     )
 )
-process.outPath = cms.EndPath(process.out)
+#process.outPath = cms.EndPath(process.out)
 
 process.load("PhysicsTools.PatAlgos.patSequences_cff")
 from PhysicsTools.PatAlgos.tools.pfTools import *
 
-runOnMC = False
+runOnMC = True
 postfix = "PFlow"
 jetAlgo="AK5"
 #usePFBRECO(process,runPFBRECO=True, jetAlgo=jetAlgo, runOnMC=True, postfix=postfix)

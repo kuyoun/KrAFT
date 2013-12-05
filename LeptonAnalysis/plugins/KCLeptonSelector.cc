@@ -26,11 +26,11 @@
 #include <string>
 
 template<typename Lepton>
-class PatRelIsoLeptonProducer : public edm::EDFilter
+class KCLeptonProducer : public edm::EDFilter
 {
 public:
-  PatRelIsoLeptonProducer(const edm::ParameterSet& pset);
-  ~PatRelIsoLeptonProducer() {};
+  KCLeptonProducer(const edm::ParameterSet& pset);
+  ~KCLeptonProducer() {};
 
   bool filter(edm::Event& event, const edm::EventSetup& eventSetup);
 
@@ -46,6 +46,7 @@ private:
 private:
   edm::InputTag rhoLabel_;
   edm::InputTag leptonLabel_;
+  StringCutObjectSelector<Lepton, true>* preselect_;
   StringCutObjectSelector<Lepton, true>* select_;
   unsigned int minNumber_, maxNumber_;
 
@@ -54,7 +55,7 @@ private:
 };
 
 template<typename Lepton>
-PatRelIsoLeptonProducer<Lepton>::PatRelIsoLeptonProducer(const edm::ParameterSet& pset)
+KCLeptonProducer<Lepton>::KCLeptonProducer(const edm::ParameterSet& pset)
 {
   // isMC_ = true as a default, determine it in the event loop.
   // Changing this default value of this flag should be done carefully,
@@ -63,7 +64,9 @@ PatRelIsoLeptonProducer<Lepton>::PatRelIsoLeptonProducer(const edm::ParameterSet
 
   rhoLabel_ = pset.getParameter<edm::InputTag>("rho");
   leptonLabel_ = pset.getParameter<edm::InputTag>("src");
+  std::string precut = pset.getParameter<std::string>("precut");
   std::string cut = pset.getParameter<std::string>("cut");
+  preselect_ = new StringCutObjectSelector<Lepton, true>(precut);
   select_ = new StringCutObjectSelector<Lepton, true>(cut);
   minNumber_ = pset.getParameter<unsigned int>("minNumber");
   maxNumber_ = pset.getParameter<unsigned int>("maxNumber");
@@ -88,7 +91,7 @@ PatRelIsoLeptonProducer<Lepton>::PatRelIsoLeptonProducer(const edm::ParameterSet
 }
 
 template<typename Lepton>
-bool PatRelIsoLeptonProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup& eventSetup)
+bool KCLeptonProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   // isMC_ is true by default, first decided here.
   if ( isMC_ and event.isRealData() )
@@ -113,7 +116,7 @@ bool PatRelIsoLeptonProducer<Lepton>::filter(edm::Event& event, const edm::Event
   for ( int i=0, n=leptonHandle->size(); i<n; ++i )
   {
     const Lepton& srcLepton = leptonHandle->at(i);
-    if ( !(*select_)(srcLepton) ) continue;
+    if ( !(*preselect_)(srcLepton) ) continue;
 
     reco::IsoDeposit::AbsVetos vetos_ch, vetos_nh, vetos_ph;
     makeIsoVeto(srcLepton, vetos_ch, vetos_nh, vetos_ph);
@@ -135,6 +138,8 @@ bool PatRelIsoLeptonProducer<Lepton>::filter(edm::Event& event, const edm::Event
     lepton.setUserIso(relIsoDbeta, 1);
     lepton.setUserIso(relIsoRho, 2);
 
+    if ( !(*select_)(srcLepton) ) continue;
+
     selectedLeptons->push_back(lepton);
   }
 
@@ -146,7 +151,7 @@ bool PatRelIsoLeptonProducer<Lepton>::filter(edm::Event& event, const edm::Event
 }
 
 template<typename Lepton>
-void PatRelIsoLeptonProducer<Lepton>::makeIsoVeto(const pat::Electron& electron, reco::IsoDeposit::AbsVetos& vetos_ch, reco::IsoDeposit::AbsVetos& vetos_nh, reco::IsoDeposit::AbsVetos& vetos_ph)
+void KCLeptonProducer<Lepton>::makeIsoVeto(const pat::Electron& electron, reco::IsoDeposit::AbsVetos& vetos_ch, reco::IsoDeposit::AbsVetos& vetos_nh, reco::IsoDeposit::AbsVetos& vetos_ph)
 {
   reco::isodeposit::Direction dir(electron.superCluster()->eta(), electron.superCluster()->phi());
 
@@ -158,20 +163,20 @@ void PatRelIsoLeptonProducer<Lepton>::makeIsoVeto(const pat::Electron& electron,
 }
 
 template<typename Lepton>
-void PatRelIsoLeptonProducer<Lepton>::makeIsoVeto(const pat::Muon& muon, reco::IsoDeposit::AbsVetos& vetos_ch, reco::IsoDeposit::AbsVetos& vetos_nh, reco::IsoDeposit::AbsVetos& vetos_ph)
+void KCLeptonProducer<Lepton>::makeIsoVeto(const pat::Muon& muon, reco::IsoDeposit::AbsVetos& vetos_ch, reco::IsoDeposit::AbsVetos& vetos_nh, reco::IsoDeposit::AbsVetos& vetos_ph)
 {
   vetos_nh.push_back(new reco::isodeposit::ThresholdVeto(0.5));
   vetos_ph.push_back(new reco::isodeposit::ThresholdVeto(0.5));
 }
 
 template<typename Lepton>
-double PatRelIsoLeptonProducer<Lepton>::getEffectiveArea(const pat::Electron& electron)
+double KCLeptonProducer<Lepton>::getEffectiveArea(const pat::Electron& electron)
 {
   return ElectronEffectiveArea::GetElectronEffectiveArea(electronEAType_, electron.superCluster()->eta(), electronEATarget_);
 }
 
 template<typename Lepton>
-double PatRelIsoLeptonProducer<Lepton>::getEffectiveArea(const pat::Muon& muon)
+double KCLeptonProducer<Lepton>::getEffectiveArea(const pat::Muon& muon)
 {
   return 1;
 }
@@ -179,8 +184,8 @@ double PatRelIsoLeptonProducer<Lepton>::getEffectiveArea(const pat::Muon& muon)
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 
-typedef PatRelIsoLeptonProducer<pat::Muon> PatRelIsoMuonProducer;
-typedef PatRelIsoLeptonProducer<pat::Electron> PatRelIsoElectronProducer;
+typedef KCLeptonProducer<pat::Muon> KCMuonProducer;
+typedef KCLeptonProducer<pat::Electron> KCElectronProducer;
 
-DEFINE_FWK_MODULE(PatRelIsoMuonProducer);
-DEFINE_FWK_MODULE(PatRelIsoElectronProducer);
+DEFINE_FWK_MODULE(KCMuonProducer);
+DEFINE_FWK_MODULE(KCElectronProducer);

@@ -101,12 +101,12 @@ KJetSelector::KJetSelector(const edm::ParameterSet& pset)
   if ( isMC_ ) jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathMC.fullPath());
   else jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathRD.fullPath());
 
-  produces<std::vector<pat::Jet> >("jet");
-  produces<std::vector<pat::Jet> >("jetUp");
-  produces<std::vector<pat::Jet> >("jetDn");
-  produces<std::vector<pat::MET> >("met");
-  produces<std::vector<pat::MET> >("metUp");
-  produces<std::vector<pat::MET> >("metDn");
+  produces<std::vector<pat::Jet> >();
+  produces<std::vector<pat::Jet> >("up");
+  produces<std::vector<pat::Jet> >("dn");
+  produces<std::vector<pat::MET> >();
+  produces<std::vector<pat::MET> >("up");
+  produces<std::vector<pat::MET> >("dn");
 
   if ( debug_ )
   {
@@ -233,12 +233,12 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   corrMetsUp->push_back(metUp);
   corrMetsDn->push_back(metDn);
 
-  event.put(corrJets  , "jet"  );
-  event.put(corrJetsUp, "jetUp");
-  event.put(corrJetsDn, "jetDn");
-  event.put(corrMets  , "met"  );
-  event.put(corrMetsUp, "metUp");
-  event.put(corrMetsDn, "metDn");
+  event.put(corrJets);
+  event.put(corrJetsUp, "up");
+  event.put(corrJetsDn, "dn");
+  event.put(corrMets);
+  event.put(corrMetsUp, "up");
+  event.put(corrMetsDn, "dn");
 
 /*
   if ( debug_ and !event.isRealData() )

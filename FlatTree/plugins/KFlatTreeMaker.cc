@@ -47,8 +47,6 @@ public:
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup);
 
 private:
-  bool doMCMatch_;
-
   // Input objects
   edm::InputTag genLabel_;
   edm::InputTag genJetLabel_;
@@ -74,7 +72,7 @@ private:
   TH1F* hEventCounter_;
 
   // Output tree
-  TTree* eventTree_;
+  TTree* tree_;
   int run_, lumi_, event_;
   double weight_, weightUp_, weightDn_;
   int nVertex_;
@@ -92,25 +90,21 @@ private:
   LVec* met_, * metUp_, * metDn_;
 
   // Generator level information
-  //TTree* genTree_;
+  bool isMC_;
   // jet MC matching
   //std::vector<int> jets_motherId_;
-  //std::vector<math::XYZTLorentzVector> genJet_;
   //std::vector<int> genJetMotherId_;
-  //LVecs* genMuons_, * genElectrons_;
-  //LVecs* genMuonNus_, * genElectronNus_;
+  LVecs* genMuons_, * genElectrons_, * genNeutrinos_;
+  doubles* genMuons_Q_, * genElectrons_Q_;
+  LVecs* genJets_;
 
 };
 
 KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
 {
-  //doMCMatch_ = pset.getParameter<bool>("doMCMatch");
+  isMC_ = pset.getParameter<bool>("isMC");
 
   // Input labels
-  //genLabel_ = pset.getParameter<edm::InputTag>("gen");
-  //recoToGenJetMapLabel_ = pset.getParameter<edm::InputTag>("recoToGenJetMap");
-  //genJetToPartonMapLabel_ = pset.getParameter<edm::InputTag>("genJetToPartonsMap");
-
   weightLabelStr_ = pset.getParameter<std::string>("weight");
   vertexLabel_ = pset.getParameter<edm::InputTag>("vertex");
 
@@ -135,6 +129,14 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
   // Event counter
   eventCounterLabels_ = pset.getParameter<std::vector<std::string> >("eventCounters");
 
+  if ( isMC_ )
+  {
+    genLabel_ = pset.getParameter<edm::InputTag>("gen");
+    genJetLabel_ = pset.getParameter<edm::InputTag>("genJet");
+    //recoToGenJetMapLabel_ = pset.getParameter<edm::InputTag>("recoToGenJetMap");
+    //genJetToPartonMapLabel_ = pset.getParameter<edm::InputTag>("genJetToPartonsMap");
+  }
+
   // Output histograms and tree
   edm::Service<TFileService> fs;
   hEventCounter_ = fs->make<TH1F>("hEventCounter", "Event counter", eventCounterLabels_.size(), 1, eventCounterLabels_.size()+1);
@@ -143,10 +145,6 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     hEventCounter_->GetXaxis()->SetBinLabel(i+1, eventCounterLabels_.at(i).c_str());
   }
 
-  LVecs* jets_, * jetsUp_, * jetsDn_;
-  doubles* jets_bTag_;
-  LVec* met_, * metUp_, * metDn_;
-
   muons_     = new LVecs()  ; electrons_     = new LVecs()  ;
   muons_Q_   = new ints()   ; electrons_Q_   = new ints()   ;
   muons_Iso_ = new doubles(); electrons_Iso_ = new doubles();
@@ -154,43 +152,52 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
   jetsUp_ = new LVecs(); jetsUp_bTag_ = new doubles(); metUp_ = new LVec();
   jetsDn_ = new LVecs(); jetsDn_bTag_ = new doubles(); metDn_ = new LVec();
 
-  eventTree_ = fs->make<TTree>("event", "Mixed event tree");
-  eventTree_->Branch("run", &run_, "run/I");
-  eventTree_->Branch("lumi", &lumi_, "lumi/I");
-  eventTree_->Branch("event", &event_, "event/I");
+  tree_ = fs->make<TTree>("event", "Mixed event tree");
+  tree_->Branch("run", &run_, "run/I");
+  tree_->Branch("lumi", &lumi_, "lumi/I");
+  tree_->Branch("event", &event_, "event/I");
 
-  eventTree_->Branch("weight", &weight_, "weight/D");
-  eventTree_->Branch("weightUp", &weightUp_, "weightUp/D");
-  eventTree_->Branch("weightDn", &weightDn_, "weightDn/D");
-  eventTree_->Branch("nVertex", &nVertex_, "nVertex/I"); 
+  tree_->Branch("weight", &weight_, "weight/D");
+  tree_->Branch("weightUp", &weightUp_, "weightUp/D");
+  tree_->Branch("weightDn", &weightDn_, "weightDn/D");
+  tree_->Branch("nVertex", &nVertex_, "nVertex/I");
 
   const char* lvecsTypeName = "std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >";
-  eventTree_->Branch("electrons", lvecsTypeName, electrons_);
-  eventTree_->Branch("electrons_Q", electrons_Q_);
-  eventTree_->Branch("electrons_Iso", electrons_Iso_);
+  tree_->Branch("electrons", lvecsTypeName, electrons_);
+  tree_->Branch("electrons_Q", electrons_Q_);
+  tree_->Branch("electrons_Iso", electrons_Iso_);
 
-  eventTree_->Branch("muons", lvecsTypeName, muons_);
-  eventTree_->Branch("muons_Q", muons_Q_);
-  eventTree_->Branch("muons_Iso", muons_Iso_);
+  tree_->Branch("muons", lvecsTypeName, muons_);
+  tree_->Branch("muons_Q", muons_Q_);
+  tree_->Branch("muons_Iso", muons_Iso_);
 
-  eventTree_->Branch("jets", lvecsTypeName, jets_);
-  eventTree_->Branch("jetsUp", lvecsTypeName, jetsUp_);
-  eventTree_->Branch("jetsDn", lvecsTypeName, jetsDn_);
-  eventTree_->Branch("jets_bTag", jets_bTag_);
-  eventTree_->Branch("jetsUp_bTag", jetsUp_bTag_);
-  eventTree_->Branch("jetsDn_bTag", jetsDn_bTag_);
+  tree_->Branch("jets", lvecsTypeName, jets_);
+  tree_->Branch("jetsUp", lvecsTypeName, jetsUp_);
+  tree_->Branch("jetsDn", lvecsTypeName, jetsDn_);
+  tree_->Branch("jets_bTag", jets_bTag_);
+  tree_->Branch("jetsUp_bTag", jetsUp_bTag_);
+  tree_->Branch("jetsDn_bTag", jetsDn_bTag_);
 
-  eventTree_->Branch("met"  , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", met_  );
-  eventTree_->Branch("metUp", "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", metUp_);
-  eventTree_->Branch("metDn", "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", metDn_);
+  tree_->Branch("met"  , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", met_  );
+  tree_->Branch("metUp", "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", metUp_);
+  tree_->Branch("metDn", "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", metDn_);
 
-  //genTree_ = fs->make<TTree>("gen", "Gen level event tree");
-  //genTree_->Branch("muons", &genMuons_);
-  //genTree_->Branch("electrons", &genElectrons_);
-  //genTree_->Branch("muonNus", &genMuonNus_);
-  //genTree_->Branch("electronNus", &genElectronNus_);
+  if ( isMC_ )
+  {
+    genMuons_   = new LVecs()  ; genElectrons_   = new LVecs()  ;
+    genMuons_Q_ = new doubles(); genElectrons_Q_ = new doubles();
+    genNeutrinos_ = new LVecs();
+    genJets_ = new LVecs();
 
-  //genTree_->Branch("jets_motherId", &jets_motherId_);
+    tree_->Branch("genMuons"    , lvecsTypeName, genMuons_    );
+    tree_->Branch("genElectrons", lvecsTypeName, genElectrons_);
+    tree_->Branch("genMuons_Q"    , genMuons_Q_    );
+    tree_->Branch("genElectrons_Q", genElectrons_Q_);
+    tree_->Branch("genNeutrinos", lvecsTypeName, genNeutrinos_);
+    tree_->Branch("genJets", lvecsTypeName, genJets_);
+
+    //tree_->Branch("jets_motherId", &jets_motherId_);
+  }
 
 }
 
@@ -219,12 +226,17 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   muons_    ->clear(); muons_Q_    ->clear(); muons_Iso_    ->clear();
   jets_     ->clear(); jetsUp_     ->clear(); jetsDn_     ->clear();
   jets_bTag_->clear(); jetsUp_bTag_->clear(); jetsDn_bTag_->clear();
-  //jets_motherId_->clear();
 
-  //genMuons_->clear();
-  //genElectrons_->clear();
-  //genMuonNus_->clear();
-  //genElectronNus_->clear();
+  if ( isMC_ )
+  {
+    genMuons_->clear();
+    genElectrons_->clear();
+    genNeutrinos_->clear();
+    genMuons_Q_->clear();
+    genElectrons_Q_->clear();
+    genJets_->clear();
+    //jets_motherId_->clear();
+  }
 
   edm::Handle<reco::VertexCollection> vertexHandle;
   event.getByLabel(vertexLabel_, vertexHandle);
@@ -282,49 +294,58 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   *metUp_ = metUpHandle->at(0).p4();
   *metDn_ = metDnHandle->at(0).p4();
 
-/*
   typedef edm::AssociationMap<edm::OneToMany<std::vector<reco::GenJet>, reco::GenParticleCollection> > GenJetToGenParticlesMap;
   typedef edm::AssociationMap<edm::OneToOne<std::vector<pat::Jet>, std::vector<reco::GenJet> > > RecoToGenJetMap;
   edm::Handle<GenJetToGenParticlesMap> genJetToPartonMapHandle;
   edm::Handle<RecoToGenJetMap> recoToGenJetMapHandle;
 
   // This while loop runs just for once, a "break" statement must be kept in the end of loop
-  // It reduces nested loop
-  while ( doMCMatch_ ) 
+  // It reduces nested-if statements
+  while ( isMC_ )
   {
-    if ( event.isRealData() ) doMCMatch_ = false;
+    if ( event.isRealData() ) { isMC_ = false; break; }
 
     edm::Handle<reco::GenParticleCollection> genHandle;
     event.getByLabel(genLabel_, genHandle);
-    event.getByLabel(genJetToPartonMapLabel_, genJetToPartonMapHandle);
+    edm::Handle<reco::GenJetCollection> genJetHandle;
+    event.getByLabel(genJetLabel_, genJetHandle);
+    //event.getByLabel(genJetToPartonMapLabel_, genJetToPartonMapHandle);
     event.getByLabel(recoToGenJetMapLabel_, recoToGenJetMapHandle);
-    if ( !genHandle.isValid() or
-         !genJetToPartonMapHandle.isValid() or 
-         !recoToGenJetMapHandle.isValid() )
-    {
-      doMCMatch_ = false;
-      break;
-    }
+    if ( !genHandle.isValid() or !genJetHandle.isValid() ) { isMC_ = false; break; }
+    //     !genJetToPartonMapHandle.isValid() or
+    //!recoToGenJetMapHandle.isValid() ) { isMC_ = false; break; }
 
     // Find top quark from the genParticles
     for ( int i=0, n=genHandle->size(); i<n; ++i )
     {
       const reco::GenParticle& p = genHandle->at(i);
       if ( p.status() != 3 ) continue;
+      const int charge = p.charge();
 
       switch(abs(p.pdgId()))
       {
-        case 11: genElectrons_.push_back(p.p4())  ; break;
-        case 13: genMuons_.push_back(p.p4())      ; break;
-        case 12: genElectronNus_.push_back(p.p4()); break;
-        case 14: genMuonNus_.push_back(p.p4())    ; break;
+        case 11:
+          genElectrons_->push_back(p.p4());
+          genElectrons_Q_->push_back(charge); break;
+        case 13:
+          genMuons_->push_back(p.p4());
+          genMuons_Q_->push_back(charge); break;
+        case 12:
+        case 14:
+          genNeutrinos_->push_back(p.p4()); break;
         default: break;
       }
     }
 
+    for ( int i=0, n=genJetHandle->size(); i<n; ++i )
+    {
+      const reco::GenJet& p = genJetHandle->at(i);
+      if ( p.pt() < 20 or std::abs(p.eta()) > 2.5 ) continue;
+      genJets_->push_back(p.p4());
+    }
+
     break;
   }
-*/
 
   edm::Handle<std::vector<pat::Jet> > jetHandle;
   edm::Handle<std::vector<pat::Jet> > jetUpHandle;
@@ -335,7 +356,6 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   for ( int i=0, n=jetHandle->size(); i<n; ++i )
   {
     const pat::Jet& jet = jetHandle->at(i);
-
     jets_->push_back(jet.p4());
     jets_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
   }
@@ -387,8 +407,7 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   lumi_ = event.luminosityBlock();
   event_ = event.id().event();
 
-  eventTree_->Fill();
-//  genTree_->Fill();
+  tree_->Fill();
 }
 
 DEFINE_FWK_MODULE(KFlatTreeMaker);

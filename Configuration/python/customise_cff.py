@@ -1,10 +1,10 @@
 import FWCore.ParameterSet.Config as cms
 
-def applyPAT(process, runOnMC):
+def customise(process, runOnMC):
     process.load("Configuration.StandardSequences.Services_cff")
     process.load("Configuration.Geometry.GeometryDB_cff")
     process.load("Configuration.StandardSequences.MagneticField_cff")
-    process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+    #process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
     process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
     process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -33,15 +33,8 @@ def applyPAT(process, runOnMC):
     from PhysicsTools.PatAlgos.tools.pfTools import usePF2PAT
 
     postfix = "PFlow"
-    jetAlgo="AK5"
     #usePFBRECO(process,runPFBRECO=True, jetAlgo=jetAlgo, runOnMC=True, postfix=postfix)
-    usePF2PAT(process, runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=runOnMC, postfix=postfix)
-
-    process.p = cms.Path(
-    #    #getattr(process,"patPFBRECOSequence"+postfix)
-        getattr(process,"patPF2PATSequence"+postfix)
-    #  + process.patDefaultSequence
-    )
+    usePF2PAT(process, runOnMC=runOnMC, postfix=postfix)
 
     # top projections in PF2PAT:
     getattr(process,"pfNoPileUp"+postfix).enable = True
@@ -52,4 +45,16 @@ def applyPAT(process, runOnMC):
 
     # verbose flags for the PF2PAT modules
     getattr(process,"pfNoMuon"+postfix).verbose = False
+
+    process.p = cms.Path(
+    #    #getattr(process,"patPFBRECOSequence"+postfix)
+        getattr(process,"patPF2PATSequence"+postfix)
+    #  + process.patDefaultSequence
+    )
+
+    # Add ntuple production
+    process.load("KCMSAnalyses.Configuration.ntuple_template_cff")
+    process.goodJets.isMC = runOnMC
+    process.p += process.ntupleSequence
+
 

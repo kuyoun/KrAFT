@@ -55,9 +55,11 @@ if os.path.isdir(jobName):
     sys.exit()
 
 ## Prepare working directory
+print "@@ Preparing batch jobs in", jobName, "..."
 os.makedirs(jobName)
 
 ## Get file list from DBS
+print "@@ Retriving file list of dataset..."
 dbsURL = 'http://cmsdbsprod.cern.ch/cms_dbs_ph_analysis_01/servlet/DBSServlet'
 query = "find file where dataset = %s" % datasetName
 os.system("dbs search --url='%s' --query='%s' --noheader > %s/files.txt" % (dbsURL, query, jobName))
@@ -76,10 +78,15 @@ if nFiles == 0:
 files.sort(key=lambda f: int(f.split('/')[-1].split('_')[1]))
     
 ## Load cfg file
+print "@@ Loading python cfg..."
 sys.path.append('.')
+cout = sys.stdout
+sys.stdout = open("%s/log.txt" % jobName, "w")
 process = __import__('.'.join(cfgFileName.split('.')[:-1])).process
+sys.stdout = cout
 
 ## Memorise to modify output file names
+print "@@ Setting output modules..."
 outFileModes = {}
 if hasattr(process, 'TFileService'):
     outFileModes['TFileService'] = process.TFileService.fileName.value()
@@ -87,6 +94,7 @@ for modName in process.outputModules_():
     outFileModes[modName] = getattr(process, modName).fileName.value()
 
 ## Split files into jobs and write python cfg
+print "@@ Splitting jobs..."
 for section in range(int(ceil(1.0*nFiles/maxFiles))):
     begin = section*maxFiles
     end = min(begin+maxFiles, nFiles)
@@ -99,6 +107,7 @@ for section in range(int(ceil(1.0*nFiles/maxFiles))):
     open(cfgFileName, "w").write(process.dumpPython())
 
 ## Write run script
+print "@@ Writing run script..."
 runFileName = "%s/run.sh" % jobName
 fout = open(runFileName, "w")
 print>>fout, """#!/bin/bash
@@ -109,3 +118,5 @@ cd %s
 time cmsRun ntuple_${SECTION}_cfg.py""" % (os.environ["CMSSW_BASE"], os.path.abspath(jobName))
 fout = None
 os.chmod(runFileName, os.stat(runFileName).st_mode | stat.S_IEXEC)
+
+print "@@ Done."

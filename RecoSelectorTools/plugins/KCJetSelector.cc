@@ -26,11 +26,11 @@
 using namespace edm;
 using namespace std;
 
-class TopJetSelector : public edm::EDFilter
+class KCJetSelector : public edm::EDFilter
 {
 public:
-  TopJetSelector(const edm::ParameterSet& pset);
-  ~TopJetSelector() {};
+  KCJetSelector(const edm::ParameterSet& pset);
+  ~KCJetSelector() {};
 
 private:
   void beginJob() {};
@@ -61,7 +61,7 @@ private:
 
 };
 
-TopJetSelector::TopJetSelector(const edm::ParameterSet& pset)
+KCJetSelector::KCJetSelector(const edm::ParameterSet& pset)
 {
   doFilter_ = pset.getParameter<bool>("doFilter");
   debug_ = pset.getUntrackedParameter<bool>("debug",false);
@@ -84,7 +84,7 @@ TopJetSelector::TopJetSelector(const edm::ParameterSet& pset)
   // Cleaning methods:
   //  subtract    =  1: Check acceptance cut after lepton p4 subtraction and store subtacted jet
   //  subtractAll =  2: Check acceptance cut after lepton p4 subtraction but keep original 4 momentum
-  //  cleanAll    =  0: No lepton subtraction
+  //  cleanAll    =  0: Jet cleaning by deltaR
   //  Default     = -1: No jet cleaning
   if ( cleanMethodName == "subtract" ) cleanMethod_ = 2; 
   else if ( cleanMethodName == "subtractAll" ) cleanMethod_ = 1; 
@@ -113,7 +113,7 @@ TopJetSelector::TopJetSelector(const edm::ParameterSet& pset)
   }
 }
 
-bool TopJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
+bool KCJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   edm::Handle<std::vector<pat::Jet> > jetHandle;
   event.getByLabel(jetLabel_, jetHandle);
@@ -287,5 +287,5 @@ bool TopJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup
   return false;
 }
 
-DEFINE_FWK_MODULE(TopJetSelector);
+DEFINE_FWK_MODULE(KCJetSelector);
 

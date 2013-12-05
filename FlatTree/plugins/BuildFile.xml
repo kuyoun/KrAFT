@@ -13,7 +13,7 @@
 
 <use name="root" />
 
-<library file="*.cc" name="TopAnalysisTTbarDileptonPlugins">
+<library file="*.cc" name="KCMSAnalysesTTbarDileptonPlugins">
   <flags EDM_PLUGIN="1" />
 </library>
 

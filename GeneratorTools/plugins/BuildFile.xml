@@ -13,11 +13,11 @@
 <use name="SimDataFormats/PileupSummaryInfo" />
 <use name="RecoVertex/VertexTools" />
 
-<use name="TopAnalysis/GeneratorTools" />
+<use name="KCMSAnalyses/GeneratorTools" />
 
 <use name="root" />
 
-<library file="*.cc" name="TopAnalysisGeneratorToolsPlugins">
+<library file="*.cc" name="KCMSAnalysesGeneratorToolsPlugins">
   <flags EDM_PLUGIN="1" />
 </library>
 

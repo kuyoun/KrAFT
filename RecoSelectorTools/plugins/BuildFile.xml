@@ -15,7 +15,7 @@
 
 <use name="root" />
 
-<library file="*.cc" name="TopAnalysisRecoSelectorToolsPlugins">
+<library file="*.cc" name="KCMSAnalysesRecoSelectorToolsPlugins">
   <flags EDM_PLUGIN="1" />
 </library>
 

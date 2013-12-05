@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("PAT")
 runOnMC = False
 
-from TopAnalysis.Configuration.pat_template_cff import applyPAT
+from KCMSAnalyses.Configuration.pat_template_cff import applyPAT
 applyPAT(process, runOnMC=runOnMC)
 
 process.source.fileNames = [

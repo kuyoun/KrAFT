@@ -29,7 +29,7 @@ process.out = cms.OutputModule("PoolOutputModule",
 )
 process.outPath = cms.EndPath(process.out)
 
-process.load("TopAnalysis.Configuration.commonFilters_cff")
+process.load("KCMSAnalyses.Configuration.commonFilters_cff")
 
 process.pElEl = cms.Path(
     process.commonSequenceForMC

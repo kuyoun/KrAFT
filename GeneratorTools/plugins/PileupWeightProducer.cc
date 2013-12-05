@@ -69,7 +69,7 @@ void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eve
   std::auto_ptr<double> weightUp(new double(1.));
   std::auto_ptr<double> weightDn(new double(1.));
 
-  if ( puHandle.isValid() )
+  if ( !event.isRealData() and puHandle.isValid() )
   {
     const int nBX = puHandle->size();
     for ( int i=0; i<nBX; ++i )

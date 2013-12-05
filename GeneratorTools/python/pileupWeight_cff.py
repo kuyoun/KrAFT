@@ -1,13 +1,13 @@
 import FWCore.ParameterSet.Config as cms
 
-lumiWeight = cms.EDProducer("LumiWeightProducer",
+pileupWeight = cms.EDProducer("PileupWeightProducer",
     pileupMC = cms.vdouble(),
     pileupRD = cms.vdouble(),
     pileupUp = cms.vdouble(),
     pileupDn = cms.vdouble(),
 )
 
-lumiWeightMap = {
+pileupWeightMap = {
 "Summer12":cms.vdouble(
     2.560E-06,    5.239E-06,    1.420E-05,    5.005E-05,    1.001E-04,
     2.705E-04,    1.999E-03,    6.097E-03,    1.046E-02,    1.383E-02,
@@ -115,7 +115,7 @@ lumiWeightMap = {
 }
 
 ## Put values
-lumiWeight.pileupMC = lumiWeightMap["Summer12"]
-lumiWeight.pileupRD = lumiWeightMap["Run2012"]
-lumiWeight.pileupUp = lumiWeightMap["Run2012Up"]
-lumiWeight.pileupDn = lumiWeightMap["Run2012Dn"]
+pileupWeight.pileupMC = pileupWeightMap["Summer12"]
+pileupWeight.pileupRD = pileupWeightMap["Run2012"]
+pileupWeight.pileupUp = pileupWeightMap["Run2012Up"]
+pileupWeight.pileupDn = pileupWeightMap["Run2012Dn"]

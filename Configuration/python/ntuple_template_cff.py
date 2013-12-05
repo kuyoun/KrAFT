@@ -19,9 +19,10 @@ TFileService = cms.Service("TFileService",
 )
 
 event = cms.EDAnalyzer("KFlatTreeMaker",
-    doMCMatch = cms.bool(False),
+    isMC = cms.bool(False),
 
     gen = cms.InputTag("genParticles"),
+    genJet = cms.InputTag("ak5GenJets"),
     recoToGenJetMap = cms.InputTag("recoToGenJetMap"),
     genJetToPartonsMap = cms.InputTag("genJetToPartonsMap"),
 
@@ -43,7 +44,7 @@ event = cms.EDAnalyzer("KFlatTreeMaker",
     jet = cms.PSet(
         src = cms.string("goodJets"),
         leptonDeltaR = cms.double(0.5),
-        bTagType = cms.string("combinedSecondaryVertexBtag"),
+        bTagType = cms.string("combinedSecondaryVertexBJetTags"),
     ),
     met = cms.PSet(
         src = cms.string("goodJets"),

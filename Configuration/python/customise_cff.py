@@ -55,6 +55,7 @@ def customise(process, runOnMC):
     # Add ntuple production
     process.load("KCMSAnalyses.Configuration.ntuple_template_cff")
     process.goodJets.isMC = runOnMC
+    process.event.isMC = runOnMC
     process.p += process.ntupleSequence
 
 

@@ -59,7 +59,7 @@ if os.path.isdir(jobName):
 ## Prepare working directory
 print "@@ Preparing batch jobs in", jobName, "..."
 os.makedirs(jobName)
-scratchPath = "/pnfs/user/%s/scratch/%s-%s" % (os.environ["USER"], jobName, uniqueID)
+scratchPath = "/pnfs/user/%s/scratch/%s" % (os.environ["USER"], jobName)
 print "@@ Preparing output scratch directory in", scratchPath, "..."
 os.makedirs(scratchPath)
 
@@ -124,7 +124,7 @@ print "@@ Writing run script..."
 runFileName = "%s/run.sh" % jobName
 fout = open(runFileName, "w")
 print>>fout, """#!/bin/bash
-SECTION=`printf %%03d $1`
+SECTION=`printf %%03d $PBS_ARRAYID`
 cd %s
 eval `scram runtime -sh`
 cd %s

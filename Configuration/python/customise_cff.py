@@ -30,6 +30,13 @@ def customise(process, runOnMC):
     #process.outPath = cms.EndPath(process.out)
 
     process.load("PhysicsTools.PatAlgos.patSequences_cff")
+    ## Apply MVA
+    process.load('EgammaAnalysis.ElectronTools.electronIdMVAProducer_cfi')
+    process.eidMVASequence = cms.Sequence(  process.mvaTrigV0 + process.mvaNonTrigV0 )
+    process.patElectrons.electronIDSources.mvaTrigV0    = cms.InputTag("mvaTrigV0")
+    process.patElectrons.electronIDSources.mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0")
+    process.patDefaultSequence.replace( process.patElectrons, process.eidMVASequence * process.patElectrons )
+
     from PhysicsTools.PatAlgos.tools.pfTools import usePF2PAT
 
     postfix = "PFlow"

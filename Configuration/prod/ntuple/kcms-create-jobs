@@ -121,7 +121,7 @@ for section in range(nSection):
 ## Checking voms proxy
 print "@@ Checking grid certificate to access files..."
 if os.system("voms-proxy-info -exists --hours 8") != 0:
-    os.system("voms-proxy-init -voms cms")
+    os.system("voms-proxy-init -voms cms --valid 144:00")
 uid = os.getuid()
 shutil.copy2("/tmp/x509up_u%d" % uid, "%s/x509up_u%d" % (jobName, uid))
 

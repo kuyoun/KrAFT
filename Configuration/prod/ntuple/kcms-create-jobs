@@ -62,6 +62,11 @@ if os.path.isdir(jobName):
     sys.exit()
 doSubmit = ('-n' not in opts)
 
+# Check necessary envvars
+if 'CMSSW_VERSION' not in os.env:
+    print "ERROR: You have to set up CMSSW. Run cmsenv in your working directory."
+    sys.exit()
+
 ## Prepare working directory
 print "@@ Preparing batch jobs in", jobName, "..."
 os.makedirs(jobName)

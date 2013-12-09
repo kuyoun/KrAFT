@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+import sys, os
+
+if len(sys.argv) < 2:
+    print "%s job_directory" % sys.argv[0]
+    sys.exit()
+jobName = os.path.basename(sys.argv[1])
+outdir = "/pnfs/user/%s/scratch/%s" % (os.environ["USER"], jobName)
+jobdir = os.path.abspath(sys.argv[1])
+
+logFiles = []
+rootFiles = []
+#filesInJobdir = os.path.listdir(sys.argv[1])
+for f in os.listdir(outdir):
+    if '.root' in f: rootFiles.append(f)
+    if '.log' in f: logFiles.append(f)
+logFiles.sort()
+
+nFileTotal = 0
+errSections = set()
+for lf in logFiles:
+    section = int(lf.split('.')[0].split('_')[-1])
+    fileStatus = {}
+    for l in open(os.path.join(outdir, lf)).readlines():
+        l = l.strip()
+        if '.root' not in l: continue
+        ll = l.split()
+        file = ll[-1]
+        if '.root' not in file: continue
+        date = ll[0]
+        time = ll[1]
+        stat = ll[3]
+
+        statKey = 0
+        if stat == "Initiating": statKey = 1
+        elif stat == "Successfully": statKey = 10
+        elif stat == "Closed": statKey = 100
+        else: statKey = 1000
+
+        if file in fileStatus: fileStatus[file] += statKey
+        else: fileStatus[file] = statKey
+
+    nFile = len(fileStatus)
+    nFileTotal += nFile
+    errFiles = []
+    for fs in fileStatus:
+        if fileStatus[fs] != 111:
+            errFiles.append(fs)
+            errSections.add(section)
+    nError = len(errFiles)
+    #print "Status of section %d : (%d/%d)" % (section, nFile-nError, nFile)
+    for ef in errFiles: print ef
+
+    ## Check output file exists
+    ntupleFile = "%s/ntuple_%03d.root" % (outdir, section)
+    if not os.path.exists(ntupleFile):
+        print "Cannot find output ntuple,", ntupleFile
+        errSections.add(section)
+
+## Check file catalogue consistency
+nFileInput = 0
+for f in open("%s/files.txt" % jobdir).readlines():
+    f = f.strip()
+    if f == "": continue
+    if f[0] == '#': continue
+    if '.root' not in f: continue
+    nFileInput += 1
+
+if nFileInput != nFileTotal or len(errSections) != 0:
+    print "Some files are not processed yet"
+    print "Resubmit with command:"
+    print "ssh uosaf0008 \"qsub -q batch -N %s -d %s -t %s run.sh\"" % (jobName, jobdir, ",".join(["%d" % x for x in errSections]))
+else:
+    print "Job is complete."

@@ -77,37 +77,46 @@ private:
   double weight_, weightUp_, weightDn_;
   int nVertex_;
 
-  typedef math::XYZTLorentzVector LVec;
-  typedef std::vector<LVec> LVecs;
   typedef std::vector<int> ints;
   typedef std::vector<unsigned int> uints;
   typedef std::vector<double> doubles;
+  typedef ints* intsP;
+  typedef uints* uintsP;
+  typedef doubles* doublesP;
 
-  LVecs*   muons_;
-  ints*    muons_Q_;
-  uints*   muons_id_;
-  doubles* muons_iso_;
+  doublesP muons_pt_, muons_eta_, muons_phi_, muons_m_;
 
-  LVecs*   electrons_;
-  ints*    electrons_Q_;
-  uints*   electrons_id_;
-  doubles* electrons_iso_;
+  intsP    muons_Q_;
+  uintsP   muons_type_;
+  doublesP muons_iso_;
 
-  doubles* electrons_mva_;
-  doubles* electrons_scEta_;
+  doublesP electrons_pt_, electrons_eta_, electrons_phi_, electrons_m_;
+  intsP    electrons_Q_;
+  uintsP   electrons_type_;
+  doublesP electrons_iso_;
 
-  LVecs* jets_, * jetsUp_, * jetsDn_;
-  doubles* jets_bTag_, * jetsUp_bTag_, * jetsDn_bTag_;
-  LVec* met_, * metUp_, * metDn_;
+  doublesP electrons_mva_;
+  doublesP electrons_scEta_;
+
+  doublesP jets_pt_, jets_eta_, jets_phi_, jets_m_;
+  doublesP jetsUp_pt_, jetsUp_eta_, jetsUp_phi_, jetsUp_m_;
+  doublesP jetsDn_pt_, jetsDn_eta_, jetsDn_phi_, jetsDn_m_;
+  doublesP jets_bTag_, jetsUp_bTag_, jetsDn_bTag_;
+  double met_pt_, met_phi_;
+  double metUp_pt_, metUp_phi_;
+  double metDn_pt_, metDn_phi_;
 
   // Generator level information
   bool isMC_;
   // jet MC matching
   //std::vector<int> jets_motherId_;
   //std::vector<int> genJetMotherId_;
-  LVecs* genMuons_, * genElectrons_, * genNeutrinos_;
-  doubles* genMuons_Q_, * genElectrons_Q_;
-  LVecs* genJets_;
+
+  doublesP genMuons_pt_, genMuons_eta_, genMuons_phi_, genMuons_m_;
+  doublesP genElectrons_pt_, genElectrons_eta_, genElectrons_phi_, genElectrons_m_;
+  doublesP genNeutrinos_pt_, genNeutrinos_eta_, genNeutrinos_phi_;
+  intsP genMuons_Q_, genElectrons_Q_;
+  doublesP genJets_pt_, genJets_eta_, genJets_phi_, genJets_m_;
 
 };
 
@@ -156,22 +165,25 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     hEventCounter_->GetXaxis()->SetBinLabel(i+1, eventCounterLabels_.at(i).c_str());
   }
 
-  muons_     = new LVecs();
-  muons_Q_   = new ints();
-  muons_id_  = new uints();
-  muons_iso_ = new doubles();
+  muons_pt_   = new doubles(); muons_eta_ = new doubles(); muons_phi_ = new doubles(); muons_m_   = new doubles();
+  muons_Q_    = new ints();
+  muons_type_ = new uints();
+  muons_iso_  = new doubles();
 
-  electrons_     = new LVecs();
-  electrons_Q_   = new ints();
-  electrons_id_  = new uints();
-  electrons_iso_ = new doubles();
+  electrons_pt_   = new doubles(); electrons_eta_ = new doubles(); electrons_phi_ = new doubles(); electrons_m_   = new doubles();
+  electrons_Q_    = new ints();
+  electrons_type_ = new uints();
+  electrons_iso_  = new doubles();
 
   electrons_mva_   = new doubles();
   electrons_scEta_ = new doubles();
 
-  jets_   = new LVecs(); jets_bTag_   = new doubles(); met_   = new LVec();
-  jetsUp_ = new LVecs(); jetsUp_bTag_ = new doubles(); metUp_ = new LVec();
-  jetsDn_ = new LVecs(); jetsDn_bTag_ = new doubles(); metDn_ = new LVec();
+  jets_pt_   = new doubles(); jets_eta_   = new doubles(); jets_phi_   = new doubles(); jets_m_   = new doubles();
+  jetsUp_pt_ = new doubles(); jetsUp_eta_ = new doubles(); jetsUp_phi_ = new doubles(); jetsUp_m_ = new doubles();
+  jetsDn_pt_ = new doubles(); jetsDn_eta_ = new doubles(); jetsDn_phi_ = new doubles(); jetsDn_m_ = new doubles();
+  jets_bTag_   = new doubles();
+  jetsUp_bTag_ = new doubles();
+  jetsDn_bTag_ = new doubles();
 
   tree_ = fs->make<TTree>("event", "Mixed event tree");
   tree_->Branch("run", &run_, "run/I");
@@ -183,44 +195,95 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
   tree_->Branch("weightDn", &weightDn_, "weightDn/D");
   tree_->Branch("nVertex", &nVertex_, "nVertex/I");
 
-  const char* lvecsTypeName = "std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >";
-  tree_->Branch("muons", lvecsTypeName, muons_);
-  tree_->Branch("muons_Q", muons_Q_);
-  tree_->Branch("muons_id", muons_id_);
-  tree_->Branch("muons_iso", muons_iso_);
+  tree_->Branch("muons_pt"  , muons_pt_  );
+  tree_->Branch("muons_eta" , muons_eta_ );
+  tree_->Branch("muons_phi" , muons_phi_ );
+  tree_->Branch("muons_m"   , muons_m_   );
+  tree_->Branch("muons_Q"   , muons_Q_   );
+  tree_->Branch("muons_type", muons_type_);
+  tree_->Branch("muons_iso" , muons_iso_ );
 
-  tree_->Branch("electrons", lvecsTypeName, electrons_);
-  tree_->Branch("electrons_Q", electrons_Q_);
-  tree_->Branch("electrons_id", electrons_id_);
+  tree_->Branch("electrons_pt"  , electrons_pt_  );
+  tree_->Branch("electrons_eta" , electrons_eta_ );
+  tree_->Branch("electrons_phi" , electrons_phi_ );
+  tree_->Branch("electrons_m"   , electrons_m_   );
+  tree_->Branch("electrons_Q"   , electrons_Q_   );
+  tree_->Branch("electrons_type", electrons_type_);
   tree_->Branch("electrons_iso", electrons_iso_);
 
   tree_->Branch("electrons_mva", electrons_mva_);
   tree_->Branch("electrons_scEta", electrons_scEta_);
 
-  tree_->Branch("jets", lvecsTypeName, jets_);
-  tree_->Branch("jetsUp", lvecsTypeName, jetsUp_);
-  tree_->Branch("jetsDn", lvecsTypeName, jetsDn_);
+  tree_->Branch("jets_pt" , jets_pt_ );
+  tree_->Branch("jets_eta", jets_eta_);
+  tree_->Branch("jets_phi", jets_phi_);
+  tree_->Branch("jets_m"  , jets_m_  );
+
+  tree_->Branch("jetsUp_pt" , jetsUp_pt_ );
+  tree_->Branch("jetsUp_eta", jetsUp_eta_);
+  tree_->Branch("jetsUp_phi", jetsUp_phi_);
+  tree_->Branch("jetsUp_m"  , jetsUp_m_  );
+
+  tree_->Branch("jetsDn_pt" , jetsDn_pt_ );
+  tree_->Branch("jetsDn_eta", jetsDn_eta_);
+  tree_->Branch("jetsDn_phi", jetsDn_phi_);
+  tree_->Branch("jetsDn_m"  , jetsDn_m_  );
+
   tree_->Branch("jets_bTag", jets_bTag_);
   tree_->Branch("jetsUp_bTag", jetsUp_bTag_);
   tree_->Branch("jetsDn_bTag", jetsDn_bTag_);
 
-  tree_->Branch("met"  , "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", met_  );
-  tree_->Branch("metUp", "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", metUp_);
-  tree_->Branch("metDn", "ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>", metDn_);
+  tree_->Branch("met_pt"  , &met_pt_  , "met_pt/D"  );
+  tree_->Branch("metUp_pt", &metUp_pt_, "metUp_pt/D");
+  tree_->Branch("metDn_pt", &metDn_pt_, "metDn_pt/D");
+
+  tree_->Branch("met_phi"  , &met_phi_  , "met_phi/D"  );
+  tree_->Branch("metUp_phi", &metUp_phi_, "metUp_phi/D");
+  tree_->Branch("metDn_phi", &metDn_phi_, "metDn_phi/D");
 
   if ( isMC_ )
   {
-    genMuons_   = new LVecs()  ; genElectrons_   = new LVecs()  ;
-    genMuons_Q_ = new doubles(); genElectrons_Q_ = new doubles();
-    genNeutrinos_ = new LVecs();
-    genJets_ = new LVecs();
+    genMuons_pt_  = new doubles();
+    genMuons_eta_ = new doubles();
+    genMuons_phi_ = new doubles();
+    genMuons_m_   = new doubles();
+    genMuons_Q_   = new ints()   ;
 
-    tree_->Branch("genMuons"    , lvecsTypeName, genMuons_    );
-    tree_->Branch("genElectrons", lvecsTypeName, genElectrons_);
-    tree_->Branch("genMuons_Q"    , genMuons_Q_    );
-    tree_->Branch("genElectrons_Q", genElectrons_Q_);
-    tree_->Branch("genNeutrinos", lvecsTypeName, genNeutrinos_);
-    tree_->Branch("genJets", lvecsTypeName, genJets_);
+    genElectrons_pt_  = new doubles();
+    genElectrons_eta_ = new doubles();
+    genElectrons_phi_ = new doubles();
+    genElectrons_m_   = new doubles();
+    genElectrons_Q_   = new ints()   ;
+
+    genNeutrinos_pt_  = new doubles();
+    genNeutrinos_eta_ = new doubles();
+    genNeutrinos_phi_ = new doubles();
+
+    genJets_pt_  = new doubles();
+    genJets_eta_ = new doubles();
+    genJets_phi_ = new doubles();
+    genJets_m_   = new doubles();
+
+    tree_->Branch("genMuons_pt" , genMuons_pt_ );
+    tree_->Branch("genMuons_eta", genMuons_eta_);
+    tree_->Branch("genMuons_phi", genMuons_phi_);
+    tree_->Branch("genMuons_m"  , genMuons_m_  );
+    tree_->Branch("genMuons_Q"  , genMuons_Q_  );
+
+    tree_->Branch("genElectrons_pt ", genElectrons_pt_ );
+    tree_->Branch("genElectrons_eta", genElectrons_eta_);
+    tree_->Branch("genElectrons_phi", genElectrons_phi_);
+    tree_->Branch("genElectrons_m"  , genElectrons_m_  );
+    tree_->Branch("genElectrons_Q"  , genElectrons_Q_  );
+
+    tree_->Branch("genNeutrinos_pt" , genNeutrinos_pt_ );
+    tree_->Branch("genNeutrinos_eta", genNeutrinos_eta_);
+    tree_->Branch("genNeutrinos_phi", genNeutrinos_phi_);
+
+    tree_->Branch("genJets_pt" , genJets_pt_ );
+    tree_->Branch("genJets_eta", genJets_eta_);
+    tree_->Branch("genJets_phi", genJets_phi_);
+    tree_->Branch("genJets_m"  , genJets_m_  );
 
     //tree_->Branch("jets_motherId", &jets_motherId_);
   }
@@ -248,30 +311,64 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   using namespace std;
 
   // Clear up
-  electrons_->clear();
+  electrons_pt_->clear();
+  electrons_eta_->clear();
+  electrons_phi_->clear();
+  electrons_m_->clear();
   electrons_Q_->clear();
-  electrons_id_->clear();
+  electrons_type_->clear();
   electrons_iso_->clear();
 
   electrons_mva_->clear();
   electrons_scEta_->clear();
 
-  muons_->clear();
+  muons_pt_->clear();
+  muons_eta_->clear();
+  muons_phi_->clear();
+  muons_m_->clear();
   muons_Q_->clear();
-  muons_id_->clear();
+  muons_type_->clear();
   muons_iso_->clear();
 
-  jets_     ->clear(); jetsUp_     ->clear(); jetsDn_     ->clear();
+  jets_pt_->clear();
+  jets_eta_->clear();
+  jets_phi_->clear();
+  jets_m_->clear();
+
+  jetsUp_pt_->clear();
+  jetsUp_eta_->clear();
+  jetsUp_phi_->clear();
+  jetsUp_m_->clear();
+
+  jetsDn_pt_->clear();
+  jetsDn_eta_->clear();
+  jetsDn_phi_->clear();
+  jetsDn_m_->clear();
+
   jets_bTag_->clear(); jetsUp_bTag_->clear(); jetsDn_bTag_->clear();
 
   if ( isMC_ )
   {
-    genMuons_->clear();
-    genElectrons_->clear();
-    genNeutrinos_->clear();
+    genMuons_pt_ ->clear();
+    genMuons_eta_->clear();
+    genMuons_phi_->clear();
+    genMuons_m_  ->clear();
     genMuons_Q_->clear();
+
+    genElectrons_pt_ ->clear();
+    genElectrons_eta_->clear();
+    genElectrons_phi_->clear();
+    genElectrons_m_  ->clear();
     genElectrons_Q_->clear();
-    genJets_->clear();
+
+    genNeutrinos_pt_ ->clear();
+    genNeutrinos_eta_->clear();
+    genNeutrinos_phi_->clear();
+
+    genJets_pt_ ->clear();
+    genJets_eta_->clear();
+    genJets_phi_->clear();
+    genJets_m_  ->clear();
     //jets_motherId_->clear();
   }
 
@@ -305,29 +402,32 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     const double dxy = std::abs(e.gsfTrack()->dxy(pv.position()));
     const double mva = e.electronID("mvaTrigV0");
 
-    int eId = 0;
+    int eType = 0;
     // Veto electrons
-    if ( 0.0 < mva and mva < 1.0 ) eId += 1;
+    if ( 0.0 < mva and mva < 1.0 ) eType += 1;
     if ( e.isPF() and e.passConversionVeto() and
          e.gsfTrack()->trackerExpectedHitsInner().numberOfHits() <= 0 and
          mva > 0.5 )
     {
       // Top Single electron ID
-      if ( dxy < 0.02 and not (1.4442 < std::abs(scEta) and std::abs(scEta) < 1.5660) ) eId += 10;
+      if ( dxy < 0.02 and not (1.4442 < std::abs(scEta) and std::abs(scEta) < 1.5660) ) eType += 10;
       // Top Dilepton electron ID
-      if ( dxy < 0.04 ) eId += 100;
+      if ( dxy < 0.04 ) eType += 100;
     }
 
-    electrons_    ->push_back(e.p4());
-    electrons_Q_  ->push_back(e.charge());
-    electrons_id_ ->push_back(eId);
-    electrons_iso_->push_back(e.userIso(2)); // rho corrected isolation
+    electrons_pt_  ->push_back(e.pt());
+    electrons_eta_ ->push_back(e.eta());
+    electrons_phi_ ->push_back(e.phi());
+    electrons_m_   ->push_back(e.mass());
+    electrons_Q_   ->push_back(e.charge());
+    electrons_type_->push_back(eType);
+    electrons_iso_ ->push_back(e.userIso(2)); // rho corrected isolation
 
     electrons_mva_->push_back(e.mva());
     electrons_scEta_->push_back(scEta);
   }
-  if ( electrons_->size() < electronMinNumber_ ) return;
-  if ( electrons_->size() > electronMaxNumber_ ) return;
+  if ( electrons_pt_->size() < electronMinNumber_ ) return;
+  if ( electrons_pt_->size() > electronMaxNumber_ ) return;
 
   edm::Handle<std::vector<pat::Muon> > muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
@@ -336,28 +436,35 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     const pat::Muon& mu = muonHandle->at(i);
     //if ( abs(mu.dz(pv.position())) > muonDz_ ) continue;
 
-    int muId = 0;
-    if ( mu.isPFMuon() and (mu.isGlobalMuon() or mu.isTrackerMuon()) ) muId += 1;
-    if ( muon::isLooseMuon(mu) ) muId += 10;
-    if ( muon::isSoftMuon(mu, pv) ) muId += 100;
-    if ( muon::isTightMuon(mu, pv) ) muId += 1000;
-    if ( muon::isHighPtMuon(mu, pv, reco::improvedTuneP) ) muId += 10000;
+    int muType = 0;
+    if ( mu.isPFMuon() and (mu.isGlobalMuon() or mu.isTrackerMuon()) ) muType += 1;
+    if ( muon::isLooseMuon(mu) ) muType += 10;
+    if ( muon::isSoftMuon(mu, pv) ) muType += 100;
+    if ( muon::isTightMuon(mu, pv) ) muType += 1000;
+    if ( muon::isHighPtMuon(mu, pv, reco::improvedTuneP) ) muType += 10000;
 
-    muons_    ->push_back(mu.p4());
-    muons_Q_  ->push_back(mu.charge());
-    muons_id_ ->push_back(muId);
-    muons_iso_->push_back(mu.userIso(1)); // dBeta corrected isolation
+    muons_pt_  ->push_back(mu.pt());
+    muons_eta_ ->push_back(mu.eta());
+    muons_phi_ ->push_back(mu.phi());
+    muons_m_   ->push_back(mu.mass());
+    muons_Q_   ->push_back(mu.charge());
+    muons_type_->push_back(muType);
+    muons_iso_ ->push_back(mu.userIso(1)); // dBeta corrected isolation
   }
-  if ( muons_->size() < muonMinNumber_ ) return;
-  if ( muons_->size() > muonMaxNumber_ ) return;
+  if ( muons_pt_->size() < muonMinNumber_ ) return;
+  if ( muons_pt_->size() > muonMaxNumber_ ) return;
 
   edm::Handle<std::vector<pat::MET> > metHandle, metUpHandle, metDnHandle;
   event.getByLabel(edm::InputTag(metLabelStr_), metHandle);
   event.getByLabel(edm::InputTag(metLabelStr_, "up"), metUpHandle);
   event.getByLabel(edm::InputTag(metLabelStr_, "dn"), metDnHandle);
-  *met_ = metHandle->at(0).p4();
-  *metUp_ = metUpHandle->at(0).p4();
-  *metDn_ = metDnHandle->at(0).p4();
+  met_pt_ = metHandle->at(0).pt();
+  metUp_pt_ = metUpHandle->at(0).pt();
+  metDn_pt_ = metDnHandle->at(0).pt();
+
+  met_phi_ = metHandle->at(0).phi();
+  metUp_phi_ = metUpHandle->at(0).phi();
+  metDn_phi_ = metDnHandle->at(0).phi();
 
   typedef edm::AssociationMap<edm::OneToMany<std::vector<reco::GenJet>, reco::GenParticleCollection> > GenJetToGenParticlesMap;
   typedef edm::AssociationMap<edm::OneToOne<std::vector<pat::Jet>, std::vector<reco::GenJet> > > RecoToGenJetMap;
@@ -390,14 +497,22 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
       switch(abs(p.pdgId()))
       {
         case 11:
-          genElectrons_->push_back(p.p4());
+          genElectrons_pt_ ->push_back(p.pt()  );
+          genElectrons_eta_->push_back(p.eta() );
+          genElectrons_phi_->push_back(p.phi() );
+          genElectrons_m_  ->push_back(p.mass());
           genElectrons_Q_->push_back(charge); break;
         case 13:
-          genMuons_->push_back(p.p4());
+          genMuons_pt_ ->push_back(p.pt()  );
+          genMuons_eta_->push_back(p.eta() );
+          genMuons_phi_->push_back(p.phi() );
+          genMuons_m_  ->push_back(p.mass());
           genMuons_Q_->push_back(charge); break;
         case 12:
         case 14:
-          genNeutrinos_->push_back(p.p4()); break;
+          genNeutrinos_pt_ ->push_back(p.pt() );
+          genNeutrinos_eta_->push_back(p.eta());
+          genNeutrinos_phi_->push_back(p.phi()); break;
         default: break;
       }
     }
@@ -406,7 +521,10 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     {
       const reco::GenJet& p = genJetHandle->at(i);
       if ( p.pt() < 20 or std::abs(p.eta()) > 2.5 ) continue;
-      genJets_->push_back(p.p4());
+      genJets_pt_ ->push_back(p.pt()  );
+      genJets_eta_->push_back(p.eta() );
+      genJets_phi_->push_back(p.phi() );
+      genJets_m_  ->push_back(p.mass());
     }
 
     break;
@@ -421,19 +539,28 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   for ( int i=0, n=jetHandle->size(); i<n; ++i )
   {
     const pat::Jet& jet = jetHandle->at(i);
-    jets_->push_back(jet.p4());
+    jets_pt_ ->push_back(jet.pt());
+    jets_eta_->push_back(jet.eta());
+    jets_phi_->push_back(jet.phi());
+    jets_m_  ->push_back(jet.mass());
     jets_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
   }
   for ( int i=0, n=jetUpHandle->size(); i<n; ++i )
   {
     const pat::Jet& jet = jetUpHandle->at(i);
-    jetsUp_->push_back(jet.p4());
+    jetsUp_pt_ ->push_back(jet.pt());
+    jetsUp_eta_->push_back(jet.eta());
+    jetsUp_phi_->push_back(jet.phi());
+    jetsUp_m_  ->push_back(jet.mass());
     jetsUp_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
   }
   for ( int i=0, n=jetDnHandle->size(); i<n; ++i )
   {
     const pat::Jet& jet = jetDnHandle->at(i);
-    jetsDn_->push_back(jet.p4());
+    jetsDn_pt_ ->push_back(jet.pt());
+    jetsDn_eta_->push_back(jet.eta());
+    jetsDn_phi_->push_back(jet.phi());
+    jetsDn_m_  ->push_back(jet.mass());
     jetsDn_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
   }
 

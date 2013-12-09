@@ -63,7 +63,7 @@ if os.path.isdir(jobName):
 doSubmit = ('-n' not in opts)
 
 # Check necessary envvars
-if 'CMSSW_VERSION' not in os.env:
+if 'CMSSW_VERSION' not in os.environ:
     print "ERROR: You have to set up CMSSW. Run cmsenv in your working directory."
     sys.exit()
 

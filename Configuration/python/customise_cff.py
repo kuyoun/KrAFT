@@ -18,15 +18,15 @@ def customise(process, runOnMC):
         process.GlobalTag.globaltag = autoCond['com10']
     process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 
-    from PhysicsTools.PatAlgos.patEventContent_cff import patEventContentNoCleaning
-    process.out = cms.OutputModule("PoolOutputModule",
-        fileName = cms.untracked.string("out.root"),
-        outputCommands = cms.untracked.vstring(
-            'drop *',
-            'keep recoPFCandidates_particleFlow_*_*',
-            *patEventContentNoCleaning
-        )
-    )
+    #from PhysicsTools.PatAlgos.patEventContent_cff import patEventContentNoCleaning
+    #process.out = cms.OutputModule("PoolOutputModule",
+    #    fileName = cms.untracked.string("out.root"),
+    #    outputCommands = cms.untracked.vstring(
+    #        'drop *',
+    #        'keep recoPFCandidates_particleFlow_*_*',
+    #        *patEventContentNoCleaning
+    #    )
+    #)
     #process.outPath = cms.EndPath(process.out)
 
     process.load("PhysicsTools.PatAlgos.patSequences_cff")
@@ -41,7 +41,7 @@ def customise(process, runOnMC):
 
     postfix = "PFlow"
     #usePFBRECO(process,runPFBRECO=True, jetAlgo=jetAlgo, runOnMC=True, postfix=postfix)
-    usePF2PAT(process, runOnMC=runOnMC, postfix=postfix)
+    usePF2PAT(process, jetAlgo="AK5", runOnMC=runOnMC, typeIMetCorrections=True, outputModules = [], postfix=postfix)
 
     # top projections in PF2PAT:
     getattr(process,"pfNoPileUp"+postfix).enable = True

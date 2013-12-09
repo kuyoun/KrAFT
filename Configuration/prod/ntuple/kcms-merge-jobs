@@ -4,7 +4,7 @@ import sys, os
 if len(sys.argv) < 2:
     print "%s job_directory" % sys.argv[0]
     sys.exit()
-jobName = os.path.basename(sys.argv[1])
+jobName = os.path.basename(os.path.abspath(sys.argv[1]))
 outdir = "/pnfs/user/%s/scratch/%s" % (os.environ["USER"], jobName)
 jobdir = os.path.abspath(sys.argv[1])
 
@@ -72,3 +72,4 @@ if nFileInput != nFileTotal or len(errSections) != 0:
     print "ssh uosaf0008 \"qsub -q batch -N %s -d %s -t %s run.sh\"" % (jobName, jobdir, ",".join(["%d" % x for x in errSections]))
 else:
     print "Job is complete."
+    os.system("hadd %s/ntuple.root %s/ntuple_*.root" % (outdir, outdir))

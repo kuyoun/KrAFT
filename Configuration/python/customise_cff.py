@@ -53,10 +53,15 @@ def customise(process, runOnMC):
     # verbose flags for the PF2PAT modules
     getattr(process,"pfNoMuon"+postfix).verbose = False
 
+    process.nEventsSkim = cms.EDProducer("EventCountProducer")
+    process.nEventsPAT  = cms.EDProducer("EventCountProducer")
+
     process.p = cms.Path(
+        process.nEventsSkim
     #    #getattr(process,"patPFBRECOSequence"+postfix)
-        getattr(process,"patPF2PATSequence"+postfix)
+      + getattr(process,"patPF2PATSequence"+postfix)
     #  + process.patDefaultSequence
+      + process.nEventsPAT
     )
 
     # Add ntuple production

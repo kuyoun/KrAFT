@@ -28,8 +28,11 @@ ElEl.electron.minNumber = 2
 MuEl.muon.minNumber = 1
 MuEl.electron.minNumber = 1
 
+nEventsNtuple = cms.EDProducer("EventCountProducer")
+
 ntupleSequence = cms.Sequence(
     goodOfflinePrimaryVertices * pileupWeight
+  + nEventsNtuple
   + goodMuons + goodElectrons
   * goodJets
   * MuMu + ElEl + MuEl

@@ -135,6 +135,7 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   std::auto_ptr<std::vector<pat::MET> > corrMetsUp(new std::vector<pat::MET>());
   std::auto_ptr<std::vector<pat::MET> > corrMetsDn(new std::vector<pat::MET>());
 
+  pat::MET met = metHandle->at(0);
   double metUpX = met.px(), metUpY = met.py();
   double metDnX = met.px(), metDnY = met.py();
 
@@ -225,7 +226,6 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   std::sort(corrJetsUp->begin(), corrJetsUp->end(), GreaterByPt<pat::Jet>());
   std::sort(corrJetsDn->begin(), corrJetsDn->end(), GreaterByPt<pat::Jet>());
 
-  pat::MET met = metHandle->at(0);
   pat::MET metUp, metDn;
   metUp.setP4(reco::Candidate::LorentzVector(metUpX, metUpY, 0, hypot(metUpX, metUpY)));
   metDn.setP4(reco::Candidate::LorentzVector(metDnX, metDnY, 0, hypot(metDnX, metDnY)));

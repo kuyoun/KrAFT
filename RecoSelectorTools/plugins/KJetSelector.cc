@@ -135,8 +135,8 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   std::auto_ptr<std::vector<pat::MET> > corrMetsUp(new std::vector<pat::MET>());
   std::auto_ptr<std::vector<pat::MET> > corrMetsDn(new std::vector<pat::MET>());
 
-  double metUpX = 0, metUpY = 0;
-  double metDnX = 0, metDnY = 0;
+  double metUpX = met.px(), metUpY = met.py();
+  double metDnX = met.px(), metDnY = met.py();
 
   std::vector<const reco::Candidate*> overlapCands;
   if ( cleanMethod_ != -1 )

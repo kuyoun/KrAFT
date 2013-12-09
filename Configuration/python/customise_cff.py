@@ -4,7 +4,7 @@ def customise(process, runOnMC):
     process.load("Configuration.StandardSequences.Services_cff")
     process.load("Configuration.Geometry.GeometryDB_cff")
     process.load("Configuration.StandardSequences.MagneticField_cff")
-    #process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+    process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
     process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
     process.load("FWCore.MessageLogger.MessageLogger_cfi")

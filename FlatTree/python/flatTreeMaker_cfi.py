@@ -11,6 +11,7 @@ event = cms.EDAnalyzer("KFlatTreeMaker",
     weight = cms.string("pileupWeight"),
     vertex = cms.InputTag("goodOfflinePrimaryVertices"),
     eventCounters = cms.vstring(
+        "nEventsTotal", "nEventsSkim", "nEventsPAT", "nEventsNtuple",
     ),
 
     electron = cms.PSet(

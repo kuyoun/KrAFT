@@ -42,8 +42,7 @@ public:
   KFlatTreeMaker(const edm::ParameterSet& pset);
   ~KFlatTreeMaker();
 
-  //void beginJob();
-  void beginLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup);
+  void endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup);
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup);
 
 private:
@@ -294,7 +293,7 @@ KFlatTreeMaker::~KFlatTreeMaker()
 {
 }
 
-void KFlatTreeMaker::beginLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup)
+void KFlatTreeMaker::endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup)
 {
   for ( int i=0, n=eventCounterLabels_.size(); i<n; ++i )
   {

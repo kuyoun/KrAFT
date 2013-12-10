@@ -58,48 +58,48 @@ def initialise(runOnMC, decayMode, doOutModule=False):
 
     #usePFBRECO(process,runPFBRECO=True,
     usePF2PAT(process, runPF2PAT=True,
-              runOnMC=runOnMC, outputModules = outputModules, postfix="PF",
+              runOnMC=runOnMC, outputModules = outputModules, postfix="PFlow",
               jetAlgo="AK5", jetCorrections=("AK5PFchs", jecLevels),
               typeIMetCorrections=True)
 
     # top projections in PF2PAT:
-    process.pfNoPileUpPF.enable = True
-    process.pfNoMuonPF.enable = True
-    process.pfNoElectronPF.enable = True
-    process.pfNoTauPF.enable = False
-    process.pfNoJetPF.enable = True
+    process.pfNoPileUpPFlow.enable = True
+    process.pfNoMuonPFlow.enable = True
+    process.pfNoElectronPFlow.enable = True
+    process.pfNoTauPFlow.enable = False
+    process.pfNoJetPFlow.enable = True
 
     # verbose flags for the PF2PAT modules
-    process.pfNoMuonPF.verbose = False
+    process.pfNoMuonPFlow.verbose = False
 
     # Change DR cone size to 0.3
-    process.pfIsolatedMuonsPF.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('muPFIsoValueCharged03PF'))
-    process.pfIsolatedMuonsPF.deltaBetaIsolationValueMap = cms.InputTag('muPFIsoValuePU03PF')
-    process.pfIsolatedMuonsPF.isolationValueMapsNeutral  = cms.VInputTag(cms.InputTag('muPFIsoValueNeutral03PF'),
-                                                                         cms.InputTag('muPFIsoValueGamma03PF'),)
-    process.pfMuonsPF.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('muPFIsoValueCharged03PF') )
-    process.pfMuonsPF.deltaBetaIsolationValueMap = cms.InputTag('muPFIsoValuePU03PF')
-    process.pfMuonsPF.isolationValueMapsNeutral  = cms.VInputTag(cms.InputTag('muPFIsoValueNeutral03PF'),
-                                                                 cms.InputTag('muPFIsoValueGamma03PF'),)
-    process.patMuonsPF.isolationValues.pfNeutralHadrons   = cms.InputTag('muPFIsoValueNeutral03PF')
-    process.patMuonsPF.isolationValues.pfChargedAll       = cms.InputTag('muPFIsoValueChargedAll03PF')
-    process.patMuonsPF.isolationValues.pfPUChargedHadrons = cms.InputTag('muPFIsoValuePU03PF')
-    process.patMuonsPF.isolationValues.pfPhotons          = cms.InputTag('muPFIsoValueGamma03PF')
-    process.patMuonsPF.isolationValues.pfChargedHadrons   = cms.InputTag('muPFIsoValueCharged03PF')
+    process.pfIsolatedMuonsPFlow.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('muPFIsoValueCharged03PFlow'))
+    process.pfIsolatedMuonsPFlow.deltaBetaIsolationValueMap = cms.InputTag('muPFIsoValuePU03PFlow')
+    process.pfIsolatedMuonsPFlow.isolationValueMapsNeutral  = cms.VInputTag(cms.InputTag('muPFIsoValueNeutral03PFlow'),
+                                                                         cms.InputTag('muPFIsoValueGamma03PFlow'),)
+    process.pfMuonsPFlow.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('muPFIsoValueCharged03PFlow') )
+    process.pfMuonsPFlow.deltaBetaIsolationValueMap = cms.InputTag('muPFIsoValuePU03PFlow')
+    process.pfMuonsPFlow.isolationValueMapsNeutral  = cms.VInputTag(cms.InputTag('muPFIsoValueNeutral03PFlow'),
+                                                                 cms.InputTag('muPFIsoValueGamma03PFlow'),)
+    process.patMuonsPFlow.isolationValues.pfNeutralHadrons   = cms.InputTag('muPFIsoValueNeutral03PFlow')
+    process.patMuonsPFlow.isolationValues.pfChargedAll       = cms.InputTag('muPFIsoValueChargedAll03PFlow')
+    process.patMuonsPFlow.isolationValues.pfPUChargedHadrons = cms.InputTag('muPFIsoValuePU03PFlow')
+    process.patMuonsPFlow.isolationValues.pfPhotons          = cms.InputTag('muPFIsoValueGamma03PFlow')
+    process.patMuonsPFlow.isolationValues.pfChargedHadrons   = cms.InputTag('muPFIsoValueCharged03PFlow')
 
-    process.pfIsolatedElectronsPF.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('elPFIsoValueCharged03PFIdPF'))
-    process.pfIsolatedElectronsPF.deltaBetaIsolationValueMap = cms.InputTag('elPFIsoValuePU03PFIdPF')
-    process.pfIsolatedElectronsPF.isolationValueMapsNeutral  = cms.VInputTag(cms.InputTag('elPFIsoValueNeutral03PFIdPF'),
-                                                                             cms.InputTag('elPFIsoValueGamma03PFIdPF'))
-    process.pfElectronsPF.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('elPFIsoValueCharged03PFIdPF'))
-    process.pfElectronsPF.deltaBetaIsolationValueMap = cms.InputTag('elPFIsoValuePU03PFIdPF')
-    process.pfElectronsPF.isolationValueMapsNeutral  = cms.VInputTag(cms.InputTag('elPFIsoValueNeutral03PFIdPF'),
-                                                                     cms.InputTag('elPFIsoValueGamma03PFIdPF'))
-    process.patElectronsPF.isolationValues.pfNeutralHadrons   = cms.InputTag('elPFIsoValueNeutral03PFIdPF')
-    process.patElectronsPF.isolationValues.pfChargedAll       = cms.InputTag('elPFIsoValueChargedAll03PFIdPF')
-    process.patElectronsPF.isolationValues.pfPUChargedHadrons = cms.InputTag('elPFIsoValuePU03PFIdPF')
-    process.patElectronsPF.isolationValues.pfPhotons          = cms.InputTag('elPFIsoValueGamma03PFIdPF')
-    process.patElectronsPF.isolationValues.pfChargedHadrons   = cms.InputTag('elPFIsoValueCharged03PFIdPF')
+    process.pfIsolatedElectronsPFlow.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('elPFIsoValueCharged03PFIdPFlow'))
+    process.pfIsolatedElectronsPFlow.deltaBetaIsolationValueMap = cms.InputTag('elPFIsoValuePU03PFIdPFlow')
+    process.pfIsolatedElectronsPFlow.isolationValueMapsNeutral  = cms.VInputTag(cms.InputTag('elPFIsoValueNeutral03PFIdPFlow'),
+                                                                             cms.InputTag('elPFIsoValueGamma03PFIdPFlow'))
+    process.pfElectronsPFlow.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('elPFIsoValueCharged03PFIdPFlow'))
+    process.pfElectronsPFlow.deltaBetaIsolationValueMap = cms.InputTag('elPFIsoValuePU03PFIdPFlow')
+    process.pfElectronsPFlow.isolationValueMapsNeutral  = cms.VInputTag(cms.InputTag('elPFIsoValueNeutral03PFIdPFlow'),
+                                                                     cms.InputTag('elPFIsoValueGamma03PFIdPFlow'))
+    process.patElectronsPFlow.isolationValues.pfNeutralHadrons   = cms.InputTag('elPFIsoValueNeutral03PFIdPFlow')
+    process.patElectronsPFlow.isolationValues.pfChargedAll       = cms.InputTag('elPFIsoValueChargedAll03PFIdPFlow')
+    process.patElectronsPFlow.isolationValues.pfPUChargedHadrons = cms.InputTag('elPFIsoValuePU03PFIdPFlow')
+    process.patElectronsPFlow.isolationValues.pfPhotons          = cms.InputTag('elPFIsoValueGamma03PFIdPFlow')
+    process.patElectronsPFlow.isolationValues.pfChargedHadrons   = cms.InputTag('elPFIsoValueCharged03PFIdPFlow')
 
     ## Add common filters
     process.load( "TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi" )
@@ -128,8 +128,8 @@ def initialise(runOnMC, decayMode, doOutModule=False):
 
     process.patSequenceComplete = cms.Sequence(
     #  + process.patDefaultSequence
-    #  + process.patPFBRECOSequencePF
-        process.patPF2PATSequencePF
+    #  + process.patPFBRECOSequencePFlow
+        process.patPF2PATSequencePFlow
       + process.nEventsPAT
     )
 

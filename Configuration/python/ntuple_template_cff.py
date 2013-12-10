@@ -9,7 +9,7 @@ TFileService = cms.Service("TFileService",
 )
 
 from KCMSAnalyses.FlatTree.flatTreeMaker_cfi import *
-event.eventCounters = ["nEventsTotal", "nEventsClean", "nEventsPAT", "nEventsNtuple"]
+event.eventCounters = ["nEventsTotal", "nEventsClean", "nEventsPAT",]
 
 MuMu = event.clone()
 ElEl = event.clone()
@@ -19,36 +19,54 @@ ElEl.electron.minNumber = 2
 MuEl.muon.minNumber = 1
 MuEl.electron.minNumber = 1
 
-MuJet = event.clone()
-MuJet.muon.minNumber = 1
-MuJet.muon.maxNumber = 1
-MuJet.electron.maxNumber = 0
+MuJets = event.clone()
+MuJets.muon.minNumber = 1
+#MuJets.muon.maxNumber = 1
+#MuJets.electron.maxNumber = 0
 
-ElJet = event.clone()
-ElJet.muon.maxNumber = 0
-ElJet.electron.minNumber = 1
-ElJet.electron.maxNumber = 1
+ElJets = event.clone()
+ElJets.electron.minNumber = 1
+#ElJets.electron.maxNumber = 1
+#ElJets.muon.maxNumber = 0
 
-nEventsNtuple = cms.EDProducer("EventCountProducer")
+nEventsNtupleElEl = cms.EDProducer("EventCountProducer")
+nEventsNtupleMuMu = cms.EDProducer("EventCountProducer")
+nEventsNtupleMuEl = cms.EDProducer("EventCountProducer")
+nEventsNtupleMuJets = cms.EDProducer("EventCountProducer")
+nEventsNtupleElJets = cms.EDProducer("EventCountProducer")
 
-ntupleSequenceDilepton = cms.Sequence(
+ntupleSequenceElEl = cms.Sequence(
     pileupWeight
-  + nEventsNtuple
+  + nEventsNtupleElEl
   + goodMuons + goodElectrons * goodJets
-  * MuMu + ElEl + MuEl
+  * ElEl
 )
 
-ntupleSequenceMuJet = cms.Sequence(
+ntupleSequenceMuMu = cms.Sequence(
     pileupWeight
-  + nEventsNtuple
+  + nEventsNtupleMuMu
   + goodMuons + goodElectrons * goodJets
-  * MuJet
+  * MuMu
 )
 
-ntupleSequenceElJet = cms.Sequence(
+ntupleSequenceMuEl = cms.Sequence(
     pileupWeight
-  + nEventsNtuple
+  + nEventsNtupleMuEl
   + goodMuons + goodElectrons * goodJets
-  * ElJet
+  * MuEl
+)
+
+ntupleSequenceMuJets = cms.Sequence(
+    pileupWeight
+  + nEventsNtupleMuJets
+  + goodMuons + goodElectrons * goodJets
+  * MuJets
+)
+
+ntupleSequenceElJets = cms.Sequence(
+    pileupWeight
+  + nEventsNtupleElJets
+  + goodMuons + goodElectrons * goodJets
+  * ElJets
 )
 

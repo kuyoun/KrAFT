@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-def customise(process, runOnMC):
+def customise(process, runOnMC, decayMode="Dilepton"):
     process.load("Configuration.StandardSequences.Services_cff")
     process.load("Configuration.Geometry.GeometryDB_cff")
     process.load("Configuration.StandardSequences.MagneticField_cff")
@@ -29,6 +29,16 @@ def customise(process, runOnMC):
     #)
     #process.outPath = cms.EndPath(process.out)
 
+    process.load( "TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi" )
+    process.goodOfflinePrimaryVertices.filter = True
+
+    process.load( 'TopQuarkAnalysis.Configuration.patRefSel_eventCleaning_cff' )
+    process.trackingFailureFilter.VertexSource = cms.InputTag('goodOfflinePrimaryVertices')
+    if runOnMC:
+        process.eventCleaning += process.eventCleaningMC
+    else:
+        process.eventCleaning += process.eventCleaningData
+
     process.load("PhysicsTools.PatAlgos.patSequences_cff")
     ## Apply MVA
     process.load('EgammaAnalysis.ElectronTools.electronIdMVAProducer_cfi')
@@ -37,11 +47,17 @@ def customise(process, runOnMC):
     process.patElectrons.electronIDSources.mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0")
     process.patDefaultSequence.replace( process.patElectrons, process.eidMVASequence * process.patElectrons )
 
+    #from TopQuarkAnalysis.Configuration.patRefSel_triggerMatching_cfi import patMuonTriggerMatch
+    #from PhysicsTools.PatAlgos.tools.trigTools import *
+    #switchOnTriggerMatchEmbedding(process, outputModule="")
+
     from PhysicsTools.PatAlgos.tools.pfTools import usePF2PAT
 
     postfix = "PFlow"
+    if runOnMC: jecLevels = ['L1FastJet','L2Relative','L3Absolute']
+    else: jecLevels = ['L1FastJet','L2Relative', 'L3Absolute', 'L2L3Residual']
     #usePFBRECO(process,runPFBRECO=True, jetAlgo=jetAlgo, runOnMC=True, postfix=postfix)
-    usePF2PAT(process, jetAlgo="AK5", runOnMC=runOnMC, typeIMetCorrections=True, outputModules = [], postfix=postfix)
+    usePF2PAT(process, jetAlgo="AK5", jetCorrections=("AK5PFchs", jecLevels), runOnMC=runOnMC, typeIMetCorrections=True, outputModules = [], postfix=postfix)
 
     # top projections in PF2PAT:
     getattr(process,"pfNoPileUp"+postfix).enable = True
@@ -53,11 +69,44 @@ def customise(process, runOnMC):
     # verbose flags for the PF2PAT modules
     getattr(process,"pfNoMuon"+postfix).verbose = False
 
-    process.nEventsSkim = cms.EDProducer("EventCountProducer")
-    process.nEventsPAT  = cms.EDProducer("EventCountProducer")
+    # Change DR cone size to 0.3
+    getattr( process, 'pfIsolatedMuons' + postfix ).isolationValueMapsCharged  = cms.VInputTag( cms.InputTag( 'muPFIsoValueCharged03' + postfix ))
+    getattr( process, 'pfIsolatedMuons' + postfix ).deltaBetaIsolationValueMap = cms.InputTag( 'muPFIsoValuePU03' + postfix )
+    getattr( process, 'pfIsolatedMuons' + postfix ).isolationValueMapsNeutral  = cms.VInputTag( cms.InputTag( 'muPFIsoValueNeutral03' + postfix )
+                                                                                              , cms.InputTag( 'muPFIsoValueGamma03' + postfix ))
+    getattr( process, 'pfMuons' + postfix ).isolationValueMapsCharged  = cms.VInputTag( cms.InputTag( 'muPFIsoValueCharged03' + postfix ) )
+    getattr( process, 'pfMuons' + postfix ).deltaBetaIsolationValueMap = cms.InputTag( 'muPFIsoValuePU03' + postfix )
+    getattr( process, 'pfMuons' + postfix ).isolationValueMapsNeutral  = cms.VInputTag( cms.InputTag( 'muPFIsoValueNeutral03' + postfix )
+                                                                                      , cms.InputTag( 'muPFIsoValueGamma03' + postfix ))
+    getattr( process, 'patMuons' + postfix ).isolationValues.pfNeutralHadrons   = cms.InputTag( 'muPFIsoValueNeutral03' + postfix )
+    getattr( process, 'patMuons' + postfix ).isolationValues.pfChargedAll       = cms.InputTag( 'muPFIsoValueChargedAll03' + postfix )
+    getattr( process, 'patMuons' + postfix ).isolationValues.pfPUChargedHadrons = cms.InputTag( 'muPFIsoValuePU03' + postfix )
+    getattr( process, 'patMuons' + postfix ).isolationValues.pfPhotons          = cms.InputTag( 'muPFIsoValueGamma03' + postfix )
+    getattr( process, 'patMuons' + postfix ).isolationValues.pfChargedHadrons   = cms.InputTag( 'muPFIsoValueCharged03' + postfix )
+
+    getattr( process, 'pfIsolatedElectrons' + postfix ).isolationValueMapsCharged  = cms.VInputTag( cms.InputTag( 'elPFIsoValueCharged03PFId' + postfix ))
+    getattr( process, 'pfIsolatedElectrons' + postfix ).deltaBetaIsolationValueMap = cms.InputTag( 'elPFIsoValuePU03PFId' + postfix )
+    getattr( process, 'pfIsolatedElectrons' + postfix ).isolationValueMapsNeutral  = cms.VInputTag( cms.InputTag( 'elPFIsoValueNeutral03PFId' + postfix )
+                                                                                                  , cms.InputTag( 'elPFIsoValueGamma03PFId'   + postfix ))
+    getattr( process, 'pfElectrons' + postfix ).isolationValueMapsCharged  = cms.VInputTag( cms.InputTag( 'elPFIsoValueCharged03PFId' + postfix ))
+    getattr( process, 'pfElectrons' + postfix ).deltaBetaIsolationValueMap = cms.InputTag( 'elPFIsoValuePU03PFId' + postfix )
+    getattr( process, 'pfElectrons' + postfix ).isolationValueMapsNeutral  = cms.VInputTag( cms.InputTag( 'elPFIsoValueNeutral03PFId' + postfix )
+                                                                                          , cms.InputTag( 'elPFIsoValueGamma03PFId'   + postfix ))
+    getattr( process, 'patElectrons' + postfix ).isolationValues.pfNeutralHadrons   = cms.InputTag( 'elPFIsoValueNeutral03PFId' + postfix )
+    getattr( process, 'patElectrons' + postfix ).isolationValues.pfChargedAll       = cms.InputTag( 'elPFIsoValueChargedAll03PFId' + postfix )
+    getattr( process, 'patElectrons' + postfix ).isolationValues.pfPUChargedHadrons = cms.InputTag( 'elPFIsoValuePU03PFId' + postfix )
+    getattr( process, 'patElectrons' + postfix ).isolationValues.pfPhotons          = cms.InputTag( 'elPFIsoValueGamma03PFId' + postfix )
+    getattr( process, 'patElectrons' + postfix ).isolationValues.pfChargedHadrons   = cms.InputTag( 'elPFIsoValueCharged03PFId' + postfix )
+
+    # event counters
+    process.nEventsTotal = cms.EDProducer("EventCountProducer")
+    process.nEventsClean = cms.EDProducer("EventCountProducer")
+    process.nEventsPAT   = cms.EDProducer("EventCountProducer")
 
     process.p = cms.Path(
-        process.nEventsSkim
+        process.nEventsTotal
+      + process.goodOfflinePrimaryVertices * process.eventCleaning
+      + process.nEventsClean
     #    #getattr(process,"patPFBRECOSequence"+postfix)
       + getattr(process,"patPF2PATSequence"+postfix)
     #  + process.patDefaultSequence
@@ -68,6 +117,7 @@ def customise(process, runOnMC):
     process.load("KCMSAnalyses.Configuration.ntuple_template_cff")
     process.goodJets.isMC = runOnMC
     process.event.isMC = runOnMC
-    process.p += process.ntupleSequence
-
+    if decayMode == 'MuJet': process.p += process.ntupleSequenceMuJet
+    elif decayMode == 'ElJet': process.p += process.ntupleSequenceElJet
+    else: process.p += process.ntupleSequenceDilepton ## Default as dilepton
 

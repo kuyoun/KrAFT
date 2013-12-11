@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 runOnMC = False
 
 from KCMSAnalyses.Configuration.customise_cff import *
-process = initialise(decayMode="dilepton", runOnMC=runOnMC)
+process = initialise(decayMode="MuMu", runOnMC=runOnMC)
 addNtupleStep(process, runOnMC=runOnMC)
 
 process.source.fileNames = [

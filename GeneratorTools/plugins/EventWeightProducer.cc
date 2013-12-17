@@ -8,7 +8,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
-#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "SimDataFormats/EventSummaryInfo/interface/EventSummaryInfo.h"
 
 #include "DataFormats/Common/interface/View.h"
 
@@ -18,11 +18,11 @@
 
 using namespace std;
 
-class PileupWeightProducer : public edm::EDProducer
+class EventWeightProducer : public edm::EDProducer
 {
 public:
-  PileupWeightProducer(const edm::ParameterSet& pset);
-  ~PileupWeightProducer() {};
+  EventWeightProducer(const edm::ParameterSet& pset);
+  ~EventWeightProducer() {};
 
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
 
@@ -31,7 +31,7 @@ private:
 
 };
 
-PileupWeightProducer::PileupWeightProducer(const edm::ParameterSet& pset)
+EventWeightProducer::EventWeightProducer(const edm::ParameterSet& pset)
 {
   std::vector<double> pileupMC = pset.getParameter<std::vector<double> >("pileupMC");
   std::vector<double> pileupRD = pset.getParameter<std::vector<double> >("pileupRD");
@@ -59,10 +59,10 @@ PileupWeightProducer::PileupWeightProducer(const edm::ParameterSet& pset)
 
 }
 
-void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
+void EventWeightProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  edm::Handle<std::vector<PileupSummaryInfo> > puHandle;
-  event.getByLabel(edm::InputTag("addPileupInfo"), puHandle);
+  edm::Handle<std::vector<EventSummaryInfo> > puHandle;
+  event.getByLabel(edm::InputTag("addEventInfo"), puHandle);
 
   std::auto_ptr<int> nTrueIntr(new int(-1));
   std::auto_ptr<double> weight(new double(1.));
@@ -74,7 +74,7 @@ void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eve
     const int nBX = puHandle->size();
     for ( int i=0; i<nBX; ++i )
     {
-      const PileupSummaryInfo& puInfo = puHandle->at(i);
+      const EventSummaryInfo& puInfo = puHandle->at(i);
 
       //const int nIntr = puInfo.getPU_NumInteractions();
       const int bx = puInfo.getBunchCrossing();
@@ -101,4 +101,4 @@ void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eve
   event.put(weightDn, "dn");
 }
 
-DEFINE_FWK_MODULE(PileupWeightProducer);
+DEFINE_FWK_MODULE(EventWeightProducer);

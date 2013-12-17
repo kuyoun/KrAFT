@@ -407,7 +407,7 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     int eType = 0;
     // Veto electrons
     if ( 0.0 < mva and mva < 1.0 ) eType += 1;
-    if ( (!e.gsfTrack().isNull() or e.isPF()) and e.passConversionVeto() and
+    if ( (e.gsfTrack().isNonnull() or e.isPF()) and e.passConversionVeto() and
          e.gsfTrack()->trackerExpectedHitsInner().numberOfHits() <= 0 and
          mva > 0.5 )
     {

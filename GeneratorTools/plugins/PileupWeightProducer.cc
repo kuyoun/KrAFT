@@ -18,11 +18,11 @@
 
 using namespace std;
 
-class EventWeightProducer : public edm::EDProducer
+class PileupWeightProducer : public edm::EDProducer
 {
 public:
-  EventWeightProducer(const edm::ParameterSet& pset);
-  ~EventWeightProducer() {};
+  PileupWeightProducer(const edm::ParameterSet& pset);
+  ~PileupWeightProducer() {};
 
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
 
@@ -31,7 +31,7 @@ private:
 
 };
 
-EventWeightProducer::EventWeightProducer(const edm::ParameterSet& pset)
+PileupWeightProducer::PileupWeightProducer(const edm::ParameterSet& pset)
 {
   std::vector<double> pileupMC = pset.getParameter<std::vector<double> >("pileupMC");
   std::vector<double> pileupRD = pset.getParameter<std::vector<double> >("pileupRD");
@@ -59,7 +59,7 @@ EventWeightProducer::EventWeightProducer(const edm::ParameterSet& pset)
 
 }
 
-void EventWeightProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
+void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   edm::Handle<std::vector<EventSummaryInfo> > puHandle;
   event.getByLabel(edm::InputTag("addEventInfo"), puHandle);
@@ -101,4 +101,4 @@ void EventWeightProducer::produce(edm::Event& event, const edm::EventSetup& even
   event.put(weightDn, "dn");
 }
 
-DEFINE_FWK_MODULE(EventWeightProducer);
+DEFINE_FWK_MODULE(PileupWeightProducer);

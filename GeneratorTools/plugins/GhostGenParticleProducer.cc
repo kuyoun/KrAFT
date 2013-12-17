@@ -171,7 +171,7 @@ bool GhostGenParticleProducer::isBHadron(const unsigned int absPdgId) const
   if ( doPartonLevel_ and absPdgId == 5 ) return true; // select b quarks if "doPartonLevel" is set
 
   if ( absPdgId <= 100 ) return false; // Fundamental particles and MC internals
-  if ( absPdgId >= 1000000000 ) return false; // Nuclears, +-10LZZZAAAI
+  if ( absPdgId >= 1000000000 ) return false; // Nuclei, +-10LZZZAAAI
 
   // General form of PDG ID is 7 digit form
   // +- n nr nL nq1 nq2 nq3 nJ

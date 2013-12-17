@@ -8,7 +8,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
-#include "SimDataFormats/EventSummaryInfo/interface/EventSummaryInfo.h"
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 #include "DataFormats/Common/interface/View.h"
 
@@ -61,7 +61,7 @@ PileupWeightProducer::PileupWeightProducer(const edm::ParameterSet& pset)
 
 void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  edm::Handle<std::vector<EventSummaryInfo> > puHandle;
+  edm::Handle<std::vector<PileupSummaryInfo> > puHandle;
   event.getByLabel(edm::InputTag("addEventInfo"), puHandle);
 
   std::auto_ptr<int> nTrueIntr(new int(-1));
@@ -74,7 +74,7 @@ void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eve
     const int nBX = puHandle->size();
     for ( int i=0; i<nBX; ++i )
     {
-      const EventSummaryInfo& puInfo = puHandle->at(i);
+      const PileupSummaryInfo& puInfo = puHandle->at(i);
 
       //const int nIntr = puInfo.getPU_NumInteractions();
       const int bx = puInfo.getBunchCrossing();

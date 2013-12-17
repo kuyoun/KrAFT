@@ -63,7 +63,6 @@ private:
   std::vector<std::string> eventCounterLabels_;
 
   unsigned int muonMinNumber_, electronMinNumber_;
-  unsigned int muonMaxNumber_, electronMaxNumber_;
 
   double muonDz_, electronDz_;
   double jetLeptonDeltaR_;
@@ -129,12 +128,10 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
 
   edm::ParameterSet electronPSet = pset.getParameter<edm::ParameterSet>("electron");
   electronMinNumber_ = electronPSet.getParameter<unsigned int>("minNumber");
-  electronMaxNumber_ = electronPSet.getParameter<unsigned int>("maxNumber");
   electronLabel_ = electronPSet.getParameter<edm::InputTag>("src");
 
   edm::ParameterSet muonPSet = pset.getParameter<edm::ParameterSet>("muon");
   muonMinNumber_ = muonPSet.getParameter<unsigned int>("minNumber");
-  muonMaxNumber_ = muonPSet.getParameter<unsigned int>("maxNumber");
   muonLabel_ = muonPSet.getParameter<edm::InputTag>("src");
 
   edm::ParameterSet jetPSet = pset.getParameter<edm::ParameterSet>("jet");
@@ -429,7 +426,6 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     electrons_scEta_->push_back(scEta);
   }
   if ( electrons_pt_->size() < electronMinNumber_ ) return;
-  if ( electrons_pt_->size() > electronMaxNumber_ ) return;
 
   edm::Handle<std::vector<pat::Muon> > muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
@@ -455,7 +451,6 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     muons_iso_ ->push_back(mu.userIso(1)); // dBeta corrected isolation
   }
   if ( muons_pt_->size() < muonMinNumber_ ) return;
-  if ( muons_pt_->size() > muonMaxNumber_ ) return;
 
   edm::Handle<std::vector<pat::MET> > metHandle, metUpHandle, metDnHandle;
   event.getByLabel(edm::InputTag(metLabelStr_), metHandle);

@@ -396,15 +396,18 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   for ( int i=0, n=electronHandle->size(); i<n; ++i )
   {
     const pat::Electron& e = electronHandle->at(i);
+    if ( e.pt() < 10 or std::abs(e.eta()) > 2.5 ) continue;
+    if ( !e.isPF() and e.gsfTrack().isNull() ) continue;
+
     //if ( abs(e.dz(pv.position())) > electronDz_ ) continue;
     const double scEta = e.superCluster()->eta();
-    const double dxy = std::abs(e.gsfTrack()->dxy(pv.position()));
+    const double dxy = e.dB();
     const double mva = e.electronID("mvaTrigV0");
 
     int eType = 0;
     // Veto electrons
     if ( 0.0 < mva and mva < 1.0 ) eType += 1;
-    if ( e.isPF() and e.passConversionVeto() and
+    if ( (!e.gsfTrack().isNull() or e.isPF()) and e.passConversionVeto() and
          e.gsfTrack()->trackerExpectedHitsInner().numberOfHits() <= 0 and
          mva > 0.5 )
     {
@@ -433,6 +436,7 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
     const pat::Muon& mu = muonHandle->at(i);
+    if ( mu.pt() < 10 or std::abs(mu.eta()) > 2.5 ) continue;
     //if ( abs(mu.dz(pv.position())) > muonDz_ ) continue;
 
     int muType = 0;

@@ -68,6 +68,7 @@ private:
   double jetLeptonDeltaR_;
 
   TH1F* hEventCounter_;
+  TNamed* dataType_;
 
   // Output tree
   TTree* tree_;
@@ -155,6 +156,7 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
 
   // Output histograms and tree
   edm::Service<TFileService> fs;
+  dataType_ = fs->make<TNamed>("dataType", isMC_ ? "MC" : "Data");
   hEventCounter_ = fs->make<TH1F>("hEventCounter", "Event counter", eventCounterLabels_.size(), 1, eventCounterLabels_.size()+1);
   for ( int i=0, n=eventCounterLabels_.size(); i<n; ++i )
   {

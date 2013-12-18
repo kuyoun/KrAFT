@@ -3,6 +3,7 @@ import FWCore.ParameterSet.Config as cms
 from KrAFT.GeneratorTools.pileupWeight_cff import *
 from KrAFT.RecoSelectorTools.leptonSelector_cfi import *
 from KrAFT.RecoSelectorTools.jetSelector_cfi import *
+from KrAFT.RecoSelectorTools.jpsiToMuMu_cfi import *
 
 TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
@@ -39,6 +40,7 @@ ntupleSequenceElEl = cms.Sequence(
     pileupWeight
   + nEventsNtupleElEl
   + goodMuons + goodElectrons * goodJets
+  + jpsiToMuMu
   * ElEl
 )
 
@@ -46,6 +48,7 @@ ntupleSequenceMuMu = cms.Sequence(
     pileupWeight
   + nEventsNtupleMuMu
   + goodMuons + goodElectrons * goodJets
+  + jpsiToMuMu
   * MuMu
 )
 
@@ -53,6 +56,7 @@ ntupleSequenceMuEl = cms.Sequence(
     pileupWeight
   + nEventsNtupleMuEl
   + goodMuons + goodElectrons * goodJets
+  + jpsiToMuMu
   * MuEl
 )
 
@@ -60,6 +64,7 @@ ntupleSequenceMuJets = cms.Sequence(
     pileupWeight
   + nEventsNtupleMuJets
   + goodMuons + goodElectrons * goodJets
+  + jpsiToMuMu
   * MuJets
 )
 
@@ -67,6 +72,7 @@ ntupleSequenceElJets = cms.Sequence(
     pileupWeight
   + nEventsNtupleElJets
   + goodMuons + goodElectrons * goodJets
+  + jpsiToMuMu
   * ElJets
 )
 

@@ -23,6 +23,7 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 //#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
 
 #include "DataFormats/Math/interface/deltaR.h"
@@ -47,11 +48,12 @@ public:
 
 private:
   // Input objects
-  edm::InputTag genLabel_;
+  edm::InputTag genEventInfoLabel_;
+  edm::InputTag genParticleLabel_;
   edm::InputTag genJetLabel_;
   edm::InputTag recoToGenJetMapLabel_;
   edm::InputTag genJetToPartonMapLabel_;
-  std::string weightLabelStr_;
+  edm::InputTag puWeightLabel_;
   edm::InputTag vertexLabel_;
 
   edm::InputTag muonLabel_;
@@ -73,7 +75,7 @@ private:
   // Output tree
   TTree* tree_;
   int run_, lumi_, event_;
-  double weight_, weightUp_, weightDn_;
+  double puWeight_, puWeightUp_, puWeightDn_;
   int nVertex_;
 
   typedef std::vector<int> ints;
@@ -107,6 +109,10 @@ private:
 
   // Generator level information
   bool isMC_;
+
+  double genWeight_;
+  int pdf_id1_, pdf_id2_;
+  double pdf_q_, pdf_x1_, pdf_x2_;
   // jet MC matching
   //std::vector<int> jets_motherId_;
   //std::vector<int> genJetMotherId_;
@@ -124,7 +130,7 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
   isMC_ = pset.getParameter<bool>("isMC");
 
   // Input labels
-  weightLabelStr_ = pset.getParameter<std::string>("weight");
+  puWeightLabel_ = pset.getParameter<edm::InputTag>("puWeight");
   vertexLabel_ = pset.getParameter<edm::InputTag>("vertex");
 
   edm::ParameterSet electronPSet = pset.getParameter<edm::ParameterSet>("electron");
@@ -148,7 +154,8 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
 
   if ( isMC_ )
   {
-    genLabel_ = pset.getParameter<edm::InputTag>("gen");
+    genEventInfoLabel_ = pset.getParameter<edm::InputTag>("genEventInfo");
+    genParticleLabel_ = pset.getParameter<edm::InputTag>("genParticle");
     genJetLabel_ = pset.getParameter<edm::InputTag>("genJet");
     //recoToGenJetMapLabel_ = pset.getParameter<edm::InputTag>("recoToGenJetMap");
     //genJetToPartonMapLabel_ = pset.getParameter<edm::InputTag>("genJetToPartonsMap");
@@ -188,9 +195,9 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
   tree_->Branch("lumi", &lumi_, "lumi/I");
   tree_->Branch("event", &event_, "event/I");
 
-  tree_->Branch("weight", &weight_, "weight/D");
-  tree_->Branch("weightUp", &weightUp_, "weightUp/D");
-  tree_->Branch("weightDn", &weightDn_, "weightDn/D");
+  tree_->Branch("puWeight", &puWeight_, "puWeight/D");
+  tree_->Branch("puWeightUp", &puWeightUp_, "puWeightUp/D");
+  tree_->Branch("puWeightDn", &puWeightDn_, "puWeightDn/D");
   tree_->Branch("nVertex", &nVertex_, "nVertex/I");
 
   tree_->Branch("muons_pt"  , muons_pt_  );
@@ -261,6 +268,14 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     genJets_eta_ = new doubles();
     genJets_phi_ = new doubles();
     genJets_m_   = new doubles();
+
+    tree_->Branch("genWeight", &genWeight_, "genWeight/D");
+
+    tree_->Branch("pdf_id1", &pdf_id1_, "pdf_id1/I");
+    tree_->Branch("pdf_id2", &pdf_id2_, "pdf_id2/I");
+    tree_->Branch("pdf_x1", &pdf_x1_, "pdf_x1/D");
+    tree_->Branch("pdf_x2", &pdf_x2_, "pdf_x2/D");
+    tree_->Branch("pdf_q", &pdf_q_, "pdf_q/D");
 
     tree_->Branch("genMuons_pt" , genMuons_pt_ );
     tree_->Branch("genMuons_eta", genMuons_eta_);
@@ -345,6 +360,8 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
 
   jets_bTag_->clear(); jetsUp_bTag_->clear(); jetsDn_bTag_->clear();
 
+  if ( isMC_ and event.isRealData() ) isMC_ = false;
+
   if ( isMC_ )
   {
     genMuons_pt_ ->clear();
@@ -375,19 +392,19 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   nVertex_ = vertexHandle->size();
   const reco::Vertex& pv = vertexHandle->at(0);
 
-  if ( event.isRealData() )
+  if ( !isMC_ )
   {
-    weight_ = weightUp_ = weightDn_ = 1.0;
+    puWeight_ = puWeightUp_ = puWeightDn_ = 1.0;
   }
   else
   {
-    edm::Handle<double> weightHandle, weightUpHandle, weightDnHandle;
-    event.getByLabel(edm::InputTag(weightLabelStr_), weightHandle);
-    event.getByLabel(edm::InputTag(weightLabelStr_, "up"), weightUpHandle);
-    event.getByLabel(edm::InputTag(weightLabelStr_, "dn"), weightDnHandle);
-    weight_ = *(weightHandle.product());
-    weightUp_ = *(weightUpHandle.product());
-    weightDn_ = *(weightDnHandle.product());
+    edm::Handle<double> puWeightHandle, puWeightUpHandle, puWeightDnHandle;
+    event.getByLabel(puWeightLabel_, puWeightHandle);
+    event.getByLabel(edm::InputTag(puWeightLabel_.label(), "up"), puWeightUpHandle);
+    event.getByLabel(edm::InputTag(puWeightLabel_.label(), "dn"), puWeightDnHandle);
+    puWeight_ = *(puWeightHandle.product());
+    puWeightUp_ = *(puWeightUpHandle.product());
+    puWeightDn_ = *(puWeightDnHandle.product());
   }
 
   edm::Handle<std::vector<pat::Electron> > electronHandle;
@@ -473,19 +490,30 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
 
   // This while loop runs just for once, a "break" statement must be kept in the end of loop
   // It reduces nested-if statements
-  while ( isMC_ )
+  if ( isMC_ )
   {
-    if ( event.isRealData() ) { isMC_ = false; break; }
+    // Event weight and PDF stuffs
+    edm::Handle<GenEventInfoProduct> genEventInfoHandle;
+    event.getByLabel(genEventInfoLabel_, genEventInfoHandle);
 
+    const gen::PdfInfo* pdf = genEventInfoHandle->pdf();
+
+    pdf_id1_ = pdf->id.first ;
+    pdf_id2_ = pdf->id.second;
+    pdf_x1_  = pdf->x.first  ;
+    pdf_x2_  = pdf->x.second ;
+    pdf_q_   = pdf->scalePDF ;
+    //const double pdf_xPDF1 = pdf->xPDF.first, pdf_xPDF2 = pdf->xPDF.second;
+
+    genWeight_ = genEventInfoHandle->weights().at(0);
+
+    // Generator level objects
     edm::Handle<reco::GenParticleCollection> genHandle;
-    event.getByLabel(genLabel_, genHandle);
+    event.getByLabel(genParticleLabel_, genHandle);
     edm::Handle<reco::GenJetCollection> genJetHandle;
     event.getByLabel(genJetLabel_, genJetHandle);
     //event.getByLabel(genJetToPartonMapLabel_, genJetToPartonMapHandle);
     event.getByLabel(recoToGenJetMapLabel_, recoToGenJetMapHandle);
-    if ( !genHandle.isValid() or !genJetHandle.isValid() ) { isMC_ = false; break; }
-    //     !genJetToPartonMapHandle.isValid() or
-    //!recoToGenJetMapHandle.isValid() ) { isMC_ = false; break; }
 
     // Find top quark from the genParticles
     for ( int i=0, n=genHandle->size(); i<n; ++i )
@@ -526,8 +554,6 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
       genJets_phi_->push_back(p.phi() );
       genJets_m_  ->push_back(p.mass());
     }
-
-    break;
   }
 
   edm::Handle<std::vector<pat::Jet> > jetHandle;

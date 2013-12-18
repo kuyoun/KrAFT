@@ -3,12 +3,13 @@ import FWCore.ParameterSet.Config as cms
 event = cms.EDAnalyzer("KFlatTreeMaker",
     isMC = cms.bool(False),
 
-    gen = cms.InputTag("genParticles"),
+    genEventInfo = cms.InputTag("generator"),
+    genParticle = cms.InputTag("genParticles"),
     genJet = cms.InputTag("ak5GenJets"),
     recoToGenJetMap = cms.InputTag("recoToGenJetMap"),
     genJetToPartonsMap = cms.InputTag("genJetToPartonsMap"),
 
-    weight = cms.string("pileupWeight"),
+    puWeight = cms.InputTag("pileupWeight"),
     vertex = cms.InputTag("goodOfflinePrimaryVertices"),
     eventCounters = cms.vstring(),
 

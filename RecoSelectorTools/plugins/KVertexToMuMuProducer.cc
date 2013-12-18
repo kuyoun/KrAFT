@@ -39,11 +39,11 @@
 #include <string>
 #include <fstream>
 
-class VertexCandProducer : public edm::EDFilter
+class KVertexToMuMuProducer : public edm::EDFilter
 {
 public:
-  VertexCandProducer(const edm::ParameterSet& pset);
-  ~VertexCandProducer() {};
+  KVertexToMuMuProducer(const edm::ParameterSet& pset);
+  ~KVertexToMuMuProducer() {};
 
   bool filter(edm::Event& event, const edm::EventSetup& eventSetup);
 
@@ -70,7 +70,7 @@ private:
   const MagneticField* bField_;
 };
 
-VertexCandProducer::VertexCandProducer(const edm::ParameterSet& pset)
+KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
 {
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
   trackLabel_ = trackPSet.getParameter<edm::InputTag>("src");
@@ -104,7 +104,7 @@ VertexCandProducer::VertexCandProducer(const edm::ParameterSet& pset)
   produces<reco::VertexCompositeCandidateCollection>();
 }
 
-bool VertexCandProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
+bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   using namespace reco;
   using namespace edm;
@@ -295,7 +295,7 @@ bool VertexCandProducer::filter(edm::Event& event, const edm::EventSetup& eventS
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
 
-bool VertexCandProducer::isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const
+bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const
 {
   const static reco::TrackBase::TrackQuality trackQual = reco::TrackBase::qualityByName("loose");
   if ( !track->quality(trackQual) ) return false;
@@ -312,7 +312,7 @@ bool VertexCandProducer::isGoodTrack(const reco::TrackRef& track, const reco::Be
   return true;
 }
 
-double VertexCandProducer::particleMass(const unsigned int pdgId) const
+double KVertexToMuMuProducer::particleMass(const unsigned int pdgId) const
 {
   switch(pdgId)
   {
@@ -325,11 +325,11 @@ double VertexCandProducer::particleMass(const unsigned int pdgId) const
   return 1e12; // Make this particle supermassive to fail mass range cut
 } 
 
-int VertexCandProducer::signedPdgId(const unsigned int pdgId, const int charge) const
+int KVertexToMuMuProducer::signedPdgId(const unsigned int pdgId, const int charge) const
 {
   if ( pdgId == 11 or pdgId == 13 or pdgId == 15 ) return -pdgId*charge;
   return pdgId*charge;
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(VertexCandProducer);
+DEFINE_FWK_MODULE(KVertexToMuMuProducer);

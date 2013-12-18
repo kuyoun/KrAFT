@@ -47,7 +47,7 @@ def initialise(runOnMC, decayMode, doOutModule=False):
     process.patDefaultSequence.replace( process.patElectrons, process.eidMVASequence * process.patElectrons )
 
     ## Load trigger matching
-    process.load("KCMSAnalyses.Configuration.hltFilters_cff")
+    process.load("KrAFT.Configuration.hltFilters_cff")
     #from PhysicsTools.PatAlgos.tools.trigTools import *
     #switchOnTriggerMatchEmbedding(process, outputModule="")
 
@@ -176,7 +176,7 @@ def initialise(runOnMC, decayMode, doOutModule=False):
 
 def addNtupleStep(process, runOnMC):
     # Add ntuple production
-    process.load("KCMSAnalyses.Configuration.ntuple_template_cff")
+    process.load("KrAFT.Configuration.ntuple_template_cff")
     process.goodJets.isMC = runOnMC
 
     for mode in ('ElEl', 'MuMu', 'MuEl', 'ElJets', 'MuJets'):

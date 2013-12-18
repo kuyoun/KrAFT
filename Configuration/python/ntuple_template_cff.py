@@ -1,14 +1,14 @@
 import FWCore.ParameterSet.Config as cms
 
-from KCMSAnalyses.GeneratorTools.pileupWeight_cff import *
-from KCMSAnalyses.RecoSelectorTools.leptonSelector_cfi import *
-from KCMSAnalyses.RecoSelectorTools.jetSelector_cfi import *
+from KrAFT.GeneratorTools.pileupWeight_cff import *
+from KrAFT.RecoSelectorTools.leptonSelector_cfi import *
+from KrAFT.RecoSelectorTools.jetSelector_cfi import *
 
 TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
 )
 
-from KCMSAnalyses.FlatTree.flatTreeMaker_cfi import *
+from KrAFT.FlatTree.flatTreeMaker_cfi import *
 event.eventCounters = ["nEventsTotal", "nEventsClean", "nEventsPAT",]
 
 MuMu = event.clone()

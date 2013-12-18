@@ -27,7 +27,7 @@ process.out = cms.OutputModule("PoolOutputModule",
 )
 process.outPath = cms.EndPath(process.out)
 
-process.load("KCMSAnalyses.Configuration.commonFilters_cff")
+process.load("KrAFT.Configuration.commonFilters_cff")
 process.load("HLTrigger.HLTfilters.hltHighLevel_cfi")
 process.hltHighLevel.throw = False
 process.hltHighLevel.HLTPaths = ["HLT_IsoMu24_v*", "HLT_IsoMu24_eta2p1_v*"]

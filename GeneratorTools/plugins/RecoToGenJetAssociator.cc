@@ -1,5 +1,5 @@
-#ifndef KCMSAnalyses_GeneratorTools_RecoToGenJetAssociator_H
-#define KCMSAnalyses_GeneratorTools_RecoToGenJetAssociator_H
+#ifndef KrAFT_GeneratorTools_RecoToGenJetAssociator_H
+#define KrAFT_GeneratorTools_RecoToGenJetAssociator_H
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDProducer.h"

@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 runOnMC = False
 
-from KCMSAnalyses.Configuration.customise_cff import *
+from KrAFT.Configuration.customise_cff import *
 process = initialise(decayMode="MuMu", runOnMC=runOnMC)
 addNtupleStep(process, runOnMC=runOnMC)
 

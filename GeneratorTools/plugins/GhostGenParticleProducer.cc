@@ -8,8 +8,7 @@
 #include "DataFormats/Candidate/interface/CompositeCandidate.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Math/interface/deltaR.h"
-#include "DataFormats/Common/interface/AssociationMap.h"
-#include "DataFormats/Common/interface/OneToOne.h"
+#include "KrAFT/GeneratorTools/interface/Types.h"
 
 #include "TMath.h"
 
@@ -29,8 +28,6 @@ public:
   GhostGenParticleProducer(const edm::ParameterSet& pset);
   ~GhostGenParticleProducer() {};
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
-
-  typedef edm::AssociationMap<edm::OneToOne<reco::GenParticleCollection, reco::GenParticleCollection> > GenParticleToGenParticleMap;
 
 private:
   bool isBHadron(const reco::Candidate* p) const; // B hadron without b hadron decendents

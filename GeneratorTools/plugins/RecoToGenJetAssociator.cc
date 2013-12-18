@@ -13,9 +13,8 @@
 
 #include "DataFormats/Common/interface/View.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "KrAFT/GeneratorTools/interface/Types.h"
 
-#include "DataFormats/Common/interface/AssociationMap.h"
-#include "DataFormats/Common/interface/OneToOne.h"
 #include "DataFormats/Math/interface/deltaR.h"
 
 #include <memory>
@@ -29,8 +28,6 @@ public:
   ~RecoToGenJetAssociator() {};
 
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
-
-  typedef edm::AssociationMap<edm::OneToOne<std::vector<pat::Jet>, std::vector<reco::GenJet> > > RecoToGenJetMap;
 
 private:
   edm::InputTag recoJetLabel_;
@@ -49,12 +46,12 @@ RecoToGenJetAssociator::RecoToGenJetAssociator(const edm::ParameterSet& pset)
   if ( cuts.exists("maxDR") ) cut_maxDR_ = cuts.getParameter<double>("maxDR");
   if ( cuts.exists("maxDPt") ) cut_maxDPt_ = cuts.getParameter<double>("maxDPt");
 
-  produces<RecoToGenJetMap>();
+  produces<pat::RecoToGenJetMap>();
 }
 
 void RecoToGenJetAssociator::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  std::auto_ptr<RecoToGenJetMap> recoToGenJetMap(new RecoToGenJetMap);
+  std::auto_ptr<pat::RecoToGenJetMap> recoToGenJetMap(new pat::RecoToGenJetMap);
 
   edm::Handle<std::vector<pat::Jet> > recoJetHandle;
   event.getByLabel(recoJetLabel_, recoJetHandle);

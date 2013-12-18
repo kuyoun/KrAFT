@@ -11,8 +11,7 @@
 #include "DataFormats/Common/interface/View.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 
-#include "DataFormats/Common/interface/AssociationMap.h"
-#include "DataFormats/Common/interface/OneToMany.h"
+#include "KrAFT/GeneratorTools/interface/Types.h"
 #include "DataFormats/Math/interface/deltaR.h"
 
 #include <memory>
@@ -30,7 +29,6 @@ public:
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
 
   bool hasMother(const reco::Candidate* p, const reco::Candidate* mother);
-  typedef edm::AssociationMap<edm::OneToMany<std::vector<reco::GenJet>, reco::GenParticleCollection> > GenJetToGenParticlesMap;
 
 private:
   edm::InputTag genParticleLabel_;
@@ -75,12 +73,12 @@ GenJetPartonAssociator::GenJetPartonAssociator(const edm::ParameterSet& pset)
   std::vector<unsigned int> pdgIdsToMatch = pset.getParameter<std::vector<unsigned int> >("pdgIdsToMatch");
   for ( int i=0, n=pdgIdsToMatch.size(); i<n; ++i ) pdgIdsToMatch_.insert(pdgIdsToMatch[i]);
 
-  produces<GenJetToGenParticlesMap>();
+  produces<reco::GenJetToGenParticlesMap>();
 }
 
 void GenJetPartonAssociator::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  std::auto_ptr<GenJetToGenParticlesMap> genJetToGenParticlesMap(new GenJetToGenParticlesMap);
+  std::auto_ptr<reco::GenJetToGenParticlesMap> genJetToGenParticlesMap(new reco::GenJetToGenParticlesMap);
 
   edm::Handle<std::vector<reco::GenJet> > genJetHandle;
   event.getByLabel(genJetLabel_, genJetHandle);

@@ -9,12 +9,15 @@
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/MuonReco/interface/Muon.h"
+#include "DataFormats/MuonReco/interface/MuonFwd.h"
 #include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
 //#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
 #include "DataFormats/Candidate/interface/VertexCompositeCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
+#include "DataFormats/Math/interface/deltaR.h"
 #include "CommonTools/CandUtils/interface/AddFourMomenta.h"
 
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
@@ -49,20 +52,24 @@ public:
 
 private:
   bool isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const;
-  inline double particleMass(const unsigned int pdgId) const;
-  inline int signedPdgId(const unsigned int absPdgId, const int charge) const;
+  const reco::Muon* matchMuon(const reco::TrackRef trackRef,
+                              reco::MuonCollection::const_iterator muonsBegin,
+                              reco::MuonCollection::const_iterator muonsEnd);
 
 private:
+  constexpr static double muonMass_ = 0.1056583715; 
+  edm::InputTag muonLabel_;
   edm::InputTag trackLabel_;
 
-  unsigned int pdgId_, leg1Id_, leg2Id_;
-  double mass1_, mass2_;
+  unsigned int pdgId_;
   double rawMassMin_, rawMassMax_, massMin_, massMax_;
 
   double cut_minPt_, cut_maxEta_;
   double cut_trackChi2_, cut_trackSignif_, cut_DCA_;
   int cut_trackNHit_;
   double cut_vertexChi2_, cut_minLxy_, cut_maxLxy_, cut_vtxSignif_;
+
+  double muonDPt_, muonDR_;
 
   unsigned int minNumber_, maxNumber_;
 
@@ -87,9 +94,12 @@ KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
   cut_maxLxy_ = vertexPSet.getParameter<double>("maxLxy");
   cut_vtxSignif_ = vertexPSet.getParameter<double>("signif");
 
+  edm::ParameterSet muonPSet = pset.getParameter<edm::ParameterSet>("muon");
+  muonLabel_ = muonPSet.getParameter<edm::InputTag>("src");
+  muonDPt_ = muonPSet.getParameter<double>("dPtRel");
+  muonDR_  = muonPSet.getParameter<double>("dR");
+
   pdgId_ = pset.getParameter<unsigned int>("pdgId");
-  leg1Id_ = pset.getParameter<unsigned int>("leg1Id");
-  leg2Id_ = pset.getParameter<unsigned int>("leg2Id");
   rawMassMin_ = pset.getParameter<double>("rawMassMin");
   rawMassMax_ = pset.getParameter<double>("rawMassMax");
   massMin_ = pset.getParameter<double>("massMin");
@@ -98,10 +108,8 @@ KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
   minNumber_ = pset.getParameter<unsigned int>("minNumber");
   maxNumber_ = pset.getParameter<unsigned int>("maxNumber");
 
-  mass1_ = particleMass(leg1Id_);
-  mass2_ = particleMass(leg2Id_);
-
   produces<reco::VertexCompositeCandidateCollection>();
+  produces<std::vector<double> >("lxy");
 }
 
 bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
@@ -113,6 +121,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   typedef reco::VertexCompositeCandidateCollection VCCandColl;
 
   std::auto_ptr<VCCandColl> decayCands(new VCCandColl);
+  std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
 
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   event.getByLabel("offlineBeamSpot", beamSpotHandle);
@@ -131,6 +140,9 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   edm::ESHandle<GlobalTrackingGeometry> glbTkGeomHandle;
   eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
   //glbTkGeom_ = glbTkGeomHandle.product();
+
+  edm::Handle<reco::MuonCollection> muonHandle;
+  event.getByLabel(muonLabel_, muonHandle);
 
   for ( int i=0, n=trackHandle->size(); i<n; ++i )
   {
@@ -167,30 +179,8 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
       if ( !caState1.isValid() or !caState2.isValid() ) continue;
 
-      double mass1 = mass1_, mass2 = mass2_;
-      int leg1Id = leg1Id_, leg2Id = leg2Id_;
-      if ( leg1Id != leg2Id )
-      {
-        if ( caState1.momentum().mag() > caState2.momentum().mag() )
-        {
-          if ( mass1 < mass2 )
-          {
-            std::swap(mass1, mass2);
-            std::swap(leg1Id, leg2Id);
-          }
-        }
-        else
-        {
-          if ( mass1 > mass2 )
-          {
-            std::swap(mass1, mass2);
-            std::swap(leg1Id, leg2Id);
-          }
-        }
-      }
- 
-      const double rawEnergy = std::hypot(caState1.momentum().mag(), mass1) 
-                             + std::hypot(caState2.momentum().mag(), mass2);
+      const double rawEnergy = std::hypot(caState1.momentum().mag(), muonMass_) 
+                             + std::hypot(caState2.momentum().mag(), muonMass_);
       const double rawMass = sqrt(rawEnergy*rawEnergy - (caState1.momentum()+caState2.momentum()).mag2());
       if ( rawMassMin_ > rawMass or rawMassMax_ < rawMass ) continue;
 
@@ -262,18 +252,23 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       double vtxChi2(vertex.chi2());
       double vtxNdof(vertex.ndof());
 
-      const double candE1 = hypot(mom1.mag(), mass1);
-      const double candE2 = hypot(mom2.mag(), mass2);
+      const double candE1 = hypot(mom1.mag(), muonMass_);
+      const double candE2 = hypot(mom2.mag(), muonMass_);
 
       Particle::LorentzVector candLVec(mom.x(), mom.y(), mom.z(), candE1+candE2);
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
+
+      // Match to muons
+      const reco::Muon* muon1 = matchMuon(trackRef1, muonHandle->begin(), muonHandle->end());
+      const reco::Muon* muon2 = matchMuon(trackRef2, muonHandle->begin(), muonHandle->end());
+      if ( !muon1 and !muon2 ) continue;
 
       RecoChargedCandidate cand1(trackRef1->charge(), Particle::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1), vtx);
       RecoChargedCandidate cand2(trackRef2->charge(), Particle::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2), vtx);
       cand1.setTrack(trackRef1);
       cand2.setTrack(trackRef2);
-      const int pdgId1 = signedPdgId(leg1Id, trackRef1->charge());
-      const int pdgId2 = signedPdgId(leg2Id, trackRef2->charge());
+      const int pdgId1 = -13*trackRef1->charge();
+      const int pdgId2 = -13*trackRef2->charge();
       cand1.setPdgId(pdgId1);
       cand2.setPdgId(pdgId2);
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);
@@ -285,12 +280,14 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       addP4.set(*cand);
 
       decayCands->push_back(*cand);
+      decayLengths->push_back(rVtxMag);
       
     }
   }
 
   const unsigned int nCands = decayCands->size();
   event.put(decayCands);
+  event.put(decayLengths, "lxy");
 
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
@@ -312,24 +309,28 @@ bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco:
   return true;
 }
 
-double KVertexToMuMuProducer::particleMass(const unsigned int pdgId) const
+const reco::Muon* KVertexToMuMuProducer::matchMuon(const reco::TrackRef trackRef, 
+                                                   reco::MuonCollection::const_iterator muonsBegin,
+                                                   reco::MuonCollection::const_iterator muonsEnd)
 {
-  switch(pdgId)
+  const double trackPt = trackRef->pt();
+  const double trackEta = trackRef->eta();
+  const double trackPhi = trackRef->phi();
+  for ( auto mu = muonsBegin; mu != muonsEnd; ++mu )
   {
-    case   11: return 0.0005109989; break;
-    case   13: return 0.1056583715; break;
-    case  211: return 0.13957018  ; break;
-    case  321: return 0.493677    ; break;
-    case 2212: return 0.938272013 ; break;
-  }
-  return 1e12; // Make this particle supermassive to fail mass range cut
-} 
+    if ( !mu->isTrackerMuon() and !mu->isPFMuon() ) continue;
+    const reco::TrackRef muonTrackRef = mu->innerTrack();
+    if ( trackRef == muonTrackRef ) return &(*mu);
 
-int KVertexToMuMuProducer::signedPdgId(const unsigned int pdgId, const int charge) const
-{
-  if ( pdgId == 11 or pdgId == 13 or pdgId == 15 ) return -pdgId*charge;
-  return pdgId*charge;
+    const double muonPt = mu->pt();
+    const double muonEta = mu->eta();
+    const double muonPhi = mu->phi();
+    if ( std::abs(muonPt-trackPt)/trackPt < muonDPt_ and
+         reco::deltaR(trackEta, muonEta, trackPhi, muonPhi) > muonDR_ ) return &(*mu);
+  }
+  return 0;
 }
+
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(KVertexToMuMuProducer);

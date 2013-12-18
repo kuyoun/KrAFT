@@ -24,11 +24,14 @@ event = cms.EDAnalyzer("KFlatTreeMaker",
         maxNumber = cms.uint32(999),
     ),
     jet = cms.PSet(
-        src = cms.string("goodJets"),
+        src = cms.InputTag("goodJets"),
         leptonDeltaR = cms.double(0.5),
         bTagType = cms.string("combinedSecondaryVertexBJetTags"),
     ),
     met = cms.PSet(
-        src = cms.string("goodJets"),
+        src = cms.InputTag("goodJets"),
+    ),
+    jpsi = cms.PSet(
+        src = cms.InputTag("jpsiToMuMu"),
     ),
 )

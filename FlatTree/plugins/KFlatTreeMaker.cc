@@ -22,6 +22,7 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
+#include "DataFormats/Candidate/interface/VertexCompositeCandidate.h"
 //#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
@@ -58,8 +59,9 @@ private:
 
   edm::InputTag muonLabel_;
   edm::InputTag electronLabel_;
-  std::string jetLabelStr_;
-  std::string metLabelStr_;
+  edm::InputTag jetLabel_;
+  edm::InputTag metLabel_;
+  edm::InputTag jpsiLabel_;
   std::string bTagType_;
 
   std::vector<std::string> eventCounterLabels_;
@@ -107,6 +109,9 @@ private:
   double metUp_pt_, metUp_phi_;
   double metDn_pt_, metDn_phi_;
 
+  doublesP jpsis_pt_, jpsis_eta_, jpsis_phi_, jpsis_m_;
+  doublesP jpsis_lxy_;
+
   // Generator level information
   bool isMC_;
 
@@ -143,11 +148,14 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
 
   edm::ParameterSet jetPSet = pset.getParameter<edm::ParameterSet>("jet");
   jetLeptonDeltaR_ = jetPSet.getParameter<double>("leptonDeltaR");
-  jetLabelStr_ = jetPSet.getParameter<std::string>("src");
+  jetLabel_ = jetPSet.getParameter<edm::InputTag>("src");
   bTagType_ = jetPSet.getParameter<std::string>("bTagType");
 
   edm::ParameterSet metPSet = pset.getParameter<edm::ParameterSet>("met");
-  metLabelStr_ = metPSet.getParameter<std::string>("src");
+  metLabel_ = metPSet.getParameter<edm::InputTag>("src");
+
+  edm::ParameterSet jpsiPSet = pset.getParameter<edm::ParameterSet>("jpsi");
+  jpsiLabel_ = jpsiPSet.getParameter<edm::InputTag>("src");
 
   // Event counter
   eventCounterLabels_ = pset.getParameter<std::vector<std::string> >("eventCounters");
@@ -170,25 +178,28 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     hEventCounter_->GetXaxis()->SetBinLabel(i+1, eventCounterLabels_.at(i).c_str());
   }
 
-  muons_pt_   = new doubles(); muons_eta_ = new doubles(); muons_phi_ = new doubles(); muons_m_   = new doubles();
-  muons_Q_    = new ints();
+  muons_pt_   = new doubles; muons_eta_ = new doubles; muons_phi_ = new doubles; muons_m_   = new doubles;
+  muons_Q_    = new ints;
   muons_type_ = new uints();
-  muons_iso_  = new doubles();
+  muons_iso_  = new doubles;
 
-  electrons_pt_   = new doubles(); electrons_eta_ = new doubles(); electrons_phi_ = new doubles(); electrons_m_   = new doubles();
-  electrons_Q_    = new ints();
+  electrons_pt_   = new doubles; electrons_eta_ = new doubles; electrons_phi_ = new doubles; electrons_m_   = new doubles;
+  electrons_Q_    = new ints;
   electrons_type_ = new uints();
-  electrons_iso_  = new doubles();
+  electrons_iso_  = new doubles;
 
-  electrons_mva_   = new doubles();
-  electrons_scEta_ = new doubles();
+  electrons_mva_   = new doubles;
+  electrons_scEta_ = new doubles;
 
-  jets_pt_   = new doubles(); jets_eta_   = new doubles(); jets_phi_   = new doubles(); jets_m_   = new doubles();
-  jetsUp_pt_ = new doubles(); jetsUp_eta_ = new doubles(); jetsUp_phi_ = new doubles(); jetsUp_m_ = new doubles();
-  jetsDn_pt_ = new doubles(); jetsDn_eta_ = new doubles(); jetsDn_phi_ = new doubles(); jetsDn_m_ = new doubles();
-  jets_bTag_   = new doubles();
-  jetsUp_bTag_ = new doubles();
-  jetsDn_bTag_ = new doubles();
+  jets_pt_   = new doubles; jets_eta_   = new doubles; jets_phi_   = new doubles; jets_m_   = new doubles;
+  jetsUp_pt_ = new doubles; jetsUp_eta_ = new doubles; jetsUp_phi_ = new doubles; jetsUp_m_ = new doubles;
+  jetsDn_pt_ = new doubles; jetsDn_eta_ = new doubles; jetsDn_phi_ = new doubles; jetsDn_m_ = new doubles;
+  jets_bTag_   = new doubles;
+  jetsUp_bTag_ = new doubles;
+  jetsDn_bTag_ = new doubles;
+
+  jpsis_pt_ = new doubles; jpsis_eta_ = new doubles; jpsis_phi_ = new doubles; jpsis_m_ = new doubles;
+  jpsis_lxy_ = new doubles;
 
   tree_ = fs->make<TTree>("event", "Mixed event tree");
   tree_->Branch("run", &run_, "run/I");
@@ -246,28 +257,34 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
   tree_->Branch("metUp_phi", &metUp_phi_, "metUp_phi/D");
   tree_->Branch("metDn_phi", &metDn_phi_, "metDn_phi/D");
 
+  tree_->Branch("jpsis_pt" , &jpsis_pt_ );
+  tree_->Branch("jpsis_eta", &jpsis_eta_);
+  tree_->Branch("jpsis_phi", &jpsis_phi_);
+  tree_->Branch("jpsis_m"  , &jpsis_m_  );
+  tree_->Branch("jpsis_lxy", &jpsis_lxy_);
+
   if ( isMC_ )
   {
-    genMuons_pt_  = new doubles();
-    genMuons_eta_ = new doubles();
-    genMuons_phi_ = new doubles();
-    genMuons_m_   = new doubles();
-    genMuons_Q_   = new ints()   ;
+    genMuons_pt_  = new doubles;
+    genMuons_eta_ = new doubles;
+    genMuons_phi_ = new doubles;
+    genMuons_m_   = new doubles;
+    genMuons_Q_   = new ints   ;
 
-    genElectrons_pt_  = new doubles();
-    genElectrons_eta_ = new doubles();
-    genElectrons_phi_ = new doubles();
-    genElectrons_m_   = new doubles();
-    genElectrons_Q_   = new ints()   ;
+    genElectrons_pt_  = new doubles;
+    genElectrons_eta_ = new doubles;
+    genElectrons_phi_ = new doubles;
+    genElectrons_m_   = new doubles;
+    genElectrons_Q_   = new ints   ;
 
-    genNeutrinos_pt_  = new doubles();
-    genNeutrinos_eta_ = new doubles();
-    genNeutrinos_phi_ = new doubles();
+    genNeutrinos_pt_  = new doubles;
+    genNeutrinos_eta_ = new doubles;
+    genNeutrinos_phi_ = new doubles;
 
-    genJets_pt_  = new doubles();
-    genJets_eta_ = new doubles();
-    genJets_phi_ = new doubles();
-    genJets_m_   = new doubles();
+    genJets_pt_  = new doubles;
+    genJets_eta_ = new doubles;
+    genJets_phi_ = new doubles;
+    genJets_m_   = new doubles;
 
     tree_->Branch("genWeight", &genWeight_, "genWeight/D");
 
@@ -359,6 +376,12 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   jetsDn_m_->clear();
 
   jets_bTag_->clear(); jetsUp_bTag_->clear(); jetsDn_bTag_->clear();
+
+  jpsis_pt_->clear();
+  jpsis_eta_->clear();
+  jpsis_phi_->clear();
+  jpsis_m_->clear();
+  jpsis_lxy_->clear();
 
   if ( isMC_ and event.isRealData() ) isMC_ = false;
 
@@ -472,9 +495,9 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   if ( muons_pt_->size() < muonMinNumber_ ) return;
 
   edm::Handle<std::vector<pat::MET> > metHandle, metUpHandle, metDnHandle;
-  event.getByLabel(edm::InputTag(metLabelStr_), metHandle);
-  event.getByLabel(edm::InputTag(metLabelStr_, "up"), metUpHandle);
-  event.getByLabel(edm::InputTag(metLabelStr_, "dn"), metDnHandle);
+  event.getByLabel(metLabel_, metHandle);
+  event.getByLabel(edm::InputTag(metLabel_.label(), "up"), metUpHandle);
+  event.getByLabel(edm::InputTag(metLabel_.label(), "dn"), metDnHandle);
   met_pt_ = metHandle->at(0).pt();
   metUp_pt_ = metUpHandle->at(0).pt();
   metDn_pt_ = metDnHandle->at(0).pt();
@@ -559,9 +582,9 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   edm::Handle<std::vector<pat::Jet> > jetHandle;
   edm::Handle<std::vector<pat::Jet> > jetUpHandle;
   edm::Handle<std::vector<pat::Jet> > jetDnHandle;
-  event.getByLabel(edm::InputTag(jetLabelStr_), jetHandle);
-  event.getByLabel(edm::InputTag(jetLabelStr_, "up"), jetUpHandle);
-  event.getByLabel(edm::InputTag(jetLabelStr_, "dn"), jetDnHandle);
+  event.getByLabel(jetLabel_, jetHandle);
+  event.getByLabel(edm::InputTag(jetLabel_.label(), "up"), jetUpHandle);
+  event.getByLabel(edm::InputTag(jetLabel_.label(), "dn"), jetDnHandle);
   for ( int i=0, n=jetHandle->size(); i<n; ++i )
   {
     const pat::Jet& jet = jetHandle->at(i);
@@ -588,6 +611,20 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     jetsDn_phi_->push_back(jet.phi());
     jetsDn_m_  ->push_back(jet.mass());
     jetsDn_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
+  }
+
+  edm::Handle<std::vector<reco::VertexCompositeCandidate> > jpsiHandle;
+  event.getByLabel(jpsiLabel_, jpsiHandle);
+  edm::Handle<std::vector<double> > jpsiLxyHandle;
+  event.getByLabel(edm::InputTag(jpsiLabel_.label(), "lxy"), jpsiLxyHandle);
+  for ( int i=0, n=jpsiHandle->size(); i<n; ++i )
+  {
+    const reco::VertexCompositeCandidate& jpsiCand = jpsiHandle->at(i);
+    jpsis_pt_ ->push_back(jpsiCand.pt()  );
+    jpsis_eta_->push_back(jpsiCand.eta() );
+    jpsis_phi_->push_back(jpsiCand.phi() );
+    jpsis_m_  ->push_back(jpsiCand.mass());
+    jpsis_lxy_->push_back(jpsiLxyHandle->at(i));
   }
 
 /*

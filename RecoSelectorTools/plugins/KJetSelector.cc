@@ -17,6 +17,8 @@
 #include "CommonTools/Utils/interface/PtComparator.h"
 #include "DataFormats/Math/interface/deltaR.h"
 
+#include "KrAFT/GeneratorTools/interface/Types.h"
+
 #include <memory>
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -51,20 +53,23 @@ private:
 
   int cleanMethod_;
 
-private:
   bool isMC_;
-  bool debug_;
-  edm::InputTag genJetLabel_, genLeptonLabel_;
 
-  TH1F* hNPFJet_;
-  TH1F* hNGenJet_;
-  TH2F* hNGenJetVsNPFJet_;
+private:
+  void getJERFactor(const double jetEta, double& cJER, double& cJERUp, double& cJERDn)
+  {
+    if      ( jetEta < 0.5 ) { cJER = 1.052; cJERUp = 1.115; cJERDn = 0.990; }
+    else if ( jetEta < 1.1 ) { cJER = 1.057; cJERUp = 1.114; cJERDn = 1.001; }
+    else if ( jetEta < 1.7 ) { cJER = 1.096; cJERUp = 1.161; cJERDn = 1.032; }
+    else if ( jetEta < 2.3 ) { cJER = 1.134; cJERUp = 1.228; cJERDn = 1.042; }
+    else if ( jetEta < 5.0 ) { cJER = 1.288; cJERUp = 1.488; cJERDn = 1.089; }
+    else { cJER = cJERUp = cJERDn = 1; }
+  }
 
 };
 
 KJetSelector::KJetSelector(const edm::ParameterSet& pset)
 {
-  debug_ = pset.getUntrackedParameter<bool>("debug",false);
   isMC_ = pset.getParameter<bool>("isMC");
 
   jetLabel_ = pset.getParameter<edm::InputTag>("jet");
@@ -107,16 +112,12 @@ KJetSelector::KJetSelector(const edm::ParameterSet& pset)
   produces<std::vector<pat::MET> >();
   produces<std::vector<pat::MET> >("up");
   produces<std::vector<pat::MET> >("dn");
-
-  if ( debug_ )
+  if ( isMC_ )
   {
-    genJetLabel_ = pset.getParameter<edm::InputTag>("genJet");
-    genLeptonLabel_ = pset.getParameter<edm::InputTag>("genLepton");
-
-    edm::Service<TFileService> fs;
-    hNPFJet_ = fs->make<TH1F>("hNPFJet", "nPFJet;Number of PF Jet;Events", 10, 0, 10);
-    hNGenJet_ = fs->make<TH1F>("hNGenJet", "nGenJet;Number of Gen Jet;Events", 10, 0, 10);
-    hNGenJetVsNPFJet_ = fs->make<TH2F>("hNGenJetVsNPFJet", "nGenJet vs nPFJet;Number of Gen Jet;Number of PF Jet", 10, 0, 10, 10, 0, 10);
+    produces<std::vector<pat::Jet> >("resUp");
+    produces<std::vector<pat::Jet> >("resDn");
+    produces<std::vector<pat::MET> >("resUp");
+    produces<std::vector<pat::MET> >("resDn");
   }
 }
 
@@ -131,13 +132,20 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   std::auto_ptr<std::vector<pat::Jet> > corrJets(new std::vector<pat::Jet>());
   std::auto_ptr<std::vector<pat::Jet> > corrJetsUp(new std::vector<pat::Jet>());
   std::auto_ptr<std::vector<pat::Jet> > corrJetsDn(new std::vector<pat::Jet>());
+  std::auto_ptr<std::vector<pat::Jet> > corrJetsResUp(new std::vector<pat::Jet>());
+  std::auto_ptr<std::vector<pat::Jet> > corrJetsResDn(new std::vector<pat::Jet>());
   std::auto_ptr<std::vector<pat::MET> > corrMets(new std::vector<pat::MET>());
   std::auto_ptr<std::vector<pat::MET> > corrMetsUp(new std::vector<pat::MET>());
   std::auto_ptr<std::vector<pat::MET> > corrMetsDn(new std::vector<pat::MET>());
+  std::auto_ptr<std::vector<pat::MET> > corrMetsResUp(new std::vector<pat::MET>());
+  std::auto_ptr<std::vector<pat::MET> > corrMetsResDn(new std::vector<pat::MET>());
 
   pat::MET met = metHandle->at(0);
-  double metUpX = met.px(), metUpY = met.py();
-  double metDnX = met.px(), metDnY = met.py();
+  double metX = met.px(), metY = met.py();
+  double metUpX = metX, metUpY = metY;
+  double metDnX = metX, metDnY = metY;
+  double metResUpX = metX, metResUpY = metY;
+  double metResDnX = metX, metResDnY = metY;
 
   std::vector<const reco::Candidate*> overlapCands;
   if ( cleanMethod_ != -1 )
@@ -162,6 +170,8 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
     if ( !(*isGoodJet_)(jet) ) continue;
 
     reco::Candidate::LorentzVector jetP4 = jet.p4();
+
+    // JES and uncertainties
     jecUncCalculator_->setJetPt(jetP4.pt());
     jecUncCalculator_->setJetEta(jetP4.eta());
     const double jecUncUp = jecUncCalculator_->getUncertainty(true);
@@ -176,6 +186,47 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
     metUpY += jetP4.py() - jetUpP4.py();
     metDnX += jetP4.px() - jetDnP4.px();
     metDnY += jetP4.py() - jetDnP4.py();
+
+    // JER and uncertainties
+    if ( isMC_ )
+    {
+      const reco::GenJet* genJet = jet.genJet();
+      if ( genJet )
+      {
+        const math::XYZTLorentzVector& rawJetP4 = jet.correctedP4(0);
+
+        const double genJetPt = genJet->pt();
+        const double jetPt = jet.pt();
+        const double dPt = jetPt-genJetPt;
+
+        const double jetEta = std::abs(jet.eta());
+        double cJER, cJERUp, cJERDn;
+        getJERFactor(jetEta, cJER, cJERUp, cJERDn);
+
+        const double ptScale   = max(0., (genJetPt+dPt*cJER  )/jetPt);
+        const double ptScaleUp = max(0., (genJetPt+dPt*cJERUp)/jetPt);
+        const double ptScaleDn = max(0., (genJetPt+dPt*cJERDn)/jetPt);
+
+        const double metDx   = rawJetP4.px()*(1-ptScale  );
+        const double metDxUp = rawJetP4.px()*(1-ptScaleUp);
+        const double metDxDn = rawJetP4.px()*(1-ptScaleDn);
+
+        const double metDy   = rawJetP4.py()*(1-ptScale  );
+        const double metDyUp = rawJetP4.py()*(1-ptScaleUp);
+        const double metDyDn = rawJetP4.py()*(1-ptScaleDn);
+
+        // Correct Jet
+        jet.setP4(jet.p4()*ptScale);
+
+        // Correct MET
+        metX += metDx;
+        metY += metDy;
+        metResUpX += metDxUp;
+        metResUpY += metDyUp;
+        metResDnX += metDxDn;
+        metResDnY += metDyDn;
+      }
+    }
 
     pat::Jet jetUp = jet, jetDn = jet;
     jetUp.setP4(jetUpP4);
@@ -240,56 +291,22 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   event.put(corrMetsUp, "up");
   event.put(corrMetsDn, "dn");
 
-/*
-  if ( debug_ and !event.isRealData() )
+  if ( isMC_ )
   {
-    edm::Handle<std::vector<reco::GenJet> > genJetHandle;
-    event.getByLabel(genJetLabel_, genJetHandle);
+    std::sort(corrJetsResUp->begin(), corrJetsResUp->end(), GreaterByPt<pat::Jet>());
+    std::sort(corrJetsResDn->begin(), corrJetsResDn->end(), GreaterByPt<pat::Jet>());
 
-    edm::Handle<std::vector<reco::GenParticle> > genLeptonHandle;
-    event.getByLabel(genLeptonLabel_, genLeptonHandle);
+    pat::MET metResUp, metResDn;
+    metResUp.setP4(reco::Candidate::LorentzVector(metResUpX, metResUpY, 0, hypot(metResUpX, metResUpY)));
+    metResDn.setP4(reco::Candidate::LorentzVector(metResDnX, metResDnY, 0, hypot(metResDnX, metResDnY)));
+    corrMetsResUp->push_back(metResUp);
+    corrMetsResDn->push_back(metResDn);
 
-    int nGenJet = 0;
-    for ( int i=0, n=genJetHandle->size(); i<n; ++i )
-    {
-      const reco::GenJet& genJet = genJetHandle->at(i);
-      if ( genJet.pt() < minPt_ or abs(genJet.eta()) > maxEta_ ) continue;
-      const std::vector<const reco::GenParticle*> genConstituents = genJet.getGenConstituents();
-      if ( genConstituents.size() <= 1 ) continue;
-      bool isOverlap = false;
-      for ( int j=0, m=genConstituents.size(); j<m; ++j )
-      {
-        const reco::Candidate* p = genConstituents.at(j);
-        if ( abs(p->pdgId()) != 11 and abs(p->pdgId()) != 13 ) continue;
-
-        while ( (p = p->mother()) != 0 )
-        {
-          if ( p->status() != 3 ) continue;
-          if ( abs(p->pdgId()) == 11 or abs(p->pdgId()) == 13 )
-          {
-            isOverlap = true;
-            break;
-          }
-        }
-      }
-      if ( isOverlap ) continue;
-      
-      for ( int j=0, m=genLeptonHandle->size(); j<m; ++j )
-      {
-        const reco::GenParticle& genLepton = genLeptonHandle->at(j);
-        if ( deltaR(genJet, genLepton) > 0.05 ) continue;
-        //if ( abs(genJet.pt()-genLepton.pt())/genJet.pt() < 0.1 ) continue;
-        //cout << genJet.pt() << "   " << genLepton.pt() << " " << deltaR(genJet, genLepton) << endl;
-        isOverlap = true;
-        break;
-      }
-      ++nGenJet;
-    }
-    hNPFJet_->Fill(nCleanJet);
-    hNGenJet_->Fill(nGenJet);
-    hNGenJetVsNPFJet_->Fill(nGenJet, nCleanJet);
+    event.put(corrJetsResUp, "resUp");
+    event.put(corrJetsResDn, "resDn");
+    event.put(corrMetsResUp, "resUp");
+    event.put(corrMetsResDn, "resDn");
   }
-*/
 
   if ( nCleanJet < minNumber_ or nCleanJet > maxNumber_ ) return false;
 

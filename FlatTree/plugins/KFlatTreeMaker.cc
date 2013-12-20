@@ -267,10 +267,18 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     jetsResUp_bTag_ = new doubles;
     jetsResDn_bTag_ = new doubles;
 
-    tree_->Branch("jetsDn_pt" , jetsDn_pt_ );
-    tree_->Branch("jetsDn_eta", jetsDn_eta_);
-    tree_->Branch("jetsDn_phi", jetsDn_phi_);
-    tree_->Branch("jetsDn_m"  , jetsDn_m_  );
+    tree_->Branch("jetsResDn_pt" , jetsResDn_pt_ );
+    tree_->Branch("jetsResDn_eta", jetsResDn_eta_);
+    tree_->Branch("jetsResDn_phi", jetsResDn_phi_);
+    tree_->Branch("jetsResDn_m"  , jetsResDn_m_  );
+
+    tree_->Branch("jetsResUp_pt" , jetsResUp_pt_ );
+    tree_->Branch("jetsResUp_eta", jetsResUp_eta_);
+    tree_->Branch("jetsResUp_phi", jetsResUp_phi_);
+    tree_->Branch("jetsResUp_m"  , jetsResUp_m_  );
+
+    tree_->Branch("jetsResUp_bTag", jetsResUp_bTag_);
+    tree_->Branch("jetsResDn_bTag", jetsResDn_bTag_);
 
     // Generator information
     genMuons_pt_  = new doubles;
@@ -308,7 +316,7 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     tree_->Branch("genMuons_m"  , genMuons_m_  );
     tree_->Branch("genMuons_Q"  , genMuons_Q_  );
 
-    tree_->Branch("genElectrons_pt ", genElectrons_pt_ );
+    tree_->Branch("genElectrons_pt" , genElectrons_pt_ );
     tree_->Branch("genElectrons_eta", genElectrons_eta_);
     tree_->Branch("genElectrons_phi", genElectrons_phi_);
     tree_->Branch("genElectrons_m"  , genElectrons_m_  );
@@ -569,13 +577,13 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
           genElectrons_eta_->push_back(p.eta() );
           genElectrons_phi_->push_back(p.phi() );
           genElectrons_m_  ->push_back(p.mass());
-          genElectrons_Q_->push_back(charge); break;
+          genElectrons_Q_  ->push_back(charge  ); break;
         case 13:
           genMuons_pt_ ->push_back(p.pt()  );
           genMuons_eta_->push_back(p.eta() );
           genMuons_phi_->push_back(p.phi() );
           genMuons_m_  ->push_back(p.mass());
-          genMuons_Q_->push_back(charge); break;
+          genMuons_Q_  ->push_back(charge  ); break;
         case 12:
         case 14:
           genNeutrinos_pt_ ->push_back(p.pt() );

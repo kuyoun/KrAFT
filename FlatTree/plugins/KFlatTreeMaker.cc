@@ -15,9 +15,6 @@
 
 #include "DataFormats/Common/interface/View.h"
 
-#include "DataFormats/Common/interface/AssociationMap.h"
-#include "DataFormats/Common/interface/OneToMany.h"
-#include "DataFormats/Common/interface/OneToOne.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
@@ -25,7 +22,6 @@
 #include "DataFormats/Candidate/interface/VertexCompositeCandidate.h"
 //#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
-#include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
 
 #include "DataFormats/Math/interface/deltaR.h"
 
@@ -52,8 +48,6 @@ private:
   edm::InputTag genEventInfoLabel_;
   edm::InputTag genParticleLabel_;
   edm::InputTag genJetLabel_;
-  edm::InputTag recoToGenJetMapLabel_;
-  edm::InputTag genJetToPartonMapLabel_;
   edm::InputTag puWeightLabel_;
   edm::InputTag vertexLabel_;
 
@@ -125,9 +119,6 @@ private:
   double genWeight_;
   int pdf_id1_, pdf_id2_;
   double pdf_q_, pdf_x1_, pdf_x2_;
-  // jet MC matching
-  //std::vector<int> jets_motherId_;
-  //std::vector<int> genJetMotherId_;
 
   doublesP genMuons_pt_, genMuons_eta_, genMuons_phi_, genMuons_m_;
   doublesP genElectrons_pt_, genElectrons_eta_, genElectrons_phi_, genElectrons_m_;
@@ -172,8 +163,6 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     genEventInfoLabel_ = pset.getParameter<edm::InputTag>("genEventInfo");
     genParticleLabel_ = pset.getParameter<edm::InputTag>("genParticle");
     genJetLabel_ = pset.getParameter<edm::InputTag>("genJet");
-    //recoToGenJetMapLabel_ = pset.getParameter<edm::InputTag>("recoToGenJetMap");
-    //genJetToPartonMapLabel_ = pset.getParameter<edm::InputTag>("genJetToPartonsMap");
   }
 
   // Output histograms and tree
@@ -333,8 +322,6 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     tree_->Branch("genJets_eta", genJets_eta_);
     tree_->Branch("genJets_phi", genJets_phi_);
     tree_->Branch("genJets_m"  , genJets_m_  );
-
-    //tree_->Branch("jets_motherId", &jets_motherId_);
   }
 
 }
@@ -439,7 +426,6 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     genJets_eta_->clear();
     genJets_phi_->clear();
     genJets_m_  ->clear();
-    //jets_motherId_->clear();
   }
 
   edm::Handle<reco::VertexCollection> vertexHandle;
@@ -546,13 +532,6 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     metResDn_phi_ = metResDnHandle->at(0).phi();
   }
 
-  //typedef edm::AssociationMap<edm::OneToMany<std::vector<reco::GenJet>, reco::GenParticleCollection> > GenJetToGenParticlesMap;
-  //typedef edm::AssociationMap<edm::OneToOne<std::vector<pat::Jet>, std::vector<reco::GenJet> > > RecoToGenJetMap;
-  //edm::Handle<GenJetToGenParticlesMap> genJetToPartonMapHandle;
-  //edm::Handle<RecoToGenJetMap> recoToGenJetMapHandle;
-
-  // This while loop runs just for once, a "break" statement must be kept in the end of loop
-  // It reduces nested-if statements
   if ( isMC_ )
   {
     // Event weight and PDF stuffs
@@ -575,8 +554,6 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     event.getByLabel(genParticleLabel_, genHandle);
     edm::Handle<reco::GenJetCollection> genJetHandle;
     event.getByLabel(genJetLabel_, genJetHandle);
-    //event.getByLabel(genJetToPartonMapLabel_, genJetToPartonMapHandle);
-    //event.getByLabel(recoToGenJetMapLabel_, recoToGenJetMapHandle);
 
     // Find top quark from the genParticles
     for ( int i=0, n=genHandle->size(); i<n; ++i )
@@ -691,36 +668,6 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     jpsis_m_  ->push_back(jpsiCand.mass());
     jpsis_lxy_->push_back(jpsiLxyHandle->at(i));
   }
-
-/*
-    int jetMotherId = 0;
-
-    while ( doMCMatch_ )
-    {
-      edm::Ref<std::vector<pat::Jet> > jetRef(jetHandle, i);
-      RecoToGenJetMap::const_iterator recoToGenJet = recoToGenJetMapHandle->find(jetRef);
-      if ( recoToGenJet == recoToGenJetMapHandle->end() ) break;
-
-      const edm::Ref<std::vector<reco::GenJet> >& genJet = recoToGenJet->val;
-      GenJetToGenParticlesMap::const_iterator genJetToParton = genJetToPartonMapHandle->find(genJet);
-      if ( genJetToParton == genJetToPartonMapHandle->end() ) break;
-
-      const edm::RefVector<reco::GenParticleCollection>& genPartons = genJetToParton->val;
-      for ( int j=0, m=genPartons.size(); j<m; ++j )
-      {
-        const int partonId = genPartons.at(j)->pdgId();
-        // NOTE : Maybe there can be better way to set mother parton's id
-        if ( abs(partonId) == 24 or partonId == 23 ) jetMotherId = partonId;
-        else if ( jetMotherId == 0 and abs(partonId) == 6 ) jetMotherId = partonId;
-        else if ( jetMotherId == 0 and partonId == 25 ) jetMotherId = partonId;
-      }
-
-      break;
-    }
-
-    jets_motherId_.push_back(jetMotherId);
-  }
-*/
 
   // Now put jets in current event to the event cache
   run_ = event.run();

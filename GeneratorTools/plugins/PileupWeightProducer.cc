@@ -62,7 +62,7 @@ PileupWeightProducer::PileupWeightProducer(const edm::ParameterSet& pset)
 void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   edm::Handle<std::vector<PileupSummaryInfo> > puHandle;
-  event.getByLabel(edm::InputTag("addEventInfo"), puHandle);
+  event.getByLabel(edm::InputTag("addPileupInfo"), puHandle);
 
   std::auto_ptr<int> nTrueIntr(new int(-1));
   std::auto_ptr<double> weight(new double(1.));
@@ -93,7 +93,6 @@ void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eve
       *weightDn = lumiWeightsDn_.weight(*nTrueIntr);
     }
   }
-
 
   event.put(nTrueIntr, "nTrueInteraction");
   event.put(weight  , "");

@@ -65,6 +65,13 @@ private:
     else if ( jetEta < 5.0 ) { cJER = 1.288; cJERUp = 1.488; cJERDn = 1.089; }
     else { cJER = cJERUp = cJERDn = 1; }
   }
+  bool isInAcceptance(const pat::Jet& jetP4)
+  {
+    if ( jetP4.pt() < minPt_ ) return false;
+    if ( std::abs(jetP4.eta()) > maxEta_ ) return false;
+
+    return true;
+  }
 
 };
 
@@ -134,6 +141,7 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   std::auto_ptr<std::vector<pat::Jet> > corrJetsDn(new std::vector<pat::Jet>());
   std::auto_ptr<std::vector<pat::Jet> > corrJetsResUp(new std::vector<pat::Jet>());
   std::auto_ptr<std::vector<pat::Jet> > corrJetsResDn(new std::vector<pat::Jet>());
+
   std::auto_ptr<std::vector<pat::MET> > corrMets(new std::vector<pat::MET>());
   std::auto_ptr<std::vector<pat::MET> > corrMetsUp(new std::vector<pat::MET>());
   std::auto_ptr<std::vector<pat::MET> > corrMetsDn(new std::vector<pat::MET>());
@@ -172,40 +180,44 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
     reco::Candidate::LorentzVector jetP4 = jet.p4();
 
     // JES and uncertainties
+    pat::Jet jetUp = jet, jetDn = jet;
     jecUncCalculator_->setJetPt(jetP4.pt());
     jecUncCalculator_->setJetEta(jetP4.eta());
     const double jecUncUp = jecUncCalculator_->getUncertainty(true);
     jecUncCalculator_->setJetPt(jetP4.pt());
     jecUncCalculator_->setJetEta(jetP4.eta());
     const double jecUncDn = jecUncCalculator_->getUncertainty(false);
-    reco::Candidate::LorentzVector jetUpP4, jetDnP4;
 
-    jetUpP4 = jetP4*(1+jecUncUp);
-    jetDnP4 = jetP4*(1-jecUncDn);
+    math::XYZTLorentzVector jetUpP4 = jetP4*(1+jecUncUp);
+    math::XYZTLorentzVector jetDnP4 = jetP4*(1-jecUncDn);
+
     metUpX += jetP4.px() - jetUpP4.px();
     metUpY += jetP4.py() - jetUpP4.py();
     metDnX += jetP4.px() - jetDnP4.px();
     metDnY += jetP4.py() - jetDnP4.py();
 
     // JER and uncertainties
+    pat::Jet jetResUp = jet, jetResDn = jet;
+    math::XYZTLorentzVector jetResUpP4, jetResDnP4;
+    double ptScale = 1, ptScaleUp = 1, ptScaleDn = 1;
     if ( isMC_ )
     {
       const reco::GenJet* genJet = jet.genJet();
-      if ( genJet )
+      if ( genJet and genJet->pt() > 10 )
       {
         const math::XYZTLorentzVector& rawJetP4 = jet.correctedP4(0);
 
         const double genJetPt = genJet->pt();
-        const double jetPt = jet.pt();
+        const double jetPt = jetP4.pt();
         const double dPt = jetPt-genJetPt;
 
         const double jetEta = std::abs(jet.eta());
         double cJER, cJERUp, cJERDn;
         getJERFactor(jetEta, cJER, cJERUp, cJERDn);
 
-        const double ptScale   = max(0., (genJetPt+dPt*cJER  )/jetPt);
-        const double ptScaleUp = max(0., (genJetPt+dPt*cJERUp)/jetPt);
-        const double ptScaleDn = max(0., (genJetPt+dPt*cJERDn)/jetPt);
+        ptScale   = max(1e-9, (genJetPt+dPt*cJER  )/jetPt);
+        ptScaleUp = max(1e-9, (genJetPt+dPt*cJERUp)/jetPt);
+        ptScaleDn = max(1e-9, (genJetPt+dPt*cJERDn)/jetPt);
 
         const double metDx   = rawJetP4.px()*(1-ptScale  );
         const double metDxUp = rawJetP4.px()*(1-ptScaleUp);
@@ -216,7 +228,11 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
         const double metDyDn = rawJetP4.py()*(1-ptScaleDn);
 
         // Correct Jet
-        jet.setP4(jet.p4()*ptScale);
+        jetResUp.setP4(jetP4*ptScaleUp);
+        jetResDn.setP4(jetP4*ptScaleDn);
+        jetP4   *= ptScale;
+        jetUpP4 *= ptScale;
+        jetDnP4 *= ptScale;
 
         // Correct MET
         metX += metDx;
@@ -228,7 +244,7 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
       }
     }
 
-    pat::Jet jetUp = jet, jetDn = jet;
+    jet.setP4(jetP4);
     jetUp.setP4(jetUpP4);
     jetDn.setP4(jetDnP4);
 
@@ -244,6 +260,11 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
           jetP4 -= overlapCands.at(j)->p4();
           jetUpP4 -= overlapCands.at(j)->p4();
           jetDnP4 -= overlapCands.at(j)->p4();
+          if ( isMC_ )
+          {
+            jetResUpP4 -= overlapCands.at(j)->p4();
+            jetResDnP4 -= overlapCands.at(j)->p4();
+          }
         }
       }
     }
@@ -258,17 +279,32 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
           jet.setP4(jetP4);
           jetUp.setP4(jetUpP4);
           jetDn.setP4(jetDnP4);
+          if ( isMC_ )
+          {
+            jetResUp.setP4(jetResUpP4);
+            jetResDn.setP4(jetResDnP4);
+          }
         }
-        if ( jetP4.pt() >= minPt_ and abs(jetP4.eta()) <= maxEta_ ) corrJets->push_back(jet);
-        if ( jetUpP4.pt() >= minPt_ and abs(jetUpP4.eta()) <= maxEta_ ) corrJetsUp->push_back(jetUp);
-        if ( jetDnP4.pt() >= minPt_ and abs(jetDnP4.eta()) <= maxEta_ ) corrJetsDn->push_back(jetDn);
+        if ( isInAcceptance(jet) ) corrJets->push_back(jet);
+        if ( isInAcceptance(jetUp) ) corrJetsUp->push_back(jetUp);
+        if ( isInAcceptance(jetDn) ) corrJetsDn->push_back(jetDn);
+        if ( isMC_ )
+        {
+          if ( isInAcceptance(jetResUp) ) corrJetsResUp->push_back(jetResUp);
+          if ( isInAcceptance(jetResDn) ) corrJetsResDn->push_back(jetResDn);
+        }
       }
     }
     else 
     {
-      if ( jetP4.pt() >= minPt_ and abs(jetP4.eta()) <= maxEta_ ) corrJets->push_back(jet);
-      if ( jetUpP4.pt() >= minPt_ and abs(jetUpP4.eta()) <= maxEta_ ) corrJetsUp->push_back(jetUp);
-      if ( jetDnP4.pt() >= minPt_ and abs(jetDnP4.eta()) <= maxEta_ ) corrJetsDn->push_back(jetDn);
+      if ( isInAcceptance(jet) ) corrJets->push_back(jet);
+      if ( isInAcceptance(jetUp) ) corrJetsUp->push_back(jetUp);
+      if ( isInAcceptance(jetDn) ) corrJetsDn->push_back(jetDn);
+      if ( isMC_ )
+      {
+        if ( isInAcceptance(jetResUp) ) corrJetsResUp->push_back(jetResUp);
+        if ( isInAcceptance(jetResDn) ) corrJetsResDn->push_back(jetResDn);
+      }
     }
   }
 

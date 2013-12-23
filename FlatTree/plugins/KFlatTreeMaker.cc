@@ -126,6 +126,9 @@ private:
   intsP genMuons_Q_, genElectrons_Q_;
   doublesP genJets_pt_, genJets_eta_, genJets_phi_, genJets_m_;
 
+  doublesP genParticles_pt_, genParticles_eta_, genParticles_phi_, genParticles_m_;
+  intsP genParticles_pdgId_;
+
 };
 
 KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
@@ -302,6 +305,12 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     genJets_phi_ = new doubles;
     genJets_m_   = new doubles;
 
+    genParticles_pt_  = new doubles;
+    genParticles_eta_ = new doubles;
+    genParticles_phi_ = new doubles;
+    genParticles_m_   = new doubles;
+    genParticles_pdgId_ = new ints;
+
     tree_->Branch("genWeight", &genWeight_, "genWeight/D");
 
     tree_->Branch("pdf_id1", &pdf_id1_, "pdf_id1/I");
@@ -330,6 +339,12 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
     tree_->Branch("genJets_eta", genJets_eta_);
     tree_->Branch("genJets_phi", genJets_phi_);
     tree_->Branch("genJets_m"  , genJets_m_  );
+
+    tree_->Branch("genParticles_pt" , genParticles_pt_ );
+    tree_->Branch("genParticles_eta", genParticles_eta_);
+    tree_->Branch("genParticles_phi", genParticles_phi_);
+    tree_->Branch("genParticles_m"  , genParticles_m_  );
+    tree_->Branch("genParticles_pdgId", genParticles_pdgId_);
   }
 
 }
@@ -434,6 +449,12 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
     genJets_eta_->clear();
     genJets_phi_->clear();
     genJets_m_  ->clear();
+
+    genParticles_pt_ ->clear();
+    genParticles_eta_->clear();
+    genParticles_phi_->clear();
+    genParticles_m_  ->clear();
+    genParticles_pdgId_->clear();
   }
 
   edm::Handle<reco::VertexCollection> vertexHandle;
@@ -569,6 +590,12 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
       const reco::GenParticle& p = genHandle->at(i);
       if ( p.status() != 3 ) continue;
       const int charge = p.charge();
+
+      genParticles_pt_ ->push_back(p.pt()  );
+      genParticles_eta_->push_back(p.eta() );
+      genParticles_phi_->push_back(p.phi() );
+      genParticles_m_  ->push_back(p.mass());
+      genParticles_pdgId_->push_back(p.pdgId());
 
       switch(abs(p.pdgId()))
       {

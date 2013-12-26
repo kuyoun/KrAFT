@@ -11,11 +11,9 @@
 <use name="PhysicsTools/RecoUtils" />
 <use name="RecoVertex/VertexTools" />
 
-<use name="KrAFT/FlatTree" />
-
 <use name="root" />
+<use name="rootrflx"/>
 
-<library file="*.cc" name="KrAFTFlatTreePlugins">
-  <flags EDM_PLUGIN="1" />
-</library>
-
+<export>
+    <lib name="1" />
+</export>

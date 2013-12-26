@@ -7,7 +7,7 @@
 struct FlatEvent
 {
 public:
-  FlatEvent(bool isMC);
+  FlatEvent(bool isMC=false);
   void clear();
   void book(TTree* tree); // book leaves to fill the tree
 

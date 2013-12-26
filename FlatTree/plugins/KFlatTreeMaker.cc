@@ -125,7 +125,8 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
   }
 
   tree_ = fs->make<TTree>("event", "Mixed event tree");
-  fevent_ = new FlatEvent(tree_, isMC_);
+  fevent_ = new FlatEvent(isMC_);
+  fevent_->book(tree_);
 }
 
 KFlatTreeMaker::~KFlatTreeMaker()

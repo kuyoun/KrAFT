@@ -11,9 +11,11 @@
 <use name="PhysicsTools/RecoUtils" />
 <use name="RecoVertex/VertexTools" />
 
+<use name="KrAFT/FlatTree" />
+
 <use name="root" />
 
-<library file="*.cc" name="KrAFTTTbarDileptonPlugins">
+<library file="*.cc" name="KrAFTFlatTreePlugins">
   <flags EDM_PLUGIN="1" />
 </library>
 

@@ -1,5 +1,4 @@
 <lcgdict>
-  <class name="FlatEvent" />
-  <class name="edm::Wrapper<FlatEvent>" />
+  <class name="KFlatTreeAnalyzer" />
 </lcgdict>
 

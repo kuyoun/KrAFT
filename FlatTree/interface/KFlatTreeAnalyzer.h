@@ -22,13 +22,13 @@ void printEntryFraction(int i, int n);
 class KFlatTreeAnalyzer
 {
 public:
-  KFlatTreeAnalyzer(const std::string inputFileName, const std::string outputFileName);
-  ~KFlatTreeAnalyzer();
-  void analyze();
+  KFlatTreeAnalyzer(const std::string modeName, const std::string inputFileName, const std::string outputFileName);
+  virtual ~KFlatTreeAnalyzer();
+  virtual void analyze();
 
 private:
-  TFile* inputFile_, * outputFile_;
-  TTree* tree_;
+  TFile* inputFile_;
+  TFile* outputFile_;
   FlatEvent* event_;
 };
 

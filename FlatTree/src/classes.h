@@ -1,10 +1,9 @@
-#include "KrAFT/FlatTree/interface/FlatEvent.h"
+#include "KrAFT/FlatTree/interface/KFlatTreeAnalyzer.h"
 #include "DataFormats/Common/interface/Wrapper.h"
 
 namespace {
   struct dictionary {
-    FlatEvent flatEvent;
-    edm::Wrapper<FlatEvent> w_flatEvent;
+    KFlatTreeAnalyzer kFlatTreeAnalyzer;
   };
 
 }

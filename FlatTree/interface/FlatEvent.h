@@ -10,6 +10,7 @@ public:
   FlatEvent(bool isMC=false);
   void clear();
   void book(TTree* tree); // book leaves to fill the tree
+  void setBranch(TTree* tree);
 
 public:
   TTree* tree_;

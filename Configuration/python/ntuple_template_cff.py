@@ -22,13 +22,11 @@ MuEl.electron.minNumber = 1
 
 MuJets = event.clone()
 MuJets.muon.minNumber = 1
-#MuJets.muon.maxNumber = 1
-#MuJets.electron.maxNumber = 0
+MuJets.jet.minNumber = 3
 
 ElJets = event.clone()
 ElJets.electron.minNumber = 1
-#ElJets.electron.maxNumber = 1
-#ElJets.muon.maxNumber = 0
+ElJets.jet.minNumber = 3
 
 nEventsNtupleElEl = cms.EDProducer("EventCountProducer")
 nEventsNtupleMuMu = cms.EDProducer("EventCountProducer")

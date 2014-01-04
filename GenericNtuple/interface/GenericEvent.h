@@ -1,13 +1,13 @@
-#ifndef KrAFT_FlatTree_FlatEvent_H
-#define KrAFT_FlatTree_FlatEvent_H
+#ifndef KrAFT_GenericNtuple_GenericEvent_H
+#define KrAFT_GenericNtuple_GenericEvent_H
 
 #include <vector>
 #include "TTree.h"
 
-struct FlatEvent
+struct GenericEvent
 {
 public:
-  FlatEvent(bool isMC=false);
+  GenericEvent(bool isMC=false);
   void clear();
   void book(TTree* tree); // book leaves to fill the tree
   void setBranch(TTree* tree);

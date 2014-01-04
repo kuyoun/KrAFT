@@ -9,7 +9,7 @@ TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
 )
 
-from KrAFT.FlatTree.flatTreeMaker_cfi import *
+from KrAFT.GenericNtuple.genericNtupleMaker_cfi import *
 event.eventCounters = ["nEventsTotal", "nEventsClean", "nEventsPAT",]
 
 MuMu = event.clone()

@@ -25,7 +25,7 @@
 
 #include "DataFormats/Math/interface/deltaR.h"
 
-#include "KrAFT/FlatTree/interface/FlatEvent.h"
+#include "KrAFT/GenericNtuple/interface/GenericEvent.h"
 
 #include "TTree.h"
 #include "TH1F.h"
@@ -36,11 +36,11 @@
 
 using namespace std;
 
-class KFlatTreeMaker : public edm::EDAnalyzer
+class KGenericNtupleMaker : public edm::EDAnalyzer
 {
 public:
-  KFlatTreeMaker(const edm::ParameterSet& pset);
-  ~KFlatTreeMaker();
+  KGenericNtupleMaker(const edm::ParameterSet& pset);
+  ~KGenericNtupleMaker();
 
   void endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup);
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup);
@@ -74,11 +74,11 @@ private:
 
   // Output tree
   TTree* tree_;
-  FlatEvent* fevent_;
+  GenericEvent* fevent_;
 
 };
 
-KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
+KGenericNtupleMaker::KGenericNtupleMaker(const edm::ParameterSet& pset)
 {
   isMC_ = pset.getParameter<bool>("isMC");
 
@@ -125,15 +125,15 @@ KFlatTreeMaker::KFlatTreeMaker(const edm::ParameterSet& pset)
   }
 
   tree_ = fs->make<TTree>("event", "Mixed event tree");
-  fevent_ = new FlatEvent(isMC_);
+  fevent_ = new GenericEvent(isMC_);
   fevent_->book(tree_);
 }
 
-KFlatTreeMaker::~KFlatTreeMaker()
+KGenericNtupleMaker::~KGenericNtupleMaker()
 {
 }
 
-void KFlatTreeMaker::endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup)
+void KGenericNtupleMaker::endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup)
 {
   for ( int i=0, n=eventCounterLabels_.size(); i<n; ++i )
   {
@@ -145,7 +145,7 @@ void KFlatTreeMaker::endLuminosityBlock(const edm::LuminosityBlock& lumi, const 
   }
 }
 
-void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
+void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
   using namespace std;
 
@@ -410,5 +410,5 @@ void KFlatTreeMaker::analyze(const edm::Event& event, const edm::EventSetup& eve
   fevent_->tree_->Fill();
 }
 
-DEFINE_FWK_MODULE(KFlatTreeMaker);
+DEFINE_FWK_MODULE(KGenericNtupleMaker);
 

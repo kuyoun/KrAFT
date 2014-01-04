@@ -1,6 +1,6 @@
-#include "KrAFT/FlatTree/interface/FlatEvent.h"
+#include "KrAFT/GenericNtuple/interface/GenericEvent.h"
 
-FlatEvent::FlatEvent(bool isMC)
+GenericEvent::GenericEvent(bool isMC)
 {
   isMC_ = isMC;
 
@@ -65,7 +65,7 @@ FlatEvent::FlatEvent(bool isMC)
   }
 }
 
-void FlatEvent::book(TTree* tree)
+void GenericEvent::book(TTree* tree)
 {
   tree_ = tree;
 
@@ -182,7 +182,7 @@ void FlatEvent::book(TTree* tree)
   }
 }
 
-void FlatEvent::clear()
+void GenericEvent::clear()
 {
   // Clear up
   electrons_pt_->clear();
@@ -271,7 +271,7 @@ void FlatEvent::clear()
   }
 }
 
-void FlatEvent::setBranch(TTree* tree)
+void GenericEvent::setBranch(TTree* tree)
 {
   tree_ = tree;
 

@@ -11,6 +11,8 @@
 <use name="PhysicsTools/RecoUtils" />
 <use name="RecoVertex/VertexTools" />
 
+<use name="KrAFT/GenericNtuple" />
+
 <use name="root" />
 
 <export name="1">

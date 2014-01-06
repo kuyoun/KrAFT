@@ -8,12 +8,10 @@ class KDileptonTreeReducer : public KFlatTreeReducerBase
 public:
   KDileptonTreeReducer(const std::string modeName,
                        const std::string inputFileName,
-                       const std::string outputFileName)
-    :KFlatTreeReducerBase(modeName, inputFileName, outputFileName) {}
+                       const std::string outputFileName);
   void run() { KFlatTreeReducerBase::run(); }
 
 private:
-  virtual void init();
   virtual bool analyze();
 
 private:
@@ -31,6 +29,18 @@ private:
   double lepton2_pt_, lepton2_eta_, lepton2_phi_, lepton2_iso_;
   double z_m_, z_pt_;
   int z_Q_;
+
+  doublesP jets_pt_, jets_bTag_;
+  doublesP jetsUp_pt_, jetsUp_bTag_;
+  doublesP jetsDn_pt_, jetsDn_bTag_;
+  doublesP jetsResUp_pt_, jetsResUp_bTag_;
+  doublesP jetsResDn_pt_, jetsResDn_bTag_;
+
+  double met_pt_, met_phi_;
+  double metUp_pt_, metUp_phi_;
+  double metDn_pt_, metDn_phi_;
+  double metResUp_pt_, metResUp_phi_;
+  double metResDn_pt_, metResDn_phi_;
 };
 
 #endif

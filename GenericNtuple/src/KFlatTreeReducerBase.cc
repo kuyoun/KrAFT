@@ -23,6 +23,11 @@ void printEntryFraction(int i, int n)
 
 KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string inputFileName, const string outputFileName)
 {
+  outputFile_ = TFile::Open(outputFileName.c_str(), "RECREATE");
+  outDir_ = outputFile_->mkdir(modeName.c_str());
+  outDir_->cd();
+  outTree_ = new TTree("ntuple", "ntuple");
+
   modeName_ = modeName;
   inputFile_ = TFile::Open(inputFileName.c_str());
   TTree* tree = dynamic_cast<TTree*>(inputFile_->Get(Form("%s/event", modeName.c_str())));
@@ -35,24 +40,14 @@ KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string i
   {
     hEvent_ = (TH1F*)inputFile_->Get(Form("%s/hEvent", modeName.c_str()));
   }
-
-  outputFile_ = TFile::Open(outputFileName.c_str(), "RECREATE");
-  outputFile_->cd();
-  outputFile_->mkdir(modeName.c_str());
-  outTree_ = new TTree("ntuple", "ntuple");
 }
 
 KFlatTreeReducerBase::~KFlatTreeReducerBase()
 {
-  //outputFile_->cd();
-  //outTree_->Write();
-  //outputFile_->Write();
-  //outputFile_->Close();
 }
 
 void KFlatTreeReducerBase::run()
 {
-  init();
   const int nEvent = event_->tree_->GetEntries();
   for ( int i=0; i<nEvent; ++i )
   {
@@ -64,6 +59,8 @@ void KFlatTreeReducerBase::run()
 
     outTree_->Fill();
   }
+  outDir_->cd();
+  outTree_->Write();
 }
 
 void KFlatTreeReducerBase::getP4(const doubles* pts, const doubles* etas, const doubles* phis, const doubles* ms, LorentzVectors& p4s)

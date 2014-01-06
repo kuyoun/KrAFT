@@ -35,7 +35,6 @@ public:
   void run();
 
 protected:
-  virtual void init() = 0;
   virtual bool analyze() = 0;
   void getP4(const doubles* pt, const doubles* eta, const doubles* phi, const doubles* m, LorentzVectors& p4);
   std::string modeName_;

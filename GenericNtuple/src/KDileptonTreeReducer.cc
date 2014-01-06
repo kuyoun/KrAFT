@@ -4,19 +4,9 @@ using namespace std;
 
 void KDileptonTreeReducer::init()
 {
-  if ( modeName_ == "ElEl")
+  if ( modeName_ == "MuMu" )
   {
     mode_ = 1;
-    leptons1_pt_  = leptons2_pt_  = event_->electrons_pt_ ;
-    leptons1_eta_ = leptons2_eta_ = event_->electrons_eta_;
-    leptons1_phi_ = leptons2_phi_ = event_->electrons_phi_;
-    leptons1_m_   = leptons2_m_   = event_->electrons_m_  ;
-    leptons1_Q_   = leptons2_Q_   = event_->electrons_Q_  ;
-    leptons1_iso_ = leptons2_iso_ = event_->electrons_relIso_;
-  }
-  else if ( modeName_ == "MuMu" )
-  {
-    mode_ = 2;
     leptons1_pt_  = leptons2_pt_  = event_->muons_pt_ ;
     leptons1_eta_ = leptons2_eta_ = event_->muons_eta_;
     leptons1_phi_ = leptons2_phi_ = event_->muons_phi_;
@@ -24,23 +14,33 @@ void KDileptonTreeReducer::init()
     leptons1_Q_   = leptons2_Q_   = event_->muons_Q_  ;
     leptons1_iso_ = leptons2_iso_ = event_->muons_relIso_;
   }
+  else if ( modeName_ == "ElEl")
+  {
+    mode_ = 2;
+    leptons1_pt_  = leptons2_pt_  = event_->electrons_pt_ ;
+    leptons1_eta_ = leptons2_eta_ = event_->electrons_eta_;
+    leptons1_phi_ = leptons2_phi_ = event_->electrons_phi_;
+    leptons1_m_   = leptons2_m_   = event_->electrons_m_  ;
+    leptons1_Q_   = leptons2_Q_   = event_->electrons_Q_  ;
+    leptons1_iso_ = leptons2_iso_ = event_->electrons_relIso_;
+  }
   else
   {
     mode_ = 3;
 
-    leptons1_pt_  = event_->electrons_pt_ ;
-    leptons1_eta_ = event_->electrons_eta_;
-    leptons1_phi_ = event_->electrons_phi_;
-    leptons1_m_   = event_->electrons_m_  ;
-    leptons1_Q_   = event_->electrons_Q_  ;
-    leptons1_iso_ = event_->electrons_relIso_;
+    leptons1_pt_  = event_->muons_pt_ ;
+    leptons1_eta_ = event_->muons_eta_;
+    leptons1_phi_ = event_->muons_phi_;
+    leptons1_m_   = event_->muons_m_  ;
+    leptons1_Q_   = event_->muons_Q_  ;
+    leptons1_iso_ = event_->muons_relIso_;
 
-    leptons2_pt_  = event_->muons_pt_ ;
-    leptons2_eta_ = event_->muons_eta_;
-    leptons2_phi_ = event_->muons_phi_;
-    leptons2_m_   = event_->muons_m_  ;
-    leptons2_Q_   = event_->muons_Q_  ;
-    leptons2_iso_ = event_->muons_relIso_;
+    leptons2_pt_  = event_->electrons_pt_ ;
+    leptons2_eta_ = event_->electrons_eta_;
+    leptons2_phi_ = event_->electrons_phi_;
+    leptons2_m_   = event_->electrons_m_  ;
+    leptons2_Q_   = event_->electrons_Q_  ;
+    leptons2_iso_ = event_->electrons_relIso_;
   }
 
   outTree_->Branch("lepton1_pt" , &lepton1_pt_ , "lepton1_pt/D" );
@@ -64,11 +64,11 @@ bool KDileptonTreeReducer::analyze()
   LorentzVector lepton1P4, lepton2P4, zP4;
   for ( int i=0, n=leptons1_pt_->size(); i<n; ++i )
   {
-    if ( mode_ == 1 )
+    if ( mode_ != 2 )
     {
-      if ( event_->electrons_type_->at(i) < 100 ) continue; // ElEl mode
+      if ( event_->muons_type_->at(i) == 0 ) continue; // MuMu or MuEl
     }
-    else if ( event_->muons_type_->at(i) == 0 ) continue; // MuMu or MuEl
+    else if ( event_->electrons_type_->at(i) < 100 ) continue; // ElEl mode
 
     lepton1_pt_  = leptons1_pt_ ->at(i);
     lepton1_eta_ = leptons1_eta_->at(i);
@@ -83,7 +83,7 @@ bool KDileptonTreeReducer::analyze()
 
     for ( int j=((mode_ == 3) ? 0 : i+1); j<n; ++j )
     {
-      if ( mode_ == 2 )
+      if ( mode_ == 1 )
       {
         if ( event_->muons_type_->at(j) == 0 ) continue; // MuMu mode
       }

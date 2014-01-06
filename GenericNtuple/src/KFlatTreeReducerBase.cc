@@ -1,11 +1,8 @@
-#include "KrAFT/GenericNtuple/interface/KFlatTreeReducer.h"
+#include "KrAFT/GenericNtuple/interface/KFlatTreeReducerBase.h"
 #include "TString.h"
 #include "TNamed.h"
 
 using namespace std;
-
-using namespace ROOT::Math::VectorUtil;
-typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LorentzVector;
 
 void printEntryFraction(int i, int n)
 {
@@ -24,10 +21,9 @@ void printEntryFraction(int i, int n)
   }
 }
 
-KFlatTreeReducer::KFlatTreeReducer(const string modeName, const string inputFileName, const string outputFileName)
+KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string inputFileName, const string outputFileName)
 {
-  eventScale_ = 1;
-
+  modeName_ = modeName;
   inputFile_ = TFile::Open(inputFileName.c_str());
   TTree* tree = dynamic_cast<TTree*>(inputFile_->Get(Form("%s/event", modeName.c_str())));
   const string dataType = inputFile_->Get(Form("%s/dataType", modeName.c_str()))->GetTitle();
@@ -42,37 +38,41 @@ KFlatTreeReducer::KFlatTreeReducer(const string modeName, const string inputFile
 
   outputFile_ = TFile::Open(outputFileName.c_str(), "RECREATE");
   outputFile_->cd();
-  TDirectory* outDir = outputFile_->mkdir(modeName.c_str());
+  outputFile_->mkdir(modeName.c_str());
   outTree_ = new TTree("ntuple", "ntuple");
 }
 
-void KFlatTreeReducer::setEventScale(const double scale)
-{
-  eventScale_ = scale;
-}
-
-void KFlatTreeReducer::setCrossSection(const double crossSection)
-{
-  if ( not isMC_ ) return;
-  const double nEventGen = hEvent_->GetBinContent(1);
-  eventScale_ = crossSection/nEventGen;
-}
-
-KFlatTreeReducer::~KFlatTreeReducer()
+KFlatTreeReducerBase::~KFlatTreeReducerBase()
 {
   //outputFile_->cd();
-  outTree_->Write();
+  //outTree_->Write();
   //outputFile_->Write();
   //outputFile_->Close();
 }
 
-void KFlatTreeReducer::analyze()
+void KFlatTreeReducerBase::run()
 {
+  init();
   const int nEvent = event_->tree_->GetEntries();
   for ( int i=0; i<nEvent; ++i )
   {
     printEntryFraction(i, nEvent);
     event_->tree_->GetEntry(i);
+
+    const bool isAccepted = analyze();
+    if ( !isAccepted ) continue;
+
+    outTree_->Fill();
   }
 }
 
+void KFlatTreeReducerBase::getP4(const doubles* pts, const doubles* etas, const doubles* phis, const doubles* ms, LorentzVectors& p4s)
+{
+  p4s.clear();
+  LorentzVector p4;
+  for ( int i=0, n=pts->size(); i<n; ++i )
+  {
+    p4.SetPtEtaPhiM(pts->at(i), etas->at(i), phis->at(i), ms->at(i));
+    p4s.push_back(p4);
+  }
+}

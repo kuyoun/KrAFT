@@ -110,6 +110,18 @@ def initialise(runOnMC, decayMode, doOutModule=False):
     if runOnMC: process.eventCleaning += process.eventCleaningMC
     else: process.eventCleaning += process.eventCleaningData
 
+    ## Lepton veto filters for L+J channels
+    process.muonVetoFilter = cms.EDFilter("PATCandViewCountFilter",
+        src = cms.InputTag("selectedPatMuonsPFlow"),
+        maxNumber = cms.uint32(0),
+        minNumber = cms.uint32(0),
+    )
+    process.electronVetoFilter = cms.EDFilter("PATCandViewCountFilter",
+        src = cms.InputTag("selectedPatElectronsPFlow"),
+        maxNumber = cms.uint32(0),
+        minNumber = cms.uint32(0),
+    )
+
     # event counters
     process.nEventsTotal = cms.EDProducer("EventCountProducer")
     process.nEventsClean = cms.EDProducer("EventCountProducer")
@@ -156,20 +168,31 @@ def initialise(runOnMC, decayMode, doOutModule=False):
           + process.patSequenceComplete
         )
     if decayMode in ("all", "MuJets"):
+        process.selectedPatMuonsPFlow.cut = 'isPFMuon && (isGlobalMuon || isTrackerMuon) && pt > 10 && abs(eta) < 2.5 && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
+        process.selectedPatElectronsPFlow.cut = 'pt > 20 && abs(eta) < 2.5 && electronID("mvaTrigV0") > 0. && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
+        process.muonVetoFilter.maxNumber = 1
+
         process.pMuJets = cms.Path(
             process.nEventsTotal
           + process.commonFilterSequence
           + process.hltMuJets + process.nEventsHLTMuJets
           + process.patSequenceComplete
+          * process.muonVetoFilter + process.electronVetoFilter
         )
         if runOnMC: process.pMuJets.remove(process.hltMuJets)
     if decayMode in ("all", "ElJets"):
+        process.selectedPatMuonsPFlow.cut = 'isPFMuon && (isGlobalMuon || isTrackerMuon) && pt > 10 && abs(eta) < 2.5 && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
+        process.selectedPatElectronsPFlow.cut = 'pt > 20 && abs(eta) < 2.5 && electronID("mvaTrigV0") > 0. && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
+        process.electronVetoFilter.maxNumber = 1
+
         process.pElJets = cms.Path(
             process.nEventsTotal
           + process.commonFilterSequence
           + process.hltElJets + process.nEventsHLTElJets
           + process.patSequenceComplete
+          * process.muonVetoFilter + process.electronVetoFilter
         )
+
         if runOnMC: process.pElJets.remove(process.hltElJets)
 
     return process

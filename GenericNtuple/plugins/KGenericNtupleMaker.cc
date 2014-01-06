@@ -46,6 +46,11 @@ public:
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup);
 
 private:
+  bool isInAcceptance(const pat::Electron& electron);
+  bool isInAcceptance(const pat::Muon& muon);
+  bool isInAcceptance(const pat::Jet& jet);
+
+private:
   // Input objects
   edm::InputTag genEventInfoLabel_;
   edm::InputTag genParticleLabel_;
@@ -65,6 +70,7 @@ private:
   bool isMC_;
 
   unsigned int muonMinNumber_, electronMinNumber_;
+  unsigned int jetMinNumber_;
 
   double muonDz_, electronDz_;
   double jetLeptonDeltaR_;
@@ -95,6 +101,7 @@ KGenericNtupleMaker::KGenericNtupleMaker(const edm::ParameterSet& pset)
   muonLabel_ = muonPSet.getParameter<edm::InputTag>("src");
 
   edm::ParameterSet jetPSet = pset.getParameter<edm::ParameterSet>("jet");
+  jetMinNumber_ = jetPSet.getParameter<unsigned int>("minNumber");
   jetLeptonDeltaR_ = jetPSet.getParameter<double>("leptonDeltaR");
   jetLabel_ = jetPSet.getParameter<edm::InputTag>("src");
   bTagType_ = jetPSet.getParameter<std::string>("bTagType");
@@ -329,6 +336,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     }
   }
 
+  unsigned int nJet = 0;
   edm::Handle<std::vector<pat::Jet> > jetHandle;
   edm::Handle<std::vector<pat::Jet> > jetUpHandle;
   edm::Handle<std::vector<pat::Jet> > jetDnHandle;
@@ -340,30 +348,36 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   for ( int i=0, n=jetHandle->size(); i<n; ++i )
   {
     const pat::Jet& jet = jetHandle->at(i);
+    if ( !isInAcceptance(jet) ) continue;
     fevent_->jets_pt_ ->push_back(jet.pt());
     fevent_->jets_eta_->push_back(jet.eta());
     fevent_->jets_phi_->push_back(jet.phi());
     fevent_->jets_m_  ->push_back(jet.mass());
     fevent_->jets_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
   }
+  nJet = std::max(nJet, (unsigned int)fevent_->jets_pt_->size());
   for ( int i=0, n=jetUpHandle->size(); i<n; ++i )
   {
     const pat::Jet& jet = jetUpHandle->at(i);
+    if ( !isInAcceptance(jet) ) continue;
     fevent_->jetsUp_pt_ ->push_back(jet.pt());
     fevent_->jetsUp_eta_->push_back(jet.eta());
     fevent_->jetsUp_phi_->push_back(jet.phi());
     fevent_->jetsUp_m_  ->push_back(jet.mass());
     fevent_->jetsUp_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
   }
+  nJet = std::max(nJet, (unsigned int)fevent_->jetsUp_pt_->size());
   for ( int i=0, n=jetDnHandle->size(); i<n; ++i )
   {
     const pat::Jet& jet = jetDnHandle->at(i);
+    if ( !isInAcceptance(jet) ) continue;
     fevent_->jetsDn_pt_ ->push_back(jet.pt());
     fevent_->jetsDn_eta_->push_back(jet.eta());
     fevent_->jetsDn_phi_->push_back(jet.phi());
     fevent_->jetsDn_m_  ->push_back(jet.mass());
     fevent_->jetsDn_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
   }
+  nJet = std::max(nJet, (unsigned int)fevent_->jetsDn_pt_->size());
   if ( isMC_ )
   {
     event.getByLabel(edm::InputTag(jetLabel_.label(), "resUp"), jetResUpHandle);
@@ -371,22 +385,27 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     for ( int i=0, n=jetResUpHandle->size(); i<n; ++i )
     {
       const pat::Jet& jet = jetResUpHandle->at(i);
+      if ( !isInAcceptance(jet) ) continue;
       fevent_->jetsResUp_pt_  ->push_back(jet.pt()  );
       fevent_->jetsResUp_eta_ ->push_back(jet.eta() );
       fevent_->jetsResUp_phi_ ->push_back(jet.phi() );
       fevent_->jetsResUp_m_   ->push_back(jet.mass());
       fevent_->jetsResUp_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
     }
+    nJet = std::max(nJet, (unsigned int)fevent_->jetsResUp_pt_->size());
     for ( int i=0, n=jetResDnHandle->size(); i<n; ++i )
     {
       const pat::Jet& jet = jetResDnHandle->at(i);
+      if ( !isInAcceptance(jet) ) continue;
       fevent_->jetsResDn_pt_  ->push_back(jet.pt()  );
       fevent_->jetsResDn_eta_ ->push_back(jet.eta() );
       fevent_->jetsResDn_phi_ ->push_back(jet.phi() );
       fevent_->jetsResDn_m_   ->push_back(jet.mass());
       fevent_->jetsResDn_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
     }
+    nJet = std::max(nJet, (unsigned int)fevent_->jetsResDn_pt_->size());
   }
+  if ( nJet < jetMinNumber_ ) return;
 
   edm::Handle<std::vector<reco::VertexCompositeCandidate> > jpsiHandle;
   event.getByLabel(jpsiLabel_, jpsiHandle);
@@ -410,5 +429,25 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   fevent_->tree_->Fill();
 }
 
-DEFINE_FWK_MODULE(KGenericNtupleMaker);
+bool KGenericNtupleMaker::isInAcceptance(const pat::Electron& electron)
+{
+  if ( electron.pt() < 10 ) return false;
+  if ( std::abs(electron.eta()) > 2.5 ) return false;
+  return true;
+}
 
+bool KGenericNtupleMaker::isInAcceptance(const pat::Muon& muon)
+{
+  if ( muon.pt() < 10 ) return false;
+  if ( std::abs(muon.eta()) > 2.5 ) return false;
+  return true;
+}
+
+bool KGenericNtupleMaker::isInAcceptance(const pat::Jet& jet)
+{
+  if ( jet.pt() < 30 ) return false;
+  if ( std::abs(jet.eta()) > 2.5 ) return false;
+  return true;
+}
+
+DEFINE_FWK_MODULE(KGenericNtupleMaker);

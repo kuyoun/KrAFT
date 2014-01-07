@@ -1,6 +1,6 @@
-#include "KrAFT/FlatTree/interface/FlatEvent.h"
+#include "KrAFT/GenericNtuple/interface/GenericEvent.h"
 
-FlatEvent::FlatEvent(bool isMC)
+GenericEvent::GenericEvent(bool isMC)
 {
   isMC_ = isMC;
 
@@ -65,7 +65,7 @@ FlatEvent::FlatEvent(bool isMC)
   }
 }
 
-void FlatEvent::book(TTree* tree)
+void GenericEvent::book(TTree* tree)
 {
   tree_ = tree;
 
@@ -182,7 +182,7 @@ void FlatEvent::book(TTree* tree)
   }
 }
 
-void FlatEvent::clear()
+void GenericEvent::clear()
 {
   // Clear up
   electrons_pt_->clear();
@@ -270,4 +270,122 @@ void FlatEvent::clear()
     genParticles_pdgId_->clear();
   }
 }
+
+void GenericEvent::setBranch(TTree* tree)
+{
+  tree_ = tree;
+
+  tree_->SetBranchAddress("run", &run_);
+  tree_->SetBranchAddress("lumi", &lumi_);
+  tree_->SetBranchAddress("event", &event_);
+
+  tree_->SetBranchAddress("puWeight", &puWeight_);
+  tree_->SetBranchAddress("puWeightUp", &puWeightUp_);
+  tree_->SetBranchAddress("puWeightDn", &puWeightDn_);
+  tree_->SetBranchAddress("nVertex", &nVertex_);
+
+  tree_->SetBranchAddress("muons_pt"  , &muons_pt_  );
+  tree_->SetBranchAddress("muons_eta" , &muons_eta_ );
+  tree_->SetBranchAddress("muons_phi" , &muons_phi_ );
+  tree_->SetBranchAddress("muons_m"   , &muons_m_   );
+  tree_->SetBranchAddress("muons_Q"   , &muons_Q_   );
+  tree_->SetBranchAddress("muons_type", &muons_type_);
+  tree_->SetBranchAddress("muons_relIso", &muons_relIso_);
+
+  tree_->SetBranchAddress("electrons_pt"  , &electrons_pt_  );
+  tree_->SetBranchAddress("electrons_eta" , &electrons_eta_ );
+  tree_->SetBranchAddress("electrons_phi" , &electrons_phi_ );
+  tree_->SetBranchAddress("electrons_m"   , &electrons_m_   );
+  tree_->SetBranchAddress("electrons_Q"   , &electrons_Q_   );
+  tree_->SetBranchAddress("electrons_type", &electrons_type_);
+  tree_->SetBranchAddress("electrons_relIso", &electrons_relIso_);
+
+  tree_->SetBranchAddress("electrons_mva", &electrons_mva_);
+  tree_->SetBranchAddress("electrons_scEta", &electrons_scEta_);
+
+  tree_->SetBranchAddress("jets_pt" , &jets_pt_ );
+  tree_->SetBranchAddress("jets_eta", &jets_eta_);
+  tree_->SetBranchAddress("jets_phi", &jets_phi_);
+  tree_->SetBranchAddress("jets_m"  , &jets_m_  );
+
+  tree_->SetBranchAddress("jetsUp_pt" , &jetsUp_pt_ );
+  tree_->SetBranchAddress("jetsUp_eta", &jetsUp_eta_);
+  tree_->SetBranchAddress("jetsUp_phi", &jetsUp_phi_);
+  tree_->SetBranchAddress("jetsUp_m"  , &jetsUp_m_  );
+
+  tree_->SetBranchAddress("jetsDn_pt" , &jetsDn_pt_ );
+  tree_->SetBranchAddress("jetsDn_eta", &jetsDn_eta_);
+  tree_->SetBranchAddress("jetsDn_phi", &jetsDn_phi_);
+  tree_->SetBranchAddress("jetsDn_m"  , &jetsDn_m_  );
+
+  tree_->SetBranchAddress("jets_bTag"  , &jets_bTag_  );
+  tree_->SetBranchAddress("jetsUp_bTag", &jetsUp_bTag_);
+  tree_->SetBranchAddress("jetsDn_bTag", &jetsDn_bTag_);
+
+  tree_->SetBranchAddress("met_pt"  , &met_pt_  );
+  tree_->SetBranchAddress("metUp_pt", &metUp_pt_);
+  tree_->SetBranchAddress("metDn_pt", &metDn_pt_);
+
+  tree_->SetBranchAddress("met_phi"  , &met_phi_  );
+  tree_->SetBranchAddress("metUp_phi", &metUp_phi_);
+  tree_->SetBranchAddress("metDn_phi", &metDn_phi_);
+
+  tree_->SetBranchAddress("jpsis_pt" , &jpsis_pt_ );
+  tree_->SetBranchAddress("jpsis_eta", &jpsis_eta_);
+  tree_->SetBranchAddress("jpsis_phi", &jpsis_phi_);
+  tree_->SetBranchAddress("jpsis_m"  , &jpsis_m_  );
+  tree_->SetBranchAddress("jpsis_lxy", &jpsis_lxy_);
+
+  if ( isMC_ )
+  {
+    tree_->SetBranchAddress("jetsResDn_pt" , &jetsResDn_pt_ );
+    tree_->SetBranchAddress("jetsResDn_eta", &jetsResDn_eta_);
+    tree_->SetBranchAddress("jetsResDn_phi", &jetsResDn_phi_);
+    tree_->SetBranchAddress("jetsResDn_m"  , &jetsResDn_m_  );
+
+    tree_->SetBranchAddress("jetsResUp_pt" , &jetsResUp_pt_ );
+    tree_->SetBranchAddress("jetsResUp_eta", &jetsResUp_eta_);
+    tree_->SetBranchAddress("jetsResUp_phi", &jetsResUp_phi_);
+    tree_->SetBranchAddress("jetsResUp_m"  , &jetsResUp_m_  );
+
+    tree_->SetBranchAddress("jetsResUp_bTag", &jetsResUp_bTag_);
+    tree_->SetBranchAddress("jetsResDn_bTag", &jetsResDn_bTag_);
+
+    tree_->SetBranchAddress("genWeight", &genWeight_);
+
+    tree_->SetBranchAddress("pdf_id1", &pdf_id1_);
+    tree_->SetBranchAddress("pdf_id2", &pdf_id2_);
+    tree_->SetBranchAddress("pdf_x1" , &pdf_x1_ );
+    tree_->SetBranchAddress("pdf_x2" , &pdf_x2_ );
+    tree_->SetBranchAddress("pdf_q"  , &pdf_q_  );
+
+    tree_->SetBranchAddress("genMuons_pt" , &genMuons_pt_ );
+    tree_->SetBranchAddress("genMuons_eta", &genMuons_eta_);
+    tree_->SetBranchAddress("genMuons_phi", &genMuons_phi_);
+    tree_->SetBranchAddress("genMuons_m"  , &genMuons_m_  );
+    tree_->SetBranchAddress("genMuons_Q"  , &genMuons_Q_  );
+
+    tree_->SetBranchAddress("genElectrons_pt" , &genElectrons_pt_ );
+    tree_->SetBranchAddress("genElectrons_eta", &genElectrons_eta_);
+    tree_->SetBranchAddress("genElectrons_phi", &genElectrons_phi_);
+    tree_->SetBranchAddress("genElectrons_m"  , &genElectrons_m_  );
+    tree_->SetBranchAddress("genElectrons_Q"  , &genElectrons_Q_  );
+
+    tree_->SetBranchAddress("genNeutrinos_pt" , &genNeutrinos_pt_ );
+    tree_->SetBranchAddress("genNeutrinos_eta", &genNeutrinos_eta_);
+    tree_->SetBranchAddress("genNeutrinos_phi", &genNeutrinos_phi_);
+
+    tree_->SetBranchAddress("genJets_pt" , &genJets_pt_ );
+    tree_->SetBranchAddress("genJets_eta", &genJets_eta_);
+    tree_->SetBranchAddress("genJets_phi", &genJets_phi_);
+    tree_->SetBranchAddress("genJets_m"  , &genJets_m_  );
+
+    tree_->SetBranchAddress("genParticles_pt" , &genParticles_pt_ );
+    tree_->SetBranchAddress("genParticles_eta", &genParticles_eta_);
+    tree_->SetBranchAddress("genParticles_phi", &genParticles_phi_);
+    tree_->SetBranchAddress("genParticles_m"  , &genParticles_m_  );
+    tree_->SetBranchAddress("genParticles_pdgId", &genParticles_pdgId_);
+  }
+}
+
 

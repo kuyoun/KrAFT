@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-event = cms.EDAnalyzer("KFlatTreeMaker",
+event = cms.EDAnalyzer("KGenericNtupleMaker",
     isMC = cms.bool(False),
 
     genEventInfo = cms.InputTag("generator"),
@@ -23,8 +23,10 @@ event = cms.EDAnalyzer("KFlatTreeMaker",
         minNumber = cms.uint32(0),
         maxNumber = cms.uint32(999),
     ),
+
     jet = cms.PSet(
         src = cms.InputTag("goodJets"),
+        minNumber = cms.uint32(0),
         leptonDeltaR = cms.double(0.5),
         bTagType = cms.string("combinedSecondaryVertexBJetTags"),
     ),

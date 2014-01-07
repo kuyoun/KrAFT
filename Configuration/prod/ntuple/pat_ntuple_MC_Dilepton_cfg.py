@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 runOnMC = True
 
 from KrAFT.Configuration.customise_cff import *
-process = initialise(decayMode="dilepton", runOnMC=runOnMC)
+process = initialise(decayMode="all", runOnMC=runOnMC)
 addNtupleStep(process, runOnMC=runOnMC)
 
 process.source.fileNames = [

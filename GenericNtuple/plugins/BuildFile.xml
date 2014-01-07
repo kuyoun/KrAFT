@@ -11,11 +11,11 @@
 <use name="PhysicsTools/RecoUtils" />
 <use name="RecoVertex/VertexTools" />
 
-<use name="KrAFT/FlatTree" />
+<use name="KrAFT/GenericNtuple" />
 
 <use name="root" />
 
-<library file="*.cc" name="KrAFTFlatTreePlugins">
+<library file="*.cc" name="KrAFTGenericNtuplePlugins">
   <flags EDM_PLUGIN="1" />
 </library>
 

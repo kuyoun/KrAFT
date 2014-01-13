@@ -72,9 +72,16 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
   jets_pt_   = new doubles;
   jetsUp_pt_ = new doubles;
   jetsDn_pt_ = new doubles;
-  outTree_->Branch("jets_pt" , &jets_pt_ );
+  outTree_->Branch("jets_pt"  , &jets_pt_   );
   outTree_->Branch("jetsUp_pt", &jetsUp_pt_ );
   outTree_->Branch("jetsDn_pt", &jetsDn_pt_ );
+
+  jets_bTag_   = new doubles;
+  jetsUp_bTag_ = new doubles;
+  jetsDn_bTag_ = new doubles;
+  outTree_->Branch("jets_bTag"  , &jets_bTag_  );
+  outTree_->Branch("jetsUp_bTag", &jetsUp_bTag_);
+  outTree_->Branch("jetsDn_bTag", &jetsDn_bTag_);
 
   outTree_->Branch("bjets_n"  , &bjets_n_  , "bjets_n/i"  );
   outTree_->Branch("bjetsUp_n", &bjetsUp_n_, "bjestUp_n/i");
@@ -103,9 +110,24 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
 
 bool KDileptonTreeReducer::analyze()
 {
+  // Initialize tree
+  z_Q_ = -999;
+  jets_pt_  ->clear(); jets_bTag_  ->clear();
+  jetsUp_pt_->clear(); jetsUp_bTag_->clear();
+  jetsDn_pt_->clear(); jetsDn_bTag_->clear();
+  bjets_n_ = 0;
+  bjetsUp_n_ = 0;
+  bjetsDn_n_ = 0;
+  if ( isMC_ )
+  {
+    jetsResUp_pt_->clear(); jetsResUp_bTag_->clear();
+    jetsResDn_pt_->clear(); jetsResDn_bTag_->clear();
+    bjetsResUp_n_ = 0;
+    bjetsResDn_n_ = 0;
+  }
+
   // Select leptons
   LorentzVector lepton1P4, lepton2P4, zP4;
-  z_Q_ = -999;
   for ( int i=0, n=leptons1_pt_->size(); i<n; ++i )
   {
     if ( mode_ != 2 )
@@ -177,7 +199,6 @@ bool KDileptonTreeReducer::analyze()
     puWeightDn_ = event_->puWeightDn_;
   }
 
-  bjets_n_ = 0;
   for ( int i=0, n=event_->jets_pt_->size(); i<n; ++i )
   {
     const double jetPt = event_->jets_pt_->at(i);
@@ -190,8 +211,75 @@ bool KDileptonTreeReducer::analyze()
     //if ( jetBtag > 0.898 ) ++bjets_n_;
     jets_bTag_->push_back(jetBtag);
 
-    LorentzVector jetP4;
-    jetP4.SetPtEtaPhiM(jetPt, event_->jets_eta_->at(i), event_->jets_phi_->at(i), event_->jets_m_->at(i));
+//    LorentzVector jetP4;
+//    jetP4.SetPtEtaPhiM(jetPt, event_->jets_eta_->at(i), event_->jets_phi_->at(i), event_->jets_m_->at(i));
+  }
+
+  for ( int i=0, n=event_->jetsUp_pt_->size(); i<n; ++i )
+  {
+    const double jetPt = event_->jetsUp_pt_->at(i);
+    if ( jetPt < 30 ) continue;
+    jetsUp_pt_->push_back(jetPt);
+
+    const double jetBtag = event_->jetsUp_bTag_->at(i);
+    //if ( jetBtag > 0.244 ) ++bjetsUp_n_;
+    if ( jetBtag > 0.679 ) ++bjetsUp_n_;
+    //if ( jetBtag > 0.898 ) ++bjetsUp_n_;
+    jetsUp_bTag_->push_back(jetBtag);
+
+//    LorentzVector jetP4;
+//    jetP4.SetPtEtaPhiM(jetPt, event_->jetsUp_eta_->at(i), event_->jetsUp_phi_->at(i), event_->jetsUp_m_->at(i));
+  }
+
+  for ( int i=0, n=event_->jetsDn_pt_->size(); i<n; ++i )
+  {
+    const double jetPt = event_->jetsDn_pt_->at(i);
+    if ( jetPt < 30 ) continue;
+    jetsDn_pt_->push_back(jetPt);
+
+    const double jetBtag = event_->jetsDn_bTag_->at(i);
+    //if ( jetBtag > 0.244 ) ++bjetsDn_n_;
+    if ( jetBtag > 0.679 ) ++bjetsDn_n_;
+    //if ( jetBtag > 0.898 ) ++bjetsDn_n_;
+    jetsDn_bTag_->push_back(jetBtag);
+
+//    LorentzVector jetP4;
+//    jetP4.SetPtEtaPhiM(jetPt, event_->jetsDn_eta_->at(i), event_->jetsDn_phi_->at(i), event_->jetsDn_m_->at(i));
+  }
+
+  if ( isMC_ )
+  {
+    for ( int i=0, n=event_->jetsResUp_pt_->size(); i<n; ++i )
+    {
+      const double jetPt = event_->jetsResUp_pt_->at(i);
+      if ( jetPt < 30 ) continue;
+      jetsResUp_pt_->push_back(jetPt);
+
+      const double jetBtag = event_->jetsResUp_bTag_->at(i);
+      //if ( jetBtag > 0.244 ) ++bjetsResUp_n_;
+      if ( jetBtag > 0.679 ) ++bjetsResUp_n_;
+      //if ( jetBtag > 0.898 ) ++bjetsResUp_n_;
+      jetsResUp_bTag_->push_back(jetBtag);
+
+  //    LorentzVector jetP4;
+  //    jetP4.SetPtEtaPhiM(jetPt, event_->jetsResUp_eta_->at(i), event_->jetsResUp_phi_->at(i), event_->jetsResUp_m_->at(i));
+    }
+
+    for ( int i=0, n=event_->jetsResDn_pt_->size(); i<n; ++i )
+    {
+      const double jetPt = event_->jetsResDn_pt_->at(i);
+      if ( jetPt < 30 ) continue;
+      jetsResDn_pt_->push_back(jetPt);
+
+      const double jetBtag = event_->jetsResDn_bTag_->at(i);
+      //if ( jetBtag > 0.244 ) ++bjetsResDn_n_;
+      if ( jetBtag > 0.679 ) ++bjetsResDn_n_;
+      //if ( jetBtag > 0.898 ) ++bjetsResDn_n_;
+      jetsResDn_bTag_->push_back(jetBtag);
+
+  //    LorentzVector jetP4;
+  //    jetP4.SetPtEtaPhiM(jetPt, event_->jetsResDn_eta_->at(i), event_->jetsResDn_phi_->at(i), event_->jetsResDn_m_->at(i));
+    }
   }
 
   return true;

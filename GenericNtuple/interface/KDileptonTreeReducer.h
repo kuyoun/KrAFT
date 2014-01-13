@@ -25,11 +25,14 @@ private:
 
 private:
   // Branch items for output tree
+  double puWeight_, puWeightUp_, puWeightDn_;
+
   double lepton1_pt_, lepton1_eta_, lepton1_phi_, lepton1_iso_;
   double lepton2_pt_, lepton2_eta_, lepton2_phi_, lepton2_iso_;
   double z_m_, z_pt_;
   int z_Q_;
 
+  unsigned int bjets_n_, bjetsUp_n_, bjetsDn_n_, bjetsResUp_n_, bjetsResDn_n_;
   doublesP jets_pt_, jets_bTag_;
   doublesP jetsUp_pt_, jetsUp_bTag_;
   doublesP jetsDn_pt_, jetsDn_bTag_;

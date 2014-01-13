@@ -23,14 +23,13 @@ void printEntryFraction(int i, int n)
 
 KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string inputFileName, const string outputFileName)
 {
-  outputFile_ = TFile::Open(outputFileName.c_str(), "RECREATE");
-  outDir_ = outputFile_->mkdir(modeName.c_str());
-  outDir_->cd();
-  outTree_ = new TTree("ntuple", "ntuple");
+  event_ = 0;
+  outputFile_ = 0;
 
   modeName_ = modeName;
   inputFile_ = TFile::Open(inputFileName.c_str());
   TTree* tree = dynamic_cast<TTree*>(inputFile_->Get(Form("%s/event", modeName.c_str())));
+  if ( !tree ) return;
   const string dataType = inputFile_->Get(Form("%s/dataType", modeName.c_str()))->GetTitle();
   isMC_ = (dataType == "MC");
   event_ = new GenericEvent(isMC_);
@@ -40,20 +39,27 @@ KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string i
   {
     hEvent_ = (TH1F*)inputFile_->Get(Form("%s/hEvent", modeName.c_str()));
   }
+
+  outputFile_ = TFile::Open(outputFileName.c_str(), "UPDATE");
+  outDir_ = outputFile_->mkdir(modeName.c_str());
+  outDir_->cd();
+  outTree_ = new TTree("ntuple", "ntuple");
 }
 
 KFlatTreeReducerBase::~KFlatTreeReducerBase()
 {
+  if ( outputFile_ and outputFile_->IsOpen() ) outputFile_->Close();
 }
 
 void KFlatTreeReducerBase::run()
 {
+  if ( !event_ ) return;
+
   const int nEvent = event_->tree_->GetEntries();
   for ( int i=0; i<nEvent; ++i )
   {
     printEntryFraction(i, nEvent);
     event_->tree_->GetEntry(i);
-
     const bool isAccepted = analyze();
     if ( !isAccepted ) continue;
 

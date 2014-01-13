@@ -7,6 +7,8 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
                                            const std::string outputFileName):
   KFlatTreeReducerBase(modeName, inputFileName, outputFileName)
 {
+  if ( !event_ ) return;
+
   if ( modeName_ == "MuMu" )
   {
     mode_ = 1;
@@ -73,8 +75,17 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
   outTree_->Branch("jets_pt" , &jets_pt_ );
   outTree_->Branch("jetsUp_pt", &jetsUp_pt_ );
   outTree_->Branch("jetsDn_pt", &jetsDn_pt_ );
+
+  outTree_->Branch("bjets_n"  , &bjets_n_  , "bjets_n/i"  );
+  outTree_->Branch("bjetsUp_n", &bjetsUp_n_, "bjestUp_n/i");
+  outTree_->Branch("bjetsDn_n", &bjetsDn_n_, "bjetsDn_n/i");
+
   if ( isMC_ )
   {
+    outTree_->Branch("puWeight", &puWeight_, "puWeight/D");
+    outTree_->Branch("puWeightUp", &puWeightUp_, "puWeightUp/D");
+    outTree_->Branch("puWeightDn", &puWeightDn_, "puWeightDn/D");
+
     outTree_->Branch("metResUp_pt" , &metResUp_pt_ , "metResUp_pt/D" );
     outTree_->Branch("metResUp_phi", &metResUp_phi_, "metResUp_phi/D");
     outTree_->Branch("metResDn_pt" , &metResDn_pt_ , "metResDn_pt/D" );
@@ -84,6 +95,9 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
     jetsResDn_pt_ = new doubles;
     outTree_->Branch("jetsResUp_pt", &jetsUp_pt_ );
     outTree_->Branch("jetsResDn_pt", &jetsUp_pt_ );
+
+    outTree_->Branch("bjetsResUp_n", &bjetsResUp_n_, "bjetsResUp_n/i");
+    outTree_->Branch("bjetsResDn_n", &bjetsResDn_n_, "bjetsResDn_n/i");
   }
 }
 
@@ -111,7 +125,7 @@ bool KDileptonTreeReducer::analyze()
     lepton1P4.SetPtEtaPhiM(lepton1_pt_, lepton1_eta_, lepton1_phi_, lepton1M);
     lepton1_iso_ = leptons1_iso_->at(i);
 
-    for ( int j=((mode_ == 3) ? 0 : i+1); j<n; ++j )
+    for ( int j=((mode_ == 3) ? 0 : i+1), m=leptons2_pt_->size(); j<m; ++j )
     {
       if ( mode_ == 1 )
       {
@@ -119,8 +133,8 @@ bool KDileptonTreeReducer::analyze()
       }
       else if ( event_->electrons_type_->at(j) < 100 ) continue; // ElEl and MuEl
 
-      lepton2_pt_  = leptons2_pt_->at(i);
-      lepton2_eta_ = leptons2_eta_->at(i);
+      lepton2_pt_  = leptons2_pt_->at(j);
+      lepton2_eta_ = leptons2_eta_->at(j);
       if ( lepton2_pt_ < 20 or std::abs(lepton2_eta_) > 2.5 ) continue;
 
       lepton2_phi_ = leptons2_phi_->at(j);
@@ -155,20 +169,30 @@ bool KDileptonTreeReducer::analyze()
     metResDn_phi_ = event_->metResDn_phi_;
   }
 
-/*
+  // Weights
+  if ( isMC_ )
+  {
+    puWeight_ = event_->puWeight_;
+    puWeightUp_ = event_->puWeightUp_;
+    puWeightDn_ = event_->puWeightDn_;
+  }
+
+  bjets_n_ = 0;
   for ( int i=0, n=event_->jets_pt_->size(); i<n; ++i )
   {
     const double jetPt = event_->jets_pt_->at(i);
+    if ( jetPt < 30 ) continue;
     jets_pt_->push_back(jetPt);
+
+    const double jetBtag = event_->jets_bTag_->at(i);
+    //if ( jetBtag > 0.244 ) ++bjets_n_;
+    if ( jetBtag > 0.679 ) ++bjets_n_;
+    //if ( jetBtag > 0.898 ) ++bjets_n_;
+    jets_bTag_->push_back(jetBtag);
 
     LorentzVector jetP4;
     jetP4.SetPtEtaPhiM(jetPt, event_->jets_eta_->at(i), event_->jets_phi_->at(i), event_->jets_m_->at(i));
   }
-  bTagCut_ = 0.898; // Tight cut
-  bTagCut_ = 0.679; // Medium cut
-  bTagCut_ = 0.244; // Loose cut
-
-*/
 
   return true;
 }

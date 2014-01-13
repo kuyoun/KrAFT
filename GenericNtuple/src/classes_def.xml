@@ -1,4 +1,5 @@
 <lcgdict>
+  <class name="KLeptonJetTreeReducer" />
   <class name="KDileptonTreeReducer" />
 </lcgdict>
 

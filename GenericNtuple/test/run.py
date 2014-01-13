@@ -1,17 +1,30 @@
 #!/usr/bin/env python
-
-import sys, os
+import sys, os, time
+from itertools import product
+from multiprocessing import Pool
 
 from ROOT import *
 gROOT.ProcessLine(".x rootlogon.C")
 
-if not os.path.isdir("hist"): os.makedirs("hist")
+def fed(args):
+    mode, file = args
+    sample = os.path.basename(file).replace('.root', '')
+    print "Running", mode, sample 
+    ana = KDileptonTreeReducer(mode, file, "ntuple/%s__%s.root" % (sample, mode))
+    ana.run()
+    print "Done", mode, sample
 
-mode = "ElEl"
-#sample = "DYJetsToLL_M-10To50filter_8TeV-madgraph"
-sample = "DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball"
+if __name__ == '__main__':
+    if os.path.isdir("ntuple"):
+        print "ntuple directory already exists. rename existing directory and rerun this script"
+        sys.exit()
+    if not os.path.isdir("ntuple"): os.makedirs("ntuple")
 
-ana = KDileptonTreeReducer("ElEl",
-    "/pnfs/user/jhgoh/data/ntuple/20131224_1/%s.root" % sample,
-    "hist/%s__%s.root" % (sample, mode))
-ana.run()
+    samples = []
+    #basedir = "/pnfs/user/jhgoh/data/ntuple/20131224_1/"
+    #samples.extend([basedir+x for x in os.listdir(basedir) if 'root' in x])
+    basedir = "/pnfs/user/jhgoh/data/ntuple/20131226_1/"
+    samples.extend([basedir+x for x in os.listdir(basedir) if 'root' in x])
+    p = Pool(4)
+    p.map(fed, [(x, y) for x in ("MuMu", "ElEl", "MuEl") for y in samples])
+

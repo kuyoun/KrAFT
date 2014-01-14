@@ -35,15 +35,12 @@ KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string i
   event_ = new GenericEvent(isMC_);
   event_->setBranch(tree);
 
-  if ( isMC_ )
-  {
-    hEvent_ = (TH1F*)inputFile_->Get(Form("%s/hEvent", modeName.c_str()));
-  }
-
-  outputFile_ = TFile::Open(outputFileName.c_str(), "UPDATE");
+  outputFile_ = TFile::Open(outputFileName.c_str(), "RECREATE");
   outDir_ = outputFile_->mkdir(modeName.c_str());
   outDir_->cd();
+  ((TH1F*)inputFile_->Get(Form("%s/hEventCounter", modeName.c_str()))->Clone())->Write();
   outTree_ = new TTree("ntuple", "ntuple");
+
 }
 
 KFlatTreeReducerBase::~KFlatTreeReducerBase()

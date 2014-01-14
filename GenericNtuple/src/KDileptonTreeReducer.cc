@@ -100,8 +100,13 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
 
     jetsResUp_pt_ = new doubles;
     jetsResDn_pt_ = new doubles;
-    outTree_->Branch("jetsResUp_pt", &jetsUp_pt_ );
-    outTree_->Branch("jetsResDn_pt", &jetsUp_pt_ );
+    outTree_->Branch("jetsResUp_pt", &jetsUp_pt_);
+    outTree_->Branch("jetsResDn_pt", &jetsUp_pt_);
+
+    jetsResUp_bTag_ = new doubles;
+    jetsResDn_bTag_ = new doubles;
+    outTree_->Branch("jetsResUp_bTag", &jetsUp_bTag_);
+    outTree_->Branch("jetsResDn_bTag", &jetsUp_bTag_);
 
     outTree_->Branch("bjetsResUp_n", &bjetsResUp_n_, "bjetsResUp_n/i");
     outTree_->Branch("bjetsResDn_n", &bjetsResDn_n_, "bjetsResDn_n/i");

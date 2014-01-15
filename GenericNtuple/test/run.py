@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys, os, time
 from itertools import product
-from multiprocessing import Pool
+import multiprocessing
 
 from ROOT import *
 gROOT.ProcessLine(".x rootlogon.C")
@@ -15,16 +15,16 @@ def fed(args):
     print "Done", mode, sample
 
 if __name__ == '__main__':
-    if os.path.isdir("ntuple"):
-        print "ntuple directory already exists. rename existing directory and rerun this script"
-        sys.exit()
+    #if os.path.isdir("ntuple"):
+    #    print "ntuple directory already exists. rename existing directory and rerun this script"
+    #    sys.exit()
     if not os.path.isdir("ntuple"): os.makedirs("ntuple")
 
     samples = []
-    #basedir = "/pnfs/user/jhgoh/data/ntuple/20131224_1/"
-    #samples.extend([basedir+x for x in os.listdir(basedir) if 'root' in x])
-    basedir = "/pnfs/user/jhgoh/data/ntuple/20131226_1/"
+    basedir = "/data/local/data01/jhgoh/CMS/ntuple/Generic/20131224_1/"
     samples.extend([basedir+x for x in os.listdir(basedir) if 'root' in x])
-    p = Pool(4)
+    basedir = "/data/local/data01/jhgoh/CMS/ntuple/Generic/20131226_1/"
+    samples.extend([basedir+x for x in os.listdir(basedir) if 'root' in x])
+    p = multiprocessing.Pool(multiprocessing.cpu_count())
     p.map(fed, [(x, y) for x in ("MuMu", "ElEl", "MuEl") for y in samples])
 

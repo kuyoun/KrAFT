@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys, os, time
-from multiprocessing import Pool
+import multiprocessing
 
 from ROOT import *
 gROOT.ProcessLine(".x rootlogon.C")
@@ -38,7 +38,7 @@ def process(sample, mode):
     ana.process()
 
 if __name__ == '__main__':
-    p = Pool(4)
+    p = multiprocessing.Pool(multiprocessing.cpu_count())
     for mode in ["MuMu", "MuEl", "ElEl"]:
         for f in os.listdir("ntuple"):
             if len(f) < 12: continue

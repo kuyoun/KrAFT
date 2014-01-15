@@ -9,6 +9,8 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
 {
   if ( !event_ ) return;
 
+  outTree_->Branch("nVertex", &nVertex_, "nVertex/I");
+
   if ( modeName_ == "MuMu" )
   {
     mode_ = 1;
@@ -130,6 +132,9 @@ bool KDileptonTreeReducer::analyze()
     bjetsResUp_n_ = 0;
     bjetsResDn_n_ = 0;
   }
+
+  // Fill common variables
+  nVertex_ = event_->nVertex_;
 
   // Select leptons
   LorentzVector lepton1P4, lepton2P4, zP4;

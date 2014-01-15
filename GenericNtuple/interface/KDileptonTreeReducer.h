@@ -25,6 +25,7 @@ private:
 
 private:
   // Branch items for output tree
+  int nVertex_;
   double puWeight_, puWeightUp_, puWeightDn_;
 
   double lepton1_pt_, lepton1_eta_, lepton1_phi_, lepton1_iso_;

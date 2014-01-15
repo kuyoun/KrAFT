@@ -39,6 +39,7 @@ KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string i
   outDir_ = outputFile_->mkdir(modeName.c_str());
   outDir_->cd();
   ((TH1F*)inputFile_->Get(Form("%s/hEventCounter", modeName.c_str()))->Clone())->Write();
+  ((TNamed*)inputFile_->Get(Form("%s/dataType", modeName.c_str()))->Clone())->Write();
   outTree_ = new TTree("ntuple", "ntuple");
 
 }

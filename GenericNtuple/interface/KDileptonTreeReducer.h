@@ -41,10 +41,11 @@ private:
   doublesP jetsResDn_pt_, jetsResDn_bTag_;
 
   double met_pt_, met_phi_;
-  double metUp_pt_, metUp_phi_;
-  double metDn_pt_, metDn_phi_;
-  double metResUp_pt_, metResUp_phi_;
-  double metResDn_pt_, metResDn_phi_;
+  double metJESUp_pt_, metJESUp_phi_;
+  double metJESDn_pt_, metJESDn_phi_;
+  double metJER_pt_, metJER_phi_;
+  double metJERUp_pt_, metJERUp_phi_;
+  double metJERDn_pt_, metJERDn_phi_;
 };
 
 #endif

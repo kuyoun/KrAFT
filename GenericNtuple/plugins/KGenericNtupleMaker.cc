@@ -26,6 +26,7 @@
 #include "DataFormats/Math/interface/deltaR.h"
 
 #include "KrAFT/GenericNtuple/interface/GenericEvent.h"
+#include "KrAFT/RecoSelectorTools/interface/Types.h"
 
 #include "TTree.h"
 #include "TH1F.h"
@@ -45,10 +46,16 @@ public:
   void endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup);
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup);
 
+  typedef std::vector<pat::Electron> Electrons;
+  typedef std::vector<pat::Muon> Muons;
+  typedef std::vector<pat::MET> METs;
+  typedef std::vector<pat::Jet> Jets;
+  typedef edm::RefVector<Jets> JetRefs;
+  typedef std::vector<double> doubles;
+  typedef std::vector<std::string> VString;
+
 private:
-  bool isInAcceptance(const pat::Electron& electron);
-  bool isInAcceptance(const pat::Muon& muon);
-  bool isInAcceptance(const pat::Jet& jet);
+  int findMother(const reco::GenParticle* p, std::vector<const reco::GenParticle*>& genParticles);
 
 private:
   // Input objects
@@ -62,10 +69,11 @@ private:
   edm::InputTag electronLabel_;
   edm::InputTag jetLabel_;
   edm::InputTag metLabel_;
+  edm::InputTag uncLabel_;
   edm::InputTag jpsiLabel_;
   std::string bTagType_;
 
-  std::vector<std::string> eventCounterLabels_;
+  VString eventCounterLabels_;
 
   bool isMC_;
 
@@ -100,20 +108,19 @@ KGenericNtupleMaker::KGenericNtupleMaker(const edm::ParameterSet& pset)
   muonMinNumber_ = muonPSet.getParameter<unsigned int>("minNumber");
   muonLabel_ = muonPSet.getParameter<edm::InputTag>("src");
 
-  edm::ParameterSet jetPSet = pset.getParameter<edm::ParameterSet>("jet");
-  jetMinNumber_ = jetPSet.getParameter<unsigned int>("minNumber");
-  jetLeptonDeltaR_ = jetPSet.getParameter<double>("leptonDeltaR");
-  jetLabel_ = jetPSet.getParameter<edm::InputTag>("src");
-  bTagType_ = jetPSet.getParameter<std::string>("bTagType");
-
-  edm::ParameterSet metPSet = pset.getParameter<edm::ParameterSet>("met");
-  metLabel_ = metPSet.getParameter<edm::InputTag>("src");
+  edm::ParameterSet jetMETPSet = pset.getParameter<edm::ParameterSet>("jetMET");
+  jetLabel_ = jetMETPSet.getParameter<edm::InputTag>("jet");
+  metLabel_ = jetMETPSet.getParameter<edm::InputTag>("met");
+  uncLabel_ = jetMETPSet.getParameter<edm::InputTag>("unc");
+  jetMinNumber_ = jetMETPSet.getParameter<unsigned int>("minNumber");
+  jetLeptonDeltaR_ = jetMETPSet.getParameter<double>("leptonDeltaR");
+  bTagType_ = jetMETPSet.getParameter<std::string>("bTagType");
 
   edm::ParameterSet jpsiPSet = pset.getParameter<edm::ParameterSet>("jpsi");
   jpsiLabel_ = jpsiPSet.getParameter<edm::InputTag>("src");
 
   // Event counter
-  eventCounterLabels_ = pset.getParameter<std::vector<std::string> >("eventCounters");
+  eventCounterLabels_ = pset.getParameter<VString>("eventCounters");
 
   if ( isMC_ )
   {
@@ -182,7 +189,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->puWeightDn_ = *(puWeightDnHandle.product());
   }
 
-  edm::Handle<std::vector<pat::Electron> > electronHandle;
+  edm::Handle<Electrons> electronHandle;
   event.getByLabel(electronLabel_, electronHandle);
   for ( int i=0, n=electronHandle->size(); i<n; ++i )
   {
@@ -221,7 +228,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   }
   if ( fevent_->electrons_pt_->size() < electronMinNumber_ ) return;
 
-  edm::Handle<std::vector<pat::Muon> > muonHandle;
+  edm::Handle<Muons> muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
@@ -246,24 +253,28 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   }
   if ( fevent_->muons_pt_->size() < muonMinNumber_ ) return;
 
-  edm::Handle<std::vector<pat::MET> > metHandle, metUpHandle, metDnHandle, metResUpHandle, metResDnHandle;
+  edm::Handle<METs> metHandle, metJESUpHandle, metJESDnHandle;
+  edm::Handle<METs> metJERHandle, metJERUpHandle, metJERDnHandle;
   event.getByLabel(metLabel_, metHandle);
-  event.getByLabel(edm::InputTag(metLabel_.label(), "up"), metUpHandle);
-  event.getByLabel(edm::InputTag(metLabel_.label(), "dn"), metDnHandle);
+  event.getByLabel(edm::InputTag(uncLabel_.label(), "up"), metJESUpHandle);
+  event.getByLabel(edm::InputTag(uncLabel_.label(), "dn"), metJESDnHandle);
   fevent_->met_pt_ = metHandle->at(0).pt();
-  fevent_->metUp_pt_ = metUpHandle->at(0).pt();
-  fevent_->metDn_pt_ = metDnHandle->at(0).pt();
+  fevent_->metJESUp_pt_ = metJESUpHandle->at(0).pt();
+  fevent_->metJESDn_pt_ = metJESDnHandle->at(0).pt();
   fevent_->met_phi_ = metHandle->at(0).phi();
-  fevent_->metUp_phi_ = metUpHandle->at(0).phi();
-  fevent_->metDn_phi_ = metDnHandle->at(0).phi();
+  fevent_->metJESUp_phi_ = metJESUpHandle->at(0).phi();
+  fevent_->metJESDn_phi_ = metJESDnHandle->at(0).phi();
   if ( isMC_ )
   {
-    event.getByLabel(edm::InputTag(metLabel_.label(), "resUp"), metResUpHandle);
-    event.getByLabel(edm::InputTag(metLabel_.label(), "resDn"), metResDnHandle);
-    fevent_->metResUp_pt_ = metResUpHandle->at(0).pt();
-    fevent_->metResDn_pt_ = metResDnHandle->at(0).pt();
-    fevent_->metResUp_phi_ = metResUpHandle->at(0).phi();
-    fevent_->metResDn_phi_ = metResDnHandle->at(0).phi();
+    event.getByLabel(edm::InputTag(uncLabel_.label(), "res"), metJERHandle);
+    event.getByLabel(edm::InputTag(uncLabel_.label(), "resUp"), metJERUpHandle);
+    event.getByLabel(edm::InputTag(uncLabel_.label(), "resDn"), metJERDnHandle);
+    fevent_->metJER_pt_ = metJERHandle->at(0).pt();
+    fevent_->metJERUp_pt_ = metJERUpHandle->at(0).pt();
+    fevent_->metJERDn_pt_ = metJERDnHandle->at(0).pt();
+    fevent_->metJER_phi_ = metJERHandle->at(0).phi();
+    fevent_->metJERUp_phi_ = metJERUpHandle->at(0).phi();
+    fevent_->metJERDn_phi_ = metJERDnHandle->at(0).phi();
   }
 
   if ( isMC_ )
@@ -290,25 +301,25 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     event.getByLabel(genJetLabel_, genJetHandle);
 
     // Find top quark from the genParticles
-    const reco::GenParticle* firstGen = &genHandle->at(0);
+    std::vector<const reco::GenParticle*> genParticlesToStore;
     for ( int i=0, n=genHandle->size(); i<n; ++i )
     {
       const reco::GenParticle& p = genHandle->at(i);
-      const int charge = p.charge();
-      const int mother1 = dynamic_cast<const reco::GenParticle*>(p.mother(0))-firstGen;
-      const int mother2 = mother1+p.numberOfMothers();
-      const int daughter1 = dynamic_cast<const reco::GenParticle*>(p.daughter(0))-firstGen;
-      const int daughter2 = daughter2+p.numberOfDaughters();
+      if ( p.status() != 3 ) continue;
+      genParticlesToStore.push_back(&p);
+    }
+    for ( int i=0, n=genParticlesToStore.size(); i<n; ++i )
+    {
+      const reco::GenParticle* p = genParticlesToStore[i];
+      //const int charge = p.charge();
+      const int mother = findMother(p, genParticlesToStore);
 
-      fevent_->genParticles_pt_ ->push_back(p.pt()  );
-      fevent_->genParticles_eta_->push_back(p.eta() );
-      fevent_->genParticles_phi_->push_back(p.phi() );
-      fevent_->genParticles_m_  ->push_back(p.mass());
-      fevent_->genParticles_pdgId_->push_back(p.pdgId());
-      fevent_->genParticles_mother1_->push_back(mother1);
-      fevent_->genParticles_mother1_->push_back(mother2);
-      fevent_->genParticles_mother1_->push_back(daughter1);
-      fevent_->genParticles_mother1_->push_back(daughter2);
+      fevent_->genParticles_pt_ ->push_back(p->pt()  );
+      fevent_->genParticles_eta_->push_back(p->eta() );
+      fevent_->genParticles_phi_->push_back(p->phi() );
+      fevent_->genParticles_m_  ->push_back(p->mass());
+      fevent_->genParticles_pdgId_->push_back(p->pdgId());
+      fevent_->genParticles_mother_->push_back(mother);
     }
 
     for ( int i=0, n=genJetHandle->size(); i<n; ++i )
@@ -322,84 +333,68 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     }
   }
 
-  unsigned int nJet = 0;
-  edm::Handle<std::vector<pat::Jet> > jetHandle;
-  edm::Handle<std::vector<pat::Jet> > jetUpHandle;
-  edm::Handle<std::vector<pat::Jet> > jetDnHandle;
-  edm::Handle<std::vector<pat::Jet> > jetResUpHandle;
-  edm::Handle<std::vector<pat::Jet> > jetResDnHandle;
+  // Do jets
+  edm::Handle<JetRefs> jetHandle;
+  edm::Handle<pat::JetToValue> fJESUpHandle, fJESDnHandle;
+  edm::Handle<pat::JetToValue> fJERHandle;
+  edm::Handle<pat::JetToValue> fJERUpHandle, fJERDnHandle;
   event.getByLabel(jetLabel_, jetHandle);
-  event.getByLabel(edm::InputTag(jetLabel_.label(), "up"), jetUpHandle);
-  event.getByLabel(edm::InputTag(jetLabel_.label(), "dn"), jetDnHandle);
+  event.getByLabel(edm::InputTag(uncLabel_.label(), "up"), fJESUpHandle);
+  event.getByLabel(edm::InputTag(uncLabel_.label(), "dn"), fJESDnHandle);
+  if ( isMC_ )
+  {
+    event.getByLabel(edm::InputTag(uncLabel_.label(), "res"), fJERHandle);
+    event.getByLabel(edm::InputTag(uncLabel_.label(), "resUp"), fJERUpHandle);
+    event.getByLabel(edm::InputTag(uncLabel_.label(), "resDn"), fJERDnHandle);
+  }
+  double fJER = 1, fJERUp = 1, fJERDn = 1;
   for ( int i=0, n=jetHandle->size(); i<n; ++i )
   {
-    const pat::Jet& jet = jetHandle->at(i);
-    if ( !isInAcceptance(jet) ) continue;
-    fevent_->jets_pt_ ->push_back(jet.pt());
-    fevent_->jets_eta_->push_back(jet.eta());
+    edm::Ref<Jets> jetRef = jetHandle->at(i);
+    const pat::Jet& jet = *jetRef;
+    const double jetEta = jet.eta();
+    if ( std::abs(jetEta) > 2.5 ) continue;
+
+    const double fJESUp = fJESUpHandle->find(jetRef)->val;
+    const double fJESDn = fJESDnHandle->find(jetRef)->val;
+    double maxPtScale = max(max(1., fJESUp), fJESDn);
+    if ( isMC_ )
+    {
+      fJER   = fJERHandle->find(jetRef)->val;
+      fJERUp = fJERUpHandle->find(jetRef)->val;
+      fJERDn = fJERDnHandle->find(jetRef)->val;
+      maxPtScale = max(max(max(fJER, fJERUp), fJERDn), maxPtScale);
+    }
+    const double jetPt = jet.pt();
+    if ( jetPt*maxPtScale < 30 ) continue;
+
+    fevent_->jets_pt_ ->push_back(jetPt);
+    fevent_->jets_eta_->push_back(jetEta);
     fevent_->jets_phi_->push_back(jet.phi());
     fevent_->jets_m_  ->push_back(jet.mass());
     fevent_->jets_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
-  }
-  nJet = std::max(nJet, (unsigned int)fevent_->jets_pt_->size());
-  for ( int i=0, n=jetUpHandle->size(); i<n; ++i )
-  {
-    const pat::Jet& jet = jetUpHandle->at(i);
-    if ( !isInAcceptance(jet) ) continue;
-    fevent_->jetsUp_pt_ ->push_back(jet.pt());
-    fevent_->jetsUp_eta_->push_back(jet.eta());
-    fevent_->jetsUp_phi_->push_back(jet.phi());
-    fevent_->jetsUp_m_  ->push_back(jet.mass());
-    fevent_->jetsUp_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
-  }
-  nJet = std::max(nJet, (unsigned int)fevent_->jetsUp_pt_->size());
-  for ( int i=0, n=jetDnHandle->size(); i<n; ++i )
-  {
-    const pat::Jet& jet = jetDnHandle->at(i);
-    if ( !isInAcceptance(jet) ) continue;
-    fevent_->jetsDn_pt_ ->push_back(jet.pt());
-    fevent_->jetsDn_eta_->push_back(jet.eta());
-    fevent_->jetsDn_phi_->push_back(jet.phi());
-    fevent_->jetsDn_m_  ->push_back(jet.mass());
-    fevent_->jetsDn_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
-  }
-  nJet = std::max(nJet, (unsigned int)fevent_->jetsDn_pt_->size());
-  if ( isMC_ )
-  {
-    event.getByLabel(edm::InputTag(jetLabel_.label(), "resUp"), jetResUpHandle);
-    event.getByLabel(edm::InputTag(jetLabel_.label(), "resDn"), jetResDnHandle);
-    for ( int i=0, n=jetResUpHandle->size(); i<n; ++i )
-    {
-      const pat::Jet& jet = jetResUpHandle->at(i);
-      if ( !isInAcceptance(jet) ) continue;
-      fevent_->jetsResUp_pt_  ->push_back(jet.pt()  );
-      fevent_->jetsResUp_eta_ ->push_back(jet.eta() );
-      fevent_->jetsResUp_phi_ ->push_back(jet.phi() );
-      fevent_->jetsResUp_m_   ->push_back(jet.mass());
-      fevent_->jetsResUp_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
-    }
-    nJet = std::max(nJet, (unsigned int)fevent_->jetsResUp_pt_->size());
-    for ( int i=0, n=jetResDnHandle->size(); i<n; ++i )
-    {
-      const pat::Jet& jet = jetResDnHandle->at(i);
-      if ( !isInAcceptance(jet) ) continue;
-      fevent_->jetsResDn_pt_  ->push_back(jet.pt()  );
-      fevent_->jetsResDn_eta_ ->push_back(jet.eta() );
-      fevent_->jetsResDn_phi_ ->push_back(jet.phi() );
-      fevent_->jetsResDn_m_   ->push_back(jet.mass());
-      fevent_->jetsResDn_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
-    }
-    nJet = std::max(nJet, (unsigned int)fevent_->jetsResDn_pt_->size());
-  }
-  if ( nJet < jetMinNumber_ ) return;
 
+    fevent_->jets_JESUp_->push_back(fJESUp);
+    fevent_->jets_JESDn_->push_back(fJESDn);
+    if ( isMC_ )
+    {
+      fevent_->jets_JER_->push_back(fJER);
+      fevent_->jets_JERUp_->push_back(fJERUp);
+      fevent_->jets_JERDn_->push_back(fJERDn);
+    }
+  }
+  if ( fevent_->jets_pt_->size() < jetMinNumber_ ) return;
+
+  // Do Jpsi
   edm::Handle<std::vector<reco::VertexCompositeCandidate> > jpsiHandle;
   event.getByLabel(jpsiLabel_, jpsiHandle);
-  edm::Handle<std::vector<double> > jpsiLxyHandle;
+  edm::Handle<doubles> jpsiLxyHandle;
   event.getByLabel(edm::InputTag(jpsiLabel_.label(), "lxy"), jpsiLxyHandle);
   for ( int i=0, n=jpsiHandle->size(); i<n; ++i )
   {
     const reco::VertexCompositeCandidate& jpsiCand = jpsiHandle->at(i);
+    const reco::Candidate* track1 = jpsiCand.daughter(0);
+    const reco::Candidate* track2 = jpsiCand.daughter(1);
     fevent_->jpsis_pt_ ->push_back(jpsiCand.pt()  );
     fevent_->jpsis_eta_->push_back(jpsiCand.eta() );
     fevent_->jpsis_phi_->push_back(jpsiCand.phi() );
@@ -415,25 +410,13 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   fevent_->tree_->Fill();
 }
 
-bool KGenericNtupleMaker::isInAcceptance(const pat::Electron& electron)
+int KGenericNtupleMaker::findMother(const reco::GenParticle* p, std::vector<const reco::GenParticle*>& genParticles)
 {
-  if ( electron.pt() < 10 ) return false;
-  if ( std::abs(electron.eta()) > 2.5 ) return false;
-  return true;
-}
-
-bool KGenericNtupleMaker::isInAcceptance(const pat::Muon& muon)
-{
-  if ( muon.pt() < 10 ) return false;
-  if ( std::abs(muon.eta()) > 2.5 ) return false;
-  return true;
-}
-
-bool KGenericNtupleMaker::isInAcceptance(const pat::Jet& jet)
-{
-  if ( jet.pt() < 30 ) return false;
-  if ( std::abs(jet.eta()) > 2.5 ) return false;
-  return true;
+  for ( int i=0, n=genParticles.size(); i<n; ++i )
+  {
+    if ( p == genParticles[i] ) return i;
+  }
+  return findMother(dynamic_cast<const reco::GenParticle*>(p->mother()), genParticles);
 }
 
 DEFINE_FWK_MODULE(KGenericNtupleMaker);

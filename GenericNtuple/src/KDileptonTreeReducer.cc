@@ -66,10 +66,10 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
 
   outTree_->Branch("met_pt" , &met_pt_ , "met_pt/D" );
   outTree_->Branch("met_phi", &met_phi_, "met_phi/D");
-  outTree_->Branch("metUp_pt" , &metUp_pt_ , "metUp_pt/D" );
-  outTree_->Branch("metUp_phi", &metUp_phi_, "metUp_phi/D");
-  outTree_->Branch("metDn_pt" , &metDn_pt_ , "metDn_pt/D" );
-  outTree_->Branch("metDn_phi", &metDn_phi_, "metDn_phi/D");
+  outTree_->Branch("metJESUp_pt" , &metJESUp_pt_ , "metJESUp_pt/D" );
+  outTree_->Branch("metJESUp_phi", &metJESUp_phi_, "metJESUp_phi/D");
+  outTree_->Branch("metJESDn_pt" , &metJESDn_pt_ , "metJESDn_pt/D" );
+  outTree_->Branch("metJESDn_phi", &metJESDn_phi_, "metJESDn_phi/D");
 
   jets_pt_   = new doubles;
   jetsUp_pt_ = new doubles;
@@ -95,10 +95,12 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
     outTree_->Branch("puWeightUp", &puWeightUp_, "puWeightUp/D");
     outTree_->Branch("puWeightDn", &puWeightDn_, "puWeightDn/D");
 
-    outTree_->Branch("metResUp_pt" , &metResUp_pt_ , "metResUp_pt/D" );
-    outTree_->Branch("metResUp_phi", &metResUp_phi_, "metResUp_phi/D");
-    outTree_->Branch("metResDn_pt" , &metResDn_pt_ , "metResDn_pt/D" );
-    outTree_->Branch("metResDn_phi", &metResDn_phi_, "metResDn_phi/D");
+    outTree_->Branch("metJER_pt" , &metJER_pt_ , "metJER_pt/D" );
+    outTree_->Branch("metJER_phi", &metJER_phi_, "metJER_phi/D");
+    outTree_->Branch("metJERUp_pt" , &metJERUp_pt_ , "metJERUp_pt/D" );
+    outTree_->Branch("metJERUp_phi", &metJERUp_phi_, "metJERUp_phi/D");
+    outTree_->Branch("metJERDn_pt" , &metJERDn_pt_ , "metJERDn_pt/D" );
+    outTree_->Branch("metJERDn_phi", &metJERDn_phi_, "metJERDn_phi/D");
 
     jetsResUp_pt_ = new doubles;
     jetsResDn_pt_ = new doubles;
@@ -189,16 +191,18 @@ bool KDileptonTreeReducer::analyze()
 
   met_pt_  = event_->met_pt_ ;
   met_phi_ = event_->met_phi_;
-  metUp_pt_  = event_->metUp_pt_ ;
-  metUp_phi_ = event_->metUp_phi_;
-  metDn_pt_  = event_->metDn_pt_ ;
-  metDn_phi_ = event_->metDn_phi_;
+  metJESUp_pt_  = event_->metJESUp_pt_ ;
+  metJESUp_phi_ = event_->metJESUp_phi_;
+  metJESDn_pt_  = event_->metJESDn_pt_ ;
+  metJESDn_phi_ = event_->metJESDn_phi_;
   if ( isMC_ )
   {
-    metResUp_pt_  = event_->metResUp_pt_ ;
-    metResUp_phi_ = event_->metResUp_phi_;
-    metResDn_pt_  = event_->metResDn_pt_ ;
-    metResDn_phi_ = event_->metResDn_phi_;
+    metJER_pt_  = event_->metJER_pt_ ;
+    metJER_phi_ = event_->metJER_phi_;
+    metJERUp_pt_  = event_->metJERUp_pt_ ;
+    metJERUp_phi_ = event_->metJERUp_phi_;
+    metJERDn_pt_  = event_->metJERDn_pt_ ;
+    metJERDn_phi_ = event_->metJERDn_phi_;
   }
 
   // Weights
@@ -223,73 +227,6 @@ bool KDileptonTreeReducer::analyze()
 
 //    LorentzVector jetP4;
 //    jetP4.SetPtEtaPhiM(jetPt, event_->jets_eta_->at(i), event_->jets_phi_->at(i), event_->jets_m_->at(i));
-  }
-
-  for ( int i=0, n=event_->jetsUp_pt_->size(); i<n; ++i )
-  {
-    const double jetPt = event_->jetsUp_pt_->at(i);
-    if ( jetPt < 30 ) continue;
-    jetsUp_pt_->push_back(jetPt);
-
-    const double jetBtag = event_->jetsUp_bTag_->at(i);
-    //if ( jetBtag > 0.244 ) ++bjetsUp_n_;
-    if ( jetBtag > 0.679 ) ++bjetsUp_n_;
-    //if ( jetBtag > 0.898 ) ++bjetsUp_n_;
-    jetsUp_bTag_->push_back(jetBtag);
-
-//    LorentzVector jetP4;
-//    jetP4.SetPtEtaPhiM(jetPt, event_->jetsUp_eta_->at(i), event_->jetsUp_phi_->at(i), event_->jetsUp_m_->at(i));
-  }
-
-  for ( int i=0, n=event_->jetsDn_pt_->size(); i<n; ++i )
-  {
-    const double jetPt = event_->jetsDn_pt_->at(i);
-    if ( jetPt < 30 ) continue;
-    jetsDn_pt_->push_back(jetPt);
-
-    const double jetBtag = event_->jetsDn_bTag_->at(i);
-    //if ( jetBtag > 0.244 ) ++bjetsDn_n_;
-    if ( jetBtag > 0.679 ) ++bjetsDn_n_;
-    //if ( jetBtag > 0.898 ) ++bjetsDn_n_;
-    jetsDn_bTag_->push_back(jetBtag);
-
-//    LorentzVector jetP4;
-//    jetP4.SetPtEtaPhiM(jetPt, event_->jetsDn_eta_->at(i), event_->jetsDn_phi_->at(i), event_->jetsDn_m_->at(i));
-  }
-
-  if ( isMC_ )
-  {
-    for ( int i=0, n=event_->jetsResUp_pt_->size(); i<n; ++i )
-    {
-      const double jetPt = event_->jetsResUp_pt_->at(i);
-      if ( jetPt < 30 ) continue;
-      jetsResUp_pt_->push_back(jetPt);
-
-      const double jetBtag = event_->jetsResUp_bTag_->at(i);
-      //if ( jetBtag > 0.244 ) ++bjetsResUp_n_;
-      if ( jetBtag > 0.679 ) ++bjetsResUp_n_;
-      //if ( jetBtag > 0.898 ) ++bjetsResUp_n_;
-      jetsResUp_bTag_->push_back(jetBtag);
-
-  //    LorentzVector jetP4;
-  //    jetP4.SetPtEtaPhiM(jetPt, event_->jetsResUp_eta_->at(i), event_->jetsResUp_phi_->at(i), event_->jetsResUp_m_->at(i));
-    }
-
-    for ( int i=0, n=event_->jetsResDn_pt_->size(); i<n; ++i )
-    {
-      const double jetPt = event_->jetsResDn_pt_->at(i);
-      if ( jetPt < 30 ) continue;
-      jetsResDn_pt_->push_back(jetPt);
-
-      const double jetBtag = event_->jetsResDn_bTag_->at(i);
-      //if ( jetBtag > 0.244 ) ++bjetsResDn_n_;
-      if ( jetBtag > 0.679 ) ++bjetsResDn_n_;
-      //if ( jetBtag > 0.898 ) ++bjetsResDn_n_;
-      jetsResDn_bTag_->push_back(jetBtag);
-
-  //    LorentzVector jetP4;
-  //    jetP4.SetPtEtaPhiM(jetPt, event_->jetsResDn_eta_->at(i), event_->jetsResDn_phi_->at(i), event_->jetsResDn_m_->at(i));
-    }
   }
 
   return true;

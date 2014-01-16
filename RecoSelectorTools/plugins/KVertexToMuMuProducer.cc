@@ -9,8 +9,8 @@
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/TrackReco/interface/Track.h"
-#include "DataFormats/MuonReco/interface/Muon.h"
-#include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+//#include "DataFormats/MuonReco/interface/MuonFwd.h"
 #include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
@@ -59,7 +59,6 @@ private:
 private:
   constexpr static double muonMass_ = 0.1056583715; 
   edm::InputTag muonLabel_;
-  edm::InputTag trackLabel_;
 
   unsigned int pdgId_;
   double rawMassMin_, rawMassMax_, massMin_, massMax_;
@@ -80,7 +79,6 @@ private:
 KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
 {
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
-  trackLabel_ = trackPSet.getParameter<edm::InputTag>("src");
   cut_minPt_ = trackPSet.getParameter<double>("minPt");
   cut_maxEta_ = trackPSet.getParameter<double>("maxEta");
   cut_trackChi2_ = trackPSet.getParameter<double>("chi2");
@@ -96,8 +94,6 @@ KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
 
   edm::ParameterSet muonPSet = pset.getParameter<edm::ParameterSet>("muon");
   muonLabel_ = muonPSet.getParameter<edm::InputTag>("src");
-  muonDPt_ = muonPSet.getParameter<double>("dPtRel");
-  muonDR_  = muonPSet.getParameter<double>("dR");
 
   pdgId_ = pset.getParameter<unsigned int>("pdgId");
   rawMassMin_ = pset.getParameter<double>("rawMassMin");
@@ -126,9 +122,6 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   event.getByLabel("offlineBeamSpot", beamSpotHandle);
 
-  edm::Handle<reco::TrackCollection> trackHandle;
-  event.getByLabel(trackLabel_, trackHandle);
-
   edm::ESHandle<MagneticField> bFieldHandle;
   eventSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle);
   bField_ = bFieldHandle.product();
@@ -144,9 +137,12 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   edm::Handle<reco::MuonCollection> muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
 
-  for ( int i=0, n=trackHandle->size(); i<n; ++i )
+  for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
-    TrackRef trackRef1(trackHandle, i);
+    const pat::Muon& muon1 = muonHandle->at(i);
+    if ( !muon1.isPFMuon() ) continue;
+    if ( !muon1.isTrackerMuon() and !muon1.isGlobalMuon() ) continue;
+    TrackRef trackRef1 = muon1.isGlobalMuon() ? muon1.globalTrack() : muon1.track();
     // Positive particle in the 1st index (pi+, proton, K+...)
     if ( trackRef1->charge() < 0 ) continue;
     if ( !isGoodTrack(trackRef1, beamSpotHandle.product()) ) continue;
@@ -157,7 +153,10 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
 
     for ( int j=0; j<n; ++j )
     {
-      TrackRef trackRef2(trackHandle, j);
+      const pat::Muon& muon2 = muonHandle->at(j);
+      if ( !muon2.isPFMuon() ) continue;
+      if ( !muon2.isTrackerMuon() and !muon2.isGlobalMuon() ) continue;
+      TrackRef trackRef2 = muon2.isGlobalMuon() ? muon2.globalTrack() : muon2.track();
       // Negative particle in the 2nd index (pi-, anti-proton, K-...)
       if ( trackRef2->charge() > 0 ) continue;
       if ( !isGoodTrack(trackRef2, beamSpotHandle.product()) ) continue;
@@ -259,21 +258,13 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
 
       // Match to muons
-      const reco::Muon* muon1 = matchMuon(trackRef1, muonHandle->begin(), muonHandle->end());
-      const reco::Muon* muon2 = matchMuon(trackRef2, muonHandle->begin(), muonHandle->end());
-      if ( !muon1 and !muon2 ) continue;
-
-      RecoChargedCandidate cand1(trackRef1->charge(), Particle::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1), vtx);
-      RecoChargedCandidate cand2(trackRef2->charge(), Particle::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2), vtx);
-      cand1.setTrack(trackRef1);
-      cand2.setTrack(trackRef2);
-      const int pdgId1 = -13*trackRef1->charge();
-      const int pdgId2 = -13*trackRef2->charge();
-      cand1.setPdgId(pdgId1);
-      cand2.setPdgId(pdgId2);
+      pat::Muon newMuon1(muon1);
+      pat::Muon newMuon2(muon2);
+      newMuon1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
+      newMuon2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);
-      cand->addDaughter(cand1);
-      cand->addDaughter(cand2);
+      cand->addDaughter(newMuon1);
+      cand->addDaughter(newMuon2);
 
       cand->setPdgId(pdgId_);
       AddFourMomenta addP4;

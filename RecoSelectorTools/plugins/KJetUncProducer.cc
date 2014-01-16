@@ -12,19 +12,10 @@
 
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
-#include "PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h"
-//#include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
-#include "CommonTools/Utils/interface/PtComparator.h"
-#include "DataFormats/Math/interface/deltaR.h"
 
-#include "KrAFT/GeneratorTools/interface/Types.h"
+#include "DataFormats/Common/interface/AssociationMap.h"
 
 #include <memory>
-
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include <TH1F.h>
-#include <TH2F.h>
 
 using namespace edm;
 using namespace std;
@@ -34,9 +25,9 @@ class KJetUncProducer : public edm::EDProducer
 public:
   KJetUncProducer(const edm::ParameterSet& pset);
   ~KJetUncProducer() {};
-  typedef std::vector<double> doubles;
   typedef std::vector<pat::Jet> Jets;
   typedef std::vector<pat::MET> METs;
+  typedef edm::AssociationMap<edm::OneToValue<Jets, double> > JetToDouble;
 
 private:
   void beginJob() {};
@@ -48,7 +39,7 @@ private:
   JetCorrectionUncertainty *jecUncCalculator_;
   double minPt_;
 
-  bool doJER_;
+  bool isMC_;
 
 private:
   void getJERFactor(const double jetEta, double& cJER, double& cJERUp, double& cJERDn)
@@ -65,7 +56,7 @@ private:
 
 KJetUncProducer::KJetUncProducer(const edm::ParameterSet& pset)
 {
-  doJER_ = pset.getParameter<bool>("doJER");
+  isMC_ = pset.getParameter<bool>("isMC");
   minPt_ = pset.getParameter<double>("minPt");
 
   jetLabel_ = pset.getParameter<edm::InputTag>("jet");
@@ -74,19 +65,19 @@ KJetUncProducer::KJetUncProducer(const edm::ParameterSet& pset)
   // JEC correction
   edm::FileInPath jecFilePathRD(pset.getParameter<string>("jecFileRD"));
   edm::FileInPath jecFilePathMC(pset.getParameter<string>("jecFileMC"));
-  if ( doJER_ ) jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathMC.fullPath());
+  if ( isMC_ ) jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathMC.fullPath());
   else jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathRD.fullPath());
 
-  produces<Jets>();
-  produces<doubles>("up");
-  produces<doubles>("dn");
-  produces<METs>();
+  produces<JetToDouble>("up");
+  produces<JetToDouble>("dn");
   produces<METs>("up");
   produces<METs>("dn");
-  if ( doJER_ )
+  if ( isMC_ )
   {
-    produces<doubles>("resUp");
-    produces<doubles>("resDn");
+    produces<JetToDouble>("res");
+    produces<JetToDouble>("resUp");
+    produces<JetToDouble>("resDn");
+    produces<METs>("res");
     produces<METs>("resUp");
     produces<METs>("resDn");
   }
@@ -100,22 +91,23 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
   edm::Handle<METs> metHandle;
   event.getByLabel(metLabel_, metHandle);
 
-  std::auto_ptr<Jets> jets(new Jets);
-  std::auto_ptr<doubles> fJECsUp(new doubles);
-  std::auto_ptr<doubles> fJECsDn(new doubles);
-  std::auto_ptr<doubles> fJERsUp(new doubles);
-  std::auto_ptr<doubles> fJERsDn(new doubles);
+  std::auto_ptr<JetToDouble> fJECsUp(new JetToDouble);
+  std::auto_ptr<JetToDouble> fJECsDn(new JetToDouble);
+  std::auto_ptr<JetToDouble> fJERs(new JetToDouble);
+  std::auto_ptr<JetToDouble> fJERsUp(new JetToDouble);
+  std::auto_ptr<JetToDouble> fJERsDn(new JetToDouble);
 
-  std::auto_ptr<METs> mets(new METs);
   std::auto_ptr<METs> metsUp(new METs);
   std::auto_ptr<METs> metsDn(new METs);
+  std::auto_ptr<METs> metsRes(new METs);
   std::auto_ptr<METs> metsResUp(new METs);
   std::auto_ptr<METs> metsResDn(new METs);
 
   pat::MET met = metHandle->at(0);
-  double metX = met.px(), metY = met.py();
+  const double metX = met.px(), metY = met.py();
   double metUpX = metX, metUpY = metY;
   double metDnX = metX, metDnY = metY;
+  double metResX   = metX, metResY   = metY;
   double metResUpX = metX, metResUpY = metY;
   double metResDnX = metX, metResDnY = metY;
 
@@ -144,7 +136,7 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
     // JER and uncertainties
     math::XYZTLorentzVector jetResUpP4, jetResDnP4;
     double fJER = 1, fJERUp = 1, fJERDn = 1;
-    if ( doJER_ )
+    if ( isMC_ )
     {
       const reco::GenJet* genJet = jet.genJet();
       if ( genJet and genJet->pt() > 10 )
@@ -173,59 +165,56 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
         const double metDyDn = rawPy*(1-fJERDn);
 
         // Correct MET
-        metX      += metDx  ; metY      += metDy  ;
         metDnX    += metDx  ; metDnY    += metDy  ;
         metUpX    += metDx  ; metUpY    += metDy  ;
+        metResX   += metDx  ; metResY   += metDy  ;
         metResUpX += metDxUp; metResUpY += metDyUp;
         metResDnX += metDxDn; metResDnY += metDyDn;
       }
     }
 
-    //jet.setP4(jetP4);
     // Check acceptance after JEC and JER
     if ( jetPt*fJER < minPt_ and 
          jetUpP4.pt()*fJER < minPt_ and jetDnP4.pt()*fJER < minPt_ and
          jetPt*fJERUp < minPt_ and jetPt*fJERDn < minPt_ ) continue;
 
-    // Shift jet p4 by JER
-    jetP4   *= fJER;
-    jetUpP4 *= fJER;
-    jetDnP4 *= fJER;
-
-    jets->push_back(jet);
-    fJECsUp->push_back(fJECUp);
-    fJECsDn->push_back(fJECDn);
-    if ( doJER_ )
+    // Put JES,JER factors
+    edm::Ref<Jets> jetRef(jetHandle, i);
+    fJECsUp->insert(jetRef, fJECUp);
+    fJECsDn->insert(jetRef, fJECDn);
+    if ( isMC_ )
     {
-      fJERsUp->push_back(fJERUp);
-      fJERsDn->push_back(fJERDn);
+      fJERs->insert(jetRef, fJER);
+      fJERsUp->insert(jetRef, fJERUp);
+      fJERsDn->insert(jetRef, fJERDn);
     }
   }
 
   pat::MET metUp, metDn;
   metUp.setP4(reco::Candidate::LorentzVector(metUpX, metUpY, 0, hypot(metUpX, metUpY)));
   metDn.setP4(reco::Candidate::LorentzVector(metDnX, metDnY, 0, hypot(metDnX, metDnY)));
-  mets->push_back(met);
   metsUp->push_back(metUp);
   metsDn->push_back(metDn);
 
-  event.put(jets);
   event.put(fJECsUp, "up");
   event.put(fJECsDn, "dn");
-  event.put(mets);
   event.put(metsUp, "up");
   event.put(metsDn, "dn");
 
-  if ( doJER_ )
+  if ( isMC_ )
   {
-    pat::MET metResUp, metResDn;
+    pat::MET metRes, metResUp, metResDn;
+    metRes.setP4(reco::Candidate::LorentzVector(metResX, metResY, 0, hypot(metResX, metResY)));
     metResUp.setP4(reco::Candidate::LorentzVector(metResUpX, metResUpY, 0, hypot(metResUpX, metResUpY)));
     metResDn.setP4(reco::Candidate::LorentzVector(metResDnX, metResDnY, 0, hypot(metResDnX, metResDnY)));
+    metsRes->push_back(metRes);
     metsResUp->push_back(metResUp);
     metsResDn->push_back(metResDn);
 
+    event.put(fJERs, "res");
     event.put(fJERsUp, "resUp");
     event.put(fJERsDn, "resDn");
+    event.put(metsRes);
     event.put(metsResUp, "resUp");
     event.put(metsResDn, "resDn");
   }

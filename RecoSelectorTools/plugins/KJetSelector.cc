@@ -35,41 +35,34 @@ public:
   KJetSelector(const edm::ParameterSet& pset);
   ~KJetSelector() {};
 
+  typedef std::vector<pat::Jet> Jets;
+  typedef edm::AssociationMap<edm::OneToValue<Jets, double> > JetToValueMap;
+
 private:
   void beginJob() {};
   bool filter(edm::Event& event, const edm::EventSetup& eventSetup);
   void endJob() {};
 
+  bool doClean_;
   double overlapDeltaR_;
   unsigned int minNumber_;
   unsigned int maxNumber_;
 
   edm::InputTag jetLabel_;
+  edm::InputTag jetUncLabel_;
   std::vector<edm::InputTag> overlapCandLabels_;
 
   PFJetIDSelectionFunctor* isGoodJet_;
   double minPt_, maxEta_;
 
-  int cleanMethod_;
-
-  bool isMC_;
-
 private:
-  bool isInAcceptance(const pat::Jet& jetP4)
-  {
-    if ( jetP4.pt() < minPt_ ) return false;
-    if ( std::abs(jetP4.eta()) > maxEta_ ) return false;
-
-    return true;
-  }
 
 };
 
 KJetSelector::KJetSelector(const edm::ParameterSet& pset)
 {
-  isMC_ = pset.getParameter<bool>("isMC");
-
   jetLabel_ = pset.getParameter<edm::InputTag>("jet");
+  jetUncLabel_ = pset.getParameter<edm::InputTag>("jetUnc");
 
   // Selection cuts
   edm::ParameterSet selectionPSet = pset.getParameter<edm::ParameterSet>("selection");
@@ -79,35 +72,40 @@ KJetSelector::KJetSelector(const edm::ParameterSet& pset)
 
   // Cleaning
   edm::ParameterSet cleanPSet = pset.getParameter<edm::ParameterSet>("cleaning");
-  overlapDeltaR_ = cleanPSet.getParameter<double>("overlapDeltaR");
-  overlapCandLabels_ = cleanPSet.getParameter<std::vector<edm::InputTag> >("overlapCands");
-  const std::string cleanMethodName = cleanPSet.getParameter<std::string>("cleanMethod");
-  // Cleaning methods:
-  //  subtract    =  1: Check acceptance cut after lepton p4 subtraction and store subtacted jet
-  //  subtractAll =  2: Check acceptance cut after lepton p4 subtraction but keep original 4 momentum
-  //  cleanAll    =  0: Jet cleaning by deltaR
-  //  Default     = -1: No jet cleaning
-  if ( cleanMethodName == "subtract" ) cleanMethod_ = 2; 
-  else if ( cleanMethodName == "subtractAll" ) cleanMethod_ = 1; 
-  else if ( cleanMethodName == "cleanAll" ) cleanMethod_ = 0; 
-  else cleanMethod_ = -1; 
-  if ( overlapCandLabels_.empty() ) cleanMethod_ = -1;
+  doClean_ = cleanPSet.getParameter<bool>("doClean");
+  if ( doClean_ )
+  {
+    overlapDeltaR_ = cleanPSet.getParameter<double>("overlapDeltaR");
+    overlapCandLabels_ = cleanPSet.getParameter<std::vector<edm::InputTag> >("overlapCands");
+    if ( overlapCandLabels_.empty() ) doClean_ = false;
+  }
 
   minNumber_ = pset.getParameter<unsigned int>("minNumber");
   maxNumber_ = pset.getParameter<unsigned int>("maxNumber");
 
-  produces<std::vector<pat::Jet> >();
+  //produces<std::vector<pat::Jet> >();
+  produces<edm::RefVector<Jets> >();
 }
 
 bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  edm::Handle<std::vector<pat::Jet> > jetHandle;
+  edm::Handle<Jets> jetHandle;
   event.getByLabel(jetLabel_, jetHandle);
 
-  std::auto_ptr<std::vector<pat::Jet> > corrJets(new std::vector<pat::Jet>());
+  std::vector<const JetToValueMap*> jetScales;
+  edm::Handle<JetToValueMap> jetScaleHandle;
+  const std::string jetUncLabel = jetUncLabel_.label();
+  if ( event.getByLabel(edm::InputTag(jetUncLabel, "up"), jetScaleHandle) ) jetScales.push_back(&*jetScaleHandle);
+  if ( event.getByLabel(edm::InputTag(jetUncLabel, "dn"), jetScaleHandle) ) jetScales.push_back(&*jetScaleHandle);
+  if ( event.getByLabel(edm::InputTag(jetUncLabel, "res"), jetScaleHandle) ) jetScales.push_back(&*jetScaleHandle);
+  if ( event.getByLabel(edm::InputTag(jetUncLabel, "resUp"), jetScaleHandle) ) jetScales.push_back(&*jetScaleHandle);
+  if ( event.getByLabel(edm::InputTag(jetUncLabel, "resDn"), jetScaleHandle) ) jetScales.push_back(&*jetScaleHandle);
+
+  //std::auto_ptr<std::vector<pat::Jet> > cleanJets(new std::vector<pat::Jet>());
+  std::auto_ptr<edm::RefVector<Jets> > cleanJets(new edm::RefVector<Jets>());
 
   std::vector<const reco::Candidate*> overlapCands;
-  if ( cleanMethod_ != -1 )
+  if ( doClean_ )
   {
     for ( int iLabel=0, nLabel=overlapCandLabels_.size(); iLabel<nLabel; ++iLabel )
     {
@@ -127,43 +125,47 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   {
     pat::Jet jet = jetHandle->at(i);
     if ( !(*isGoodJet_)(jet) ) continue;
-    reco::Candidate::LorentzVector jetP4 = jet.p4();
+    const reco::Candidate::LorentzVector jetP4 = jet.p4();
 
-    bool isOverlap = false;
-    for ( int j=0, m=overlapCands.size(); j<m; ++j )
+    // Check overlap
+    if ( doClean_ )
     {
-      if ( deltaR(jet.p4(), overlapCands.at(j)->p4()) < overlapDeltaR_ )
+      bool isOverlap = false;
+      for ( int j=0, m=overlapCands.size(); j<m; ++j )
       {
-        isOverlap = true;
-        if ( cleanMethod_ == 0 ) break;
-        else if ( cleanMethod_ == 1 or cleanMethod_ == 2 )
+        if ( deltaR(jet.p4(), overlapCands.at(j)->p4()) < overlapDeltaR_ )
         {
-          jetP4 -= overlapCands.at(j)->p4();
+          isOverlap = true;
         }
       }
+      if ( isOverlap ) continue;
     }
 
-    if ( isOverlap )
+    // Check acceptance
+    bool isAccepted = false;
+    if ( std::abs(jetP4.eta()) <= maxEta_ ) isAccepted = true;
+    if ( jetP4.pt() > minPt_ ) isAccepted = true;
+
+    // Check accepted with JES/JER uncertanty
+    edm::Ref<Jets> jetRef(jetHandle, i);
+    for ( int j=0, m=jetScales.size(); j<m; ++j )
     {
-      if ( cleanMethod_ == 0 ) continue;
-      else
+      JetToValueMap::const_iterator jetScale = jetScales.at(j)->find(jetRef);
+      if ( jetScale == jetScales.at(j)->end() ) continue;
+      const double scale = jetScale->val;
+      if ( jetP4.pt()*scale > minPt_ )
       {
-        if ( cleanMethod_ == 1 )
-        {
-          jet.setP4(jetP4);
-        }
-        if ( isInAcceptance(jet) ) corrJets->push_back(jet);
+        isAccepted = true;
+        break;
       }
     }
-    else 
-    {
-      if ( isInAcceptance(jet) ) corrJets->push_back(jet);
-    }
+    if ( !isAccepted ) continue;
+
+    cleanJets->push_back(jetRef);
   }
 
-  const unsigned int nCleanJet = corrJets->size();
-  std::sort(corrJets->begin(), corrJets->end(), GreaterByPt<pat::Jet>());
-  event.put(corrJets);
+  const unsigned int nCleanJet = cleanJets->size();
+  event.put(cleanJets);
 
   if ( nCleanJet < minNumber_ or nCleanJet > maxNumber_ ) return false;
 

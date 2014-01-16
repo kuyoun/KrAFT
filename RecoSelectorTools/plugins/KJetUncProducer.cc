@@ -37,7 +37,6 @@ private:
   edm::InputTag jetLabel_, metLabel_;
 
   JetCorrectionUncertainty *jecUncCalculator_;
-  double minPt_;
 
   bool isMC_;
 
@@ -57,7 +56,6 @@ private:
 KJetUncProducer::KJetUncProducer(const edm::ParameterSet& pset)
 {
   isMC_ = pset.getParameter<bool>("isMC");
-  minPt_ = pset.getParameter<double>("minPt");
 
   jetLabel_ = pset.getParameter<edm::InputTag>("jet");
   metLabel_ = pset.getParameter<edm::InputTag>("met");
@@ -173,11 +171,6 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
       }
     }
 
-    // Check acceptance after JEC and JER
-    if ( jetPt*fJER < minPt_ and 
-         jetUpP4.pt()*fJER < minPt_ and jetDnP4.pt()*fJER < minPt_ and
-         jetPt*fJERUp < minPt_ and jetPt*fJERDn < minPt_ ) continue;
-
     // Put JES,JER factors
     edm::Ref<Jets> jetRef(jetHandle, i);
     fJECsUp->insert(jetRef, fJECUp);
@@ -214,7 +207,7 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
     event.put(fJERs, "res");
     event.put(fJERsUp, "resUp");
     event.put(fJERsDn, "resDn");
-    event.put(metsRes);
+    event.put(metsRes, "res");
     event.put(metsResUp, "resUp");
     event.put(metsResDn, "resDn");
   }

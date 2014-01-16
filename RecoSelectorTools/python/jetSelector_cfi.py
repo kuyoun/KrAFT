@@ -1,13 +1,21 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
 
-goodJets = cms.EDFilter("KJetSelector",
-    debug = cms.untracked.bool(False),
-
-    isMC = cms.bool(False),
+jetUnc = cms.EDProducer("KJetUncProducer",
+    isMC = cms.bool(True),
 
     jet = cms.InputTag("patJetsPFlow"),
     met = cms.InputTag("patMETsPFlow"),
+
+    jecFileRD = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_Uncertainty_AK5PFchs.txt"),
+    jecFileMC = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_MC_Uncertainty_AK5PFchs.txt"),
+)
+
+goodJets = cms.EDFilter("KJetSelector",
+    isMC = cms.bool(False),
+
+    jet = cms.InputTag("patJetsPFlow"),
+    jetUnc = cms.InputTag("jetUnc"),
 
     selection = cms.PSet(
         jetId = pfJetIDSelector,
@@ -16,19 +24,14 @@ goodJets = cms.EDFilter("KJetSelector",
     ),
 
     cleaning = cms.PSet(
+        doClean = cms.bool(False),
         overlapDeltaR = cms.double(0.5),
         overlapCands = cms.VInputTag(
             cms.InputTag("goodMuons"),
             cms.InputTag("goodElectrons"),
         ),
-        #cleanMethod = cms.string("subtract"),
-        cleanMethod = cms.string("subtractAndRestore"),
-        #cleanMethod = cms.string("cleanAll"),
     ),
-    jecFileRD = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_Uncertainty_AK5PFchs.txt"),
-    jecFileMC = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_MC_Uncertainty_AK5PFchs.txt"),
 
     minNumber = cms.uint32(0),
     maxNumber = cms.uint32(999),
 )
-

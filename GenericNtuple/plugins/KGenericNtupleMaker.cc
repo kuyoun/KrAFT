@@ -290,39 +290,25 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     event.getByLabel(genJetLabel_, genJetHandle);
 
     // Find top quark from the genParticles
+    const reco::GenParticle* firstGen = &genHandle->at(0);
     for ( int i=0, n=genHandle->size(); i<n; ++i )
     {
       const reco::GenParticle& p = genHandle->at(i);
-      if ( p.status() != 3 ) continue;
       const int charge = p.charge();
+      const int mother1 = dynamic_cast<const reco::GenParticle*>(p.mother(0))-firstGen;
+      const int mother2 = mother1+p.numberOfMothers();
+      const int daughter1 = dynamic_cast<const reco::GenParticle*>(p.daughter(0))-firstGen;
+      const int daughter2 = daughter2+p.numberOfDaughters();
 
       fevent_->genParticles_pt_ ->push_back(p.pt()  );
       fevent_->genParticles_eta_->push_back(p.eta() );
       fevent_->genParticles_phi_->push_back(p.phi() );
       fevent_->genParticles_m_  ->push_back(p.mass());
       fevent_->genParticles_pdgId_->push_back(p.pdgId());
-
-      switch(abs(p.pdgId()))
-      {
-        case 11:
-          fevent_->genElectrons_pt_ ->push_back(p.pt()  );
-          fevent_->genElectrons_eta_->push_back(p.eta() );
-          fevent_->genElectrons_phi_->push_back(p.phi() );
-          fevent_->genElectrons_m_  ->push_back(p.mass());
-          fevent_->genElectrons_Q_  ->push_back(charge  ); break;
-        case 13:
-          fevent_->genMuons_pt_ ->push_back(p.pt()  );
-          fevent_->genMuons_eta_->push_back(p.eta() );
-          fevent_->genMuons_phi_->push_back(p.phi() );
-          fevent_->genMuons_m_  ->push_back(p.mass());
-          fevent_->genMuons_Q_  ->push_back(charge  ); break;
-        case 12:
-        case 14:
-          fevent_->genNeutrinos_pt_ ->push_back(p.pt() );
-          fevent_->genNeutrinos_eta_->push_back(p.eta());
-          fevent_->genNeutrinos_phi_->push_back(p.phi()); break;
-        default: break;
-      }
+      fevent_->genParticles_mother1_->push_back(mother1);
+      fevent_->genParticles_mother1_->push_back(mother2);
+      fevent_->genParticles_mother1_->push_back(daughter1);
+      fevent_->genParticles_mother1_->push_back(daughter2);
     }
 
     for ( int i=0, n=genJetHandle->size(); i<n; ++i )

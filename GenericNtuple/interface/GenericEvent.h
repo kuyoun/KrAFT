@@ -65,14 +65,11 @@ public:
   int pdf_id1_, pdf_id2_;
   double pdf_q_, pdf_x1_, pdf_x2_;
 
-  doublesP genMuons_pt_, genMuons_eta_, genMuons_phi_, genMuons_m_;
-  doublesP genElectrons_pt_, genElectrons_eta_, genElectrons_phi_, genElectrons_m_;
-  doublesP genNeutrinos_pt_, genNeutrinos_eta_, genNeutrinos_phi_;
-  intsP genMuons_Q_, genElectrons_Q_;
   doublesP genJets_pt_, genJets_eta_, genJets_phi_, genJets_m_;
-
   doublesP genParticles_pt_, genParticles_eta_, genParticles_phi_, genParticles_m_;
   intsP genParticles_pdgId_;
+  intsP genParticles_mother1_, genParticles_mother2_;
+  intsP genParticles_daughter1_, genParticles_daughter2_;
 
 };
 

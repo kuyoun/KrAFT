@@ -36,32 +36,15 @@ GenericEvent::GenericEvent(bool isMC)
     jetsResDn_bTag_ = new doubles;
 
     // Generator information
-    genMuons_pt_  = new doubles;
-    genMuons_eta_ = new doubles;
-    genMuons_phi_ = new doubles;
-    genMuons_m_   = new doubles;
-    genMuons_Q_   = new ints   ;
-
-    genElectrons_pt_  = new doubles;
-    genElectrons_eta_ = new doubles;
-    genElectrons_phi_ = new doubles;
-    genElectrons_m_   = new doubles;
-    genElectrons_Q_   = new ints   ;
-
-    genNeutrinos_pt_  = new doubles;
-    genNeutrinos_eta_ = new doubles;
-    genNeutrinos_phi_ = new doubles;
-
-    genJets_pt_  = new doubles;
-    genJets_eta_ = new doubles;
-    genJets_phi_ = new doubles;
-    genJets_m_   = new doubles;
-
     genParticles_pt_  = new doubles;
     genParticles_eta_ = new doubles;
     genParticles_phi_ = new doubles;
     genParticles_m_   = new doubles;
     genParticles_pdgId_ = new ints;
+    genParticles_mother1_ = new ints;
+    genParticles_mother2_ = new ints;
+    genParticles_daughter1_ = new ints;
+    genParticles_daughter2_ = new ints;
   }
 }
 
@@ -153,22 +136,6 @@ void GenericEvent::book(TTree* tree)
     tree_->Branch("pdf_x2" , &pdf_x2_ , "pdf_x2/D" );
     tree_->Branch("pdf_q"  , &pdf_q_  , "pdf_q/D"  );
 
-    tree_->Branch("genMuons_pt" , genMuons_pt_ );
-    tree_->Branch("genMuons_eta", genMuons_eta_);
-    tree_->Branch("genMuons_phi", genMuons_phi_);
-    tree_->Branch("genMuons_m"  , genMuons_m_  );
-    tree_->Branch("genMuons_Q"  , genMuons_Q_  );
-
-    tree_->Branch("genElectrons_pt" , genElectrons_pt_ );
-    tree_->Branch("genElectrons_eta", genElectrons_eta_);
-    tree_->Branch("genElectrons_phi", genElectrons_phi_);
-    tree_->Branch("genElectrons_m"  , genElectrons_m_  );
-    tree_->Branch("genElectrons_Q"  , genElectrons_Q_  );
-
-    tree_->Branch("genNeutrinos_pt" , genNeutrinos_pt_ );
-    tree_->Branch("genNeutrinos_eta", genNeutrinos_eta_);
-    tree_->Branch("genNeutrinos_phi", genNeutrinos_phi_);
-
     tree_->Branch("genJets_pt" , genJets_pt_ );
     tree_->Branch("genJets_eta", genJets_eta_);
     tree_->Branch("genJets_phi", genJets_phi_);
@@ -179,6 +146,10 @@ void GenericEvent::book(TTree* tree)
     tree_->Branch("genParticles_phi", genParticles_phi_);
     tree_->Branch("genParticles_m"  , genParticles_m_  );
     tree_->Branch("genParticles_pdgId", genParticles_pdgId_);
+    tree_->Branch("genParticles_mother1"  , genParticles_mother1_  );
+    tree_->Branch("genParticles_mother2"  , genParticles_mother2_  );
+    tree_->Branch("genParticles_daughter1", genParticles_daughter1_);
+    tree_->Branch("genParticles_daughter2", genParticles_daughter2_);
   }
 }
 
@@ -242,22 +213,6 @@ void GenericEvent::clear()
     jetsResUp_bTag_->clear();
     jetsResDn_bTag_->clear();
 
-    genMuons_pt_ ->clear();
-    genMuons_eta_->clear();
-    genMuons_phi_->clear();
-    genMuons_m_  ->clear();
-    genMuons_Q_  ->clear();
-
-    genElectrons_pt_ ->clear();
-    genElectrons_eta_->clear();
-    genElectrons_phi_->clear();
-    genElectrons_m_  ->clear();
-    genElectrons_Q_  ->clear();
-
-    genNeutrinos_pt_ ->clear();
-    genNeutrinos_eta_->clear();
-    genNeutrinos_phi_->clear();
-
     genJets_pt_ ->clear();
     genJets_eta_->clear();
     genJets_phi_->clear();
@@ -268,6 +223,10 @@ void GenericEvent::clear()
     genParticles_phi_->clear();
     genParticles_m_  ->clear();
     genParticles_pdgId_->clear();
+    genParticles_mother1_  ->clear();
+    genParticles_mother2_  ->clear();
+    genParticles_daughter1_->clear();
+    genParticles_daughter2_->clear();
   }
 }
 
@@ -359,22 +318,6 @@ void GenericEvent::setBranch(TTree* tree)
     tree_->SetBranchAddress("pdf_x2" , &pdf_x2_ );
     tree_->SetBranchAddress("pdf_q"  , &pdf_q_  );
 
-    tree_->SetBranchAddress("genMuons_pt" , &genMuons_pt_ );
-    tree_->SetBranchAddress("genMuons_eta", &genMuons_eta_);
-    tree_->SetBranchAddress("genMuons_phi", &genMuons_phi_);
-    tree_->SetBranchAddress("genMuons_m"  , &genMuons_m_  );
-    tree_->SetBranchAddress("genMuons_Q"  , &genMuons_Q_  );
-
-    tree_->SetBranchAddress("genElectrons_pt" , &genElectrons_pt_ );
-    tree_->SetBranchAddress("genElectrons_eta", &genElectrons_eta_);
-    tree_->SetBranchAddress("genElectrons_phi", &genElectrons_phi_);
-    tree_->SetBranchAddress("genElectrons_m"  , &genElectrons_m_  );
-    tree_->SetBranchAddress("genElectrons_Q"  , &genElectrons_Q_  );
-
-    tree_->SetBranchAddress("genNeutrinos_pt" , &genNeutrinos_pt_ );
-    tree_->SetBranchAddress("genNeutrinos_eta", &genNeutrinos_eta_);
-    tree_->SetBranchAddress("genNeutrinos_phi", &genNeutrinos_phi_);
-
     tree_->SetBranchAddress("genJets_pt" , &genJets_pt_ );
     tree_->SetBranchAddress("genJets_eta", &genJets_eta_);
     tree_->SetBranchAddress("genJets_phi", &genJets_phi_);
@@ -385,6 +328,10 @@ void GenericEvent::setBranch(TTree* tree)
     tree_->SetBranchAddress("genParticles_phi", &genParticles_phi_);
     tree_->SetBranchAddress("genParticles_m"  , &genParticles_m_  );
     tree_->SetBranchAddress("genParticles_pdgId", &genParticles_pdgId_);
+    tree_->SetBranchAddress("genParticles_mother1"  , &genParticles_mother1_  );
+    tree_->SetBranchAddress("genParticles_mother2"  , &genParticles_mother2_  );
+    tree_->SetBranchAddress("genParticles_daughter1", &genParticles_daughter1_);
+    tree_->SetBranchAddress("genParticles_daughter2", &genParticles_daughter2_);
   }
 }
 

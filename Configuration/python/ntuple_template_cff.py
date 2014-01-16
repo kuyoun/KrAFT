@@ -22,11 +22,11 @@ MuEl.electron.minNumber = 1
 
 MuJets = event.clone()
 MuJets.muon.minNumber = 1
-MuJets.jet.minNumber = 3
+MuJets.jetMET.minNumber = 3
 
 ElJets = event.clone()
 ElJets.electron.minNumber = 1
-ElJets.jet.minNumber = 3
+ElJets.jetMET.minNumber = 3
 
 nEventsNtupleElEl = cms.EDProducer("EventCountProducer")
 nEventsNtupleMuMu = cms.EDProducer("EventCountProducer")
@@ -37,6 +37,7 @@ nEventsNtupleElJets = cms.EDProducer("EventCountProducer")
 ntupleSequenceElEl = cms.Sequence(
     pileupWeight
   + nEventsNtupleElEl
+  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * ElEl
@@ -45,6 +46,7 @@ ntupleSequenceElEl = cms.Sequence(
 ntupleSequenceMuMu = cms.Sequence(
     pileupWeight
   + nEventsNtupleMuMu
+  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * MuMu
@@ -53,6 +55,7 @@ ntupleSequenceMuMu = cms.Sequence(
 ntupleSequenceMuEl = cms.Sequence(
     pileupWeight
   + nEventsNtupleMuEl
+  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * MuEl
@@ -61,6 +64,7 @@ ntupleSequenceMuEl = cms.Sequence(
 ntupleSequenceMuJets = cms.Sequence(
     pileupWeight
   + nEventsNtupleMuJets
+  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * MuJets
@@ -69,6 +73,7 @@ ntupleSequenceMuJets = cms.Sequence(
 ntupleSequenceElJets = cms.Sequence(
     pileupWeight
   + nEventsNtupleElJets
+  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * ElJets

@@ -41,22 +41,19 @@ public:
   doublesP electrons_scEta_;
 
   doublesP jets_pt_, jets_eta_, jets_phi_, jets_m_;
-  doublesP jetsUp_pt_, jetsUp_eta_, jetsUp_phi_, jetsUp_m_;
-  doublesP jetsDn_pt_, jetsDn_eta_, jetsDn_phi_, jetsDn_m_;
-  doublesP jets_bTag_, jetsUp_bTag_, jetsDn_bTag_;
+  doublesP jets_bTag_;
+  doublesP jets_JESUp_, jets_JESDn_;
+  doublesP jets_JER_, jets_JERUp_, jets_JERDn_;
+
   double met_pt_, met_phi_;
-  double metUp_pt_, metUp_phi_;
-  double metDn_pt_, metDn_phi_;
+  double metJESUp_pt_, metJESUp_phi_;
+  double metJESDn_pt_, metJESDn_phi_;
+  double metJER_pt_  , metJER_phi_  ;
+  double metJERUp_pt_, metJERUp_phi_;
+  double metJERDn_pt_, metJERDn_phi_;
 
   doublesP jpsis_pt_, jpsis_eta_, jpsis_phi_, jpsis_m_;
   doublesP jpsis_lxy_;
-
-  // JER
-  doublesP jetsResUp_pt_, jetsResUp_eta_, jetsResUp_phi_, jetsResUp_m_;
-  doublesP jetsResDn_pt_, jetsResDn_eta_, jetsResDn_phi_, jetsResDn_m_;
-  doublesP jetsResUp_bTag_, jetsResDn_bTag_;
-  double metResUp_pt_, metResUp_phi_;
-  double metResDn_pt_, metResDn_phi_;
 
   // Generator level information
   bool isMC_;
@@ -65,14 +62,10 @@ public:
   int pdf_id1_, pdf_id2_;
   double pdf_q_, pdf_x1_, pdf_x2_;
 
-  doublesP genMuons_pt_, genMuons_eta_, genMuons_phi_, genMuons_m_;
-  doublesP genElectrons_pt_, genElectrons_eta_, genElectrons_phi_, genElectrons_m_;
-  doublesP genNeutrinos_pt_, genNeutrinos_eta_, genNeutrinos_phi_;
-  intsP genMuons_Q_, genElectrons_Q_;
   doublesP genJets_pt_, genJets_eta_, genJets_phi_, genJets_m_;
-
   doublesP genParticles_pt_, genParticles_eta_, genParticles_phi_, genParticles_m_;
   intsP genParticles_pdgId_;
+  intsP genParticles_mother_;
 
 };
 

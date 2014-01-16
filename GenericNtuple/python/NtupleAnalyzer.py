@@ -86,7 +86,8 @@ class NtupleAnalyzer(object):
         hNEvent.GetXaxis().SetBinLabel(2, "Precut")
         hNEvent.SetBinContent(2, nPassed)
         hWeight.GetXaxis().SetBinLabel(2, "Precut")
-        self.chain.Draw("2>>+hWeight", "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
+        if self.isMC: self.chain.Draw("2>>+hWeight", "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
+        else: self.chain.Draw("2>>+hWeight", "%s" % stackedCut, "goff")
 
         for i, cutStepInfo in enumerate(self.cutSteps):
             name, cut, histNames = cutStepInfo
@@ -98,7 +99,8 @@ class NtupleAnalyzer(object):
             hNEvent.GetXaxis().SetBinLabel(i+3, name)
             hNEvent.SetBinContent(i+3, nPassed)
             hWeight.GetXaxis().SetBinLabel(i+3, name)
-            self.chain.Draw("%d>>+hWeight" % (i+3), "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
+            if self.isMC: self.chain.Draw("%d>>+hWeight" % (i+3), "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
+            else: self.chain.Draw("%d>>+hWeight" % (i+3), "%s" % stackedCut, "goff")
 
             cutStepDir = self.outDir.mkdir(name)
             cutStepDir.cd()
@@ -110,12 +112,14 @@ class NtupleAnalyzer(object):
                     h.Sumw2()
                     if self.isMC: h.SetOption("hist")
                     xmax = h.GetXaxis().GetXmax()-1e-9*h.GetXaxis().GetBinWidth(len(bins))
-                    self.chain.Draw("min(%s,%f)>>%s" % (varexp, xmax, histName), "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
+                    if self.isMC: self.chain.Draw("min(%s,%f)>>%s" % (varexp, xmax, histName), "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
+                    else: self.chain.Draw("min(%s,%f)>>%s" % (varexp, xmax, histName), "%s" % stackedCut, "goff")
                 elif histName in self.h2:
                     varexp, title, binsX, binsY = self.h2[histName]
                     h = TH2F(histName, title, len(binsX)-1, binsX, len(binsY)-1, binsY)
                     h.Sumw2()
-                    self.chain.Draw("%s>>%s" % (varexp, histName), "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
+                    if self.isMC: self.chain.Draw("%s>>%s" % (varexp, histName), "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
+                    else: self.chain.Draw("%s>>%s" % (varexp, histName), "%s" % stackedCut, "goff")
                 else:
                     print "Histogram", histName, "in cut step", name, "not defined."
                     continue

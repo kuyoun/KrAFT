@@ -46,5 +46,4 @@ if __name__ == '__main__':
             sample = f.replace("__%s.root" % mode, "")
 
             p.apply(process, [sample, mode])
-    p.join()
 

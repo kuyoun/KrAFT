@@ -96,18 +96,18 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("metJESUp_phi", &metJESUp_phi_, "metJESUp_phi/D");
   tree_->Branch("metJESDn_phi", &metJESDn_phi_, "metJESDn_phi/D");
 
-  tree_->Branch("jpsis_pt" , &jpsis_pt_ );
-  tree_->Branch("jpsis_eta", &jpsis_eta_);
-  tree_->Branch("jpsis_phi", &jpsis_phi_);
-  tree_->Branch("jpsis_m"  , &jpsis_m_  );
-  tree_->Branch("jpsis_lxy", &jpsis_lxy_);
+  tree_->Branch("jpsis_pt" , jpsis_pt_ );
+  tree_->Branch("jpsis_eta", jpsis_eta_);
+  tree_->Branch("jpsis_phi", jpsis_phi_);
+  tree_->Branch("jpsis_m"  , jpsis_m_  );
+  tree_->Branch("jpsis_lxy", jpsis_lxy_);
 
-  tree_->Branch("jpsis_pt1" , &jpsis_pt1_ );
-  tree_->Branch("jpsis_eta1", &jpsis_eta1_);
-  tree_->Branch("jpsis_phi1", &jpsis_phi1_);
-  tree_->Branch("jpsis_pt2" , &jpsis_pt2_ );
-  tree_->Branch("jpsis_eta2", &jpsis_eta2_);
-  tree_->Branch("jpsis_phi2", &jpsis_phi2_);
+  tree_->Branch("jpsis_pt1" , jpsis_pt1_ );
+  tree_->Branch("jpsis_eta1", jpsis_eta1_);
+  tree_->Branch("jpsis_phi1", jpsis_phi1_);
+  tree_->Branch("jpsis_pt2" , jpsis_pt2_ );
+  tree_->Branch("jpsis_eta2", jpsis_eta2_);
+  tree_->Branch("jpsis_phi2", jpsis_phi2_);
 
   if ( isMC_ )
   {

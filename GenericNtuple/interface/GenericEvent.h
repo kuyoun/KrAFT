@@ -54,6 +54,8 @@ public:
 
   doublesP jpsis_pt_, jpsis_eta_, jpsis_phi_, jpsis_m_;
   doublesP jpsis_lxy_;
+  doublesP jpsis_pt1_, jpsis_eta1_, jpsis_phi1_;
+  doublesP jpsis_pt2_, jpsis_eta2_, jpsis_phi2_;
 
   // Generator level information
   bool isMC_;

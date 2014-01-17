@@ -393,13 +393,20 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   for ( int i=0, n=jpsiHandle->size(); i<n; ++i )
   {
     const reco::VertexCompositeCandidate& jpsiCand = jpsiHandle->at(i);
-    const reco::Candidate* track1 = jpsiCand.daughter(0);
-    const reco::Candidate* track2 = jpsiCand.daughter(1);
+    const reco::Candidate* muon1 = jpsiCand.daughter(0);
+    const reco::Candidate* muon2 = jpsiCand.daughter(1);
     fevent_->jpsis_pt_ ->push_back(jpsiCand.pt()  );
     fevent_->jpsis_eta_->push_back(jpsiCand.eta() );
     fevent_->jpsis_phi_->push_back(jpsiCand.phi() );
     fevent_->jpsis_m_  ->push_back(jpsiCand.mass());
     fevent_->jpsis_lxy_->push_back(jpsiLxyHandle->at(i));
+
+    fevent_->jpsis_pt1_- >push_back(muon1->pt() );
+    fevent_->jpsis_eta1_->push_back(muon1->eta());
+    fevent_->jpsis_phi1_->push_back(muon1->phi());
+    fevent_->jpsis_pt2_ ->push_back(muon2->pt() );
+    fevent_->jpsis_eta2_->push_back(muon2->eta());
+    fevent_->jpsis_phi2_->push_back(muon2->phi());
   }
 
   // Now put jets in current event to the event cache

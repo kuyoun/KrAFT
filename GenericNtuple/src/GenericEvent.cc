@@ -23,6 +23,8 @@ GenericEvent::GenericEvent(bool isMC)
 
   jpsis_pt_ = new doubles; jpsis_eta_ = new doubles; jpsis_phi_ = new doubles; jpsis_m_ = new doubles;
   jpsis_lxy_ = new doubles;
+  jpsis_pt1_ = new doubles; jpsis_eta1_ = new doubles; jpsis_phi1_ = new doubles;
+  jpsis_pt2_ = new doubles; jpsis_eta2_ = new doubles; jpsis_phi2_ = new doubles;
 
   if ( isMC_ )
   {
@@ -100,6 +102,13 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("jpsis_m"  , &jpsis_m_  );
   tree_->Branch("jpsis_lxy", &jpsis_lxy_);
 
+  tree_->Branch("jpsis_pt1" , &jpsis_pt1_ );
+  tree_->Branch("jpsis_eta1", &jpsis_eta1_);
+  tree_->Branch("jpsis_phi1", &jpsis_phi1_);
+  tree_->Branch("jpsis_pt2" , &jpsis_pt2_ );
+  tree_->Branch("jpsis_eta2", &jpsis_eta2_);
+  tree_->Branch("jpsis_phi2", &jpsis_phi2_);
+
   if ( isMC_ )
   {
     tree_->Branch("jets_JER"  , jets_JER_);
@@ -172,6 +181,13 @@ void GenericEvent::clear()
   jpsis_phi_->clear();
   jpsis_m_->clear();
   jpsis_lxy_->clear();
+
+  jpsis_pt1_ ->clear();
+  jpsis_eta1_->clear();
+  jpsis_phi1_->clear();
+  jpsis_pt2_ ->clear();
+  jpsis_eta2_->clear();
+  jpsis_phi2_->clear();
 
   if ( isMC_ )
   {
@@ -247,6 +263,13 @@ void GenericEvent::setBranch(TTree* tree)
   tree_->SetBranchAddress("jpsis_phi", &jpsis_phi_);
   tree_->SetBranchAddress("jpsis_m"  , &jpsis_m_  );
   tree_->SetBranchAddress("jpsis_lxy", &jpsis_lxy_);
+
+  tree_->SetBranchAddress("jpsis_pt1" , &jpsis_pt1_ );
+  tree_->SetBranchAddress("jpsis_eta1", &jpsis_eta1_);
+  tree_->SetBranchAddress("jpsis_phi1", &jpsis_phi1_);
+  tree_->SetBranchAddress("jpsis_pt2" , &jpsis_pt2_ );
+  tree_->SetBranchAddress("jpsis_eta2", &jpsis_eta2_);
+  tree_->SetBranchAddress("jpsis_phi2", &jpsis_phi2_);
 
   if ( isMC_ )
   {

@@ -419,6 +419,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
 int KGenericNtupleMaker::findMother(const reco::GenParticle* p, std::vector<const reco::GenParticle*>& genParticles)
 {
+  if ( !p ) return -1;
   for ( int i=0, n=genParticles.size(); i<n; ++i )
   {
     if ( p == genParticles[i] ) return i;

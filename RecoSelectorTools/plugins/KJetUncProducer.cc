@@ -13,7 +13,7 @@
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 
-#include "DataFormats/Common/interface/AssociationMap.h"
+#include "KrAFT/RecoSelectorTools/interface/Types.h"
 
 #include <memory>
 
@@ -27,7 +27,6 @@ public:
   ~KJetUncProducer() {};
   typedef std::vector<pat::Jet> Jets;
   typedef std::vector<pat::MET> METs;
-  typedef edm::AssociationMap<edm::OneToValue<Jets, double> > JetToDouble;
 
 private:
   void beginJob() {};
@@ -66,15 +65,15 @@ KJetUncProducer::KJetUncProducer(const edm::ParameterSet& pset)
   if ( isMC_ ) jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathMC.fullPath());
   else jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathRD.fullPath());
 
-  produces<JetToDouble>("up");
-  produces<JetToDouble>("dn");
+  produces<pat::JetToValue>("up");
+  produces<pat::JetToValue>("dn");
   produces<METs>("up");
   produces<METs>("dn");
   if ( isMC_ )
   {
-    produces<JetToDouble>("res");
-    produces<JetToDouble>("resUp");
-    produces<JetToDouble>("resDn");
+    produces<pat::JetToValue>("res");
+    produces<pat::JetToValue>("resUp");
+    produces<pat::JetToValue>("resDn");
     produces<METs>("res");
     produces<METs>("resUp");
     produces<METs>("resDn");
@@ -89,11 +88,11 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
   edm::Handle<METs> metHandle;
   event.getByLabel(metLabel_, metHandle);
 
-  std::auto_ptr<JetToDouble> fJECsUp(new JetToDouble);
-  std::auto_ptr<JetToDouble> fJECsDn(new JetToDouble);
-  std::auto_ptr<JetToDouble> fJERs(new JetToDouble);
-  std::auto_ptr<JetToDouble> fJERsUp(new JetToDouble);
-  std::auto_ptr<JetToDouble> fJERsDn(new JetToDouble);
+  std::auto_ptr<pat::JetToValue> fJECsUp(new pat::JetToValue);
+  std::auto_ptr<pat::JetToValue> fJECsDn(new pat::JetToValue);
+  std::auto_ptr<pat::JetToValue> fJERs(new pat::JetToValue);
+  std::auto_ptr<pat::JetToValue> fJERsUp(new pat::JetToValue);
+  std::auto_ptr<pat::JetToValue> fJERsDn(new pat::JetToValue);
 
   std::auto_ptr<METs> metsUp(new METs);
   std::auto_ptr<METs> metsDn(new METs);
@@ -132,7 +131,6 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
     metDnY += jetP4.py() - jetDnP4.py();
 
     // JER and uncertainties
-    math::XYZTLorentzVector jetResUpP4, jetResDnP4;
     double fJER = 1, fJERUp = 1, fJERDn = 1;
     if ( isMC_ )
     {

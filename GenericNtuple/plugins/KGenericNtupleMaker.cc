@@ -306,6 +306,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     {
       const reco::GenParticle& p = genHandle->at(i);
       if ( p.status() != 3 ) continue;
+      if ( p.pt() == 0 ) continue;
       genParticlesToStore.push_back(&p);
     }
     for ( int i=0, n=genParticlesToStore.size(); i<n; ++i )

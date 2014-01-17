@@ -401,7 +401,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->jpsis_m_  ->push_back(jpsiCand.mass());
     fevent_->jpsis_lxy_->push_back(jpsiLxyHandle->at(i));
 
-    fevent_->jpsis_pt1_- >push_back(muon1->pt() );
+    fevent_->jpsis_pt1_ ->push_back(muon1->pt() );
     fevent_->jpsis_eta1_->push_back(muon1->eta());
     fevent_->jpsis_phi1_->push_back(muon1->phi());
     fevent_->jpsis_pt2_ ->push_back(muon2->pt() );

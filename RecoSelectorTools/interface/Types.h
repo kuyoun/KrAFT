@@ -8,7 +8,9 @@
 
 namespace pat
 {
-  typedef edm::AssociationMap<edm::OneToValue<std::vector<pat::Jet>, double> > JetToValue;
+  //typedef edm::AssociationMap<edm::OneToValue<std::vector<pat::Jet>, double> > JetToValue;
+  //typedef edm::Association<pat::Jet> JetMap;
+  typedef edm::ValueMap<double> JetToValue;
 }
 
 #endif

@@ -17,14 +17,9 @@
 #include "CommonTools/Utils/interface/PtComparator.h"
 #include "DataFormats/Math/interface/deltaR.h"
 
-#include "KrAFT/GeneratorTools/interface/Types.h"
+#include "KrAFT/RecoSelectorTools/interface/Types.h"
 
 #include <memory>
-
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include <TH1F.h>
-#include <TH2F.h>
 
 using namespace edm;
 using namespace std;
@@ -36,7 +31,6 @@ public:
   ~KJetSelector() {};
 
   typedef std::vector<pat::Jet> Jets;
-  typedef edm::AssociationMap<edm::OneToValue<Jets, double> > JetToValueMap;
 
 private:
   void beginJob() {};
@@ -92,8 +86,8 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   edm::Handle<Jets> jetHandle;
   event.getByLabel(jetLabel_, jetHandle);
 
-  std::vector<const JetToValueMap*> jetScales;
-  edm::Handle<JetToValueMap> jetScaleHandle;
+  std::vector<const pat::JetToValue*> jetScales;
+  edm::Handle<pat::JetToValue> jetScaleHandle;
   const std::string jetUncLabel = jetUncLabel_.label();
   if ( event.getByLabel(edm::InputTag(jetUncLabel, "up"), jetScaleHandle) ) jetScales.push_back(&*jetScaleHandle);
   if ( event.getByLabel(edm::InputTag(jetUncLabel, "dn"), jetScaleHandle) ) jetScales.push_back(&*jetScaleHandle);
@@ -150,9 +144,9 @@ bool KJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
     edm::Ref<Jets> jetRef(jetHandle, i);
     for ( int j=0, m=jetScales.size(); j<m; ++j )
     {
-      JetToValueMap::const_iterator jetScale = jetScales.at(j)->find(jetRef);
-      if ( jetScale == jetScales.at(j)->end() ) continue;
-      const double scale = jetScale->val;
+      //pat::JetToValue::const_iterator jetScale = jetScales.at(j)->find(jetRef);
+      //if ( jetScale == jetScales.at(j)->end() ) continue;
+      const double scale = (*jetScales.at(j))[jetRef];
       if ( jetP4.pt()*scale > minPt_ )
       {
         isAccepted = true;

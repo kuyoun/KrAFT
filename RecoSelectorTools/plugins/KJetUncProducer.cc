@@ -88,17 +88,11 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
   edm::Handle<METs> metHandle;
   event.getByLabel(metLabel_, metHandle);
 
-  std::auto_ptr<pat::JetToValue> fJECsUp(new pat::JetToValue);
-  std::auto_ptr<pat::JetToValue> fJECsDn(new pat::JetToValue);
-  std::auto_ptr<pat::JetToValue> fJERs(new pat::JetToValue);
-  std::auto_ptr<pat::JetToValue> fJERsUp(new pat::JetToValue);
-  std::auto_ptr<pat::JetToValue> fJERsDn(new pat::JetToValue);
-
-  std::auto_ptr<METs> metsUp(new METs);
-  std::auto_ptr<METs> metsDn(new METs);
-  std::auto_ptr<METs> metsRes(new METs);
-  std::auto_ptr<METs> metsResUp(new METs);
-  std::auto_ptr<METs> metsResDn(new METs);
+  std::vector<double> fJECsUp;
+  std::vector<double> fJECsDn;
+  std::vector<double> fJERs;
+  std::vector<double> fJERsUp;
+  std::vector<double> fJERsDn;
 
   pat::MET met = metHandle->at(0);
   const double metX = met.px(), metY = met.py();
@@ -170,41 +164,68 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
     }
 
     // Put JES,JER factors
-    edm::Ref<Jets> jetRef(jetHandle, i);
-    fJECsUp->insert(jetRef, fJECUp);
-    fJECsDn->insert(jetRef, fJECDn);
+    //edm::Ref<Jets> jetRef(jetHandle, i);
+    fJECsUp.push_back(fJECUp);
+    fJECsDn.push_back(fJECDn);
     if ( isMC_ )
     {
-      fJERs->insert(jetRef, fJER);
-      fJERsUp->insert(jetRef, fJERUp);
-      fJERsDn->insert(jetRef, fJERDn);
+      fJERs.push_back(fJER);
+      fJERsUp.push_back(fJERUp);
+      fJERsDn.push_back(fJERDn);
     }
   }
 
   pat::MET metUp, metDn;
   metUp.setP4(reco::Candidate::LorentzVector(metUpX, metUpY, 0, hypot(metUpX, metUpY)));
   metDn.setP4(reco::Candidate::LorentzVector(metDnX, metDnY, 0, hypot(metDnX, metDnY)));
+
+  std::auto_ptr<pat::JetToValue> fJECMapUp(new pat::JetToValue);
+  std::auto_ptr<pat::JetToValue> fJECMapDn(new pat::JetToValue);
+  pat::JetToValue::Filler fillJECUp(*fJECMapUp);
+  pat::JetToValue::Filler fillJECDn(*fJECMapDn);
+  fillJECUp.insert(jetHandle, fJECsUp.begin(), fJECsUp.end());
+  fillJECDn.insert(jetHandle, fJECsDn.begin(), fJECsDn.end());
+  fillJECUp.fill();
+  fillJECDn.fill();
+  event.put(fJECMapUp, "up");
+  event.put(fJECMapDn, "dn");
+
+  std::auto_ptr<METs> metsUp(new METs);
+  std::auto_ptr<METs> metsDn(new METs);
   metsUp->push_back(metUp);
   metsDn->push_back(metDn);
-
-  event.put(fJECsUp, "up");
-  event.put(fJECsDn, "dn");
   event.put(metsUp, "up");
   event.put(metsDn, "dn");
 
   if ( isMC_ )
   {
+    std::auto_ptr<pat::JetToValue> fJERMap(new pat::JetToValue);
+    std::auto_ptr<pat::JetToValue> fJERMapUp(new pat::JetToValue);
+    std::auto_ptr<pat::JetToValue> fJERMapDn(new pat::JetToValue);
+    pat::JetToValue::Filler fillJER(*fJERMap);
+    pat::JetToValue::Filler fillJERUp(*fJERMapUp);
+    pat::JetToValue::Filler fillJERDn(*fJERMapDn);
+    fillJER.insert(jetHandle, fJERs.begin(), fJERs.end());
+    fillJERUp.insert(jetHandle, fJERsUp.begin(), fJERsUp.end());
+    fillJERDn.insert(jetHandle, fJERsDn.begin(), fJERsDn.end());
+    fillJER.fill();
+    fillJERUp.fill();
+    fillJERDn.fill();
+    event.put(fJERMap, "res");
+    event.put(fJERMapUp, "resUp");
+    event.put(fJERMapDn, "resDn");
+
     pat::MET metRes, metResUp, metResDn;
     metRes.setP4(reco::Candidate::LorentzVector(metResX, metResY, 0, hypot(metResX, metResY)));
     metResUp.setP4(reco::Candidate::LorentzVector(metResUpX, metResUpY, 0, hypot(metResUpX, metResUpY)));
     metResDn.setP4(reco::Candidate::LorentzVector(metResDnX, metResDnY, 0, hypot(metResDnX, metResDnY)));
+
+    std::auto_ptr<METs> metsRes(new METs);
+    std::auto_ptr<METs> metsResUp(new METs);
+    std::auto_ptr<METs> metsResDn(new METs);
     metsRes->push_back(metRes);
     metsResUp->push_back(metResUp);
     metsResDn->push_back(metResDn);
-
-    event.put(fJERs, "res");
-    event.put(fJERsUp, "resUp");
-    event.put(fJERsDn, "resDn");
     event.put(metsRes, "res");
     event.put(metsResUp, "resUp");
     event.put(metsResDn, "resDn");

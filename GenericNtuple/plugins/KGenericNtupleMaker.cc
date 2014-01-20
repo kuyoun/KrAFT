@@ -356,14 +356,14 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     const double jetEta = jet.eta();
     if ( std::abs(jetEta) > 2.5 ) continue;
 
-    const double fJESUp = fJESUpHandle->find(jetRef)->val;
-    const double fJESDn = fJESDnHandle->find(jetRef)->val;
+    const double fJESUp = (*fJESUpHandle)[jetRef];
+    const double fJESDn = (*fJESDnHandle)[jetRef];
     double maxPtScale = max(max(1., fJESUp), fJESDn);
     if ( isMC_ )
     {
-      fJER   = fJERHandle->find(jetRef)->val;
-      fJERUp = fJERUpHandle->find(jetRef)->val;
-      fJERDn = fJERDnHandle->find(jetRef)->val;
+      fJER   = (*fJERHandle)[jetRef];
+      fJERUp = (*fJERUpHandle)[jetRef];
+      fJERDn = (*fJERDnHandle)[jetRef];
       maxPtScale = max(max(max(fJER, fJERUp), fJERDn), maxPtScale);
     }
     const double jetPt = jet.pt();

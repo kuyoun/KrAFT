@@ -4,35 +4,55 @@ GenericEvent::GenericEvent(bool isMC)
 {
   isMC_ = isMC;
 
-  muons_pt_ = new doubles; muons_eta_ = new doubles; muons_phi_ = new doubles; muons_m_ = new doubles;
-  muons_Q_ = new ints;
-  muons_type_ = new uints();
+  muons_pt_  = new doubles;
+  muons_eta_ = new doubles;
+  muons_phi_ = new doubles;
+  muons_m_   = new doubles;
+  muons_Q_      = new ints;
+  muons_type_   = new uints;
   muons_relIso_ = new doubles;
 
-  electrons_pt_ = new doubles; electrons_eta_ = new doubles; electrons_phi_ = new doubles; electrons_m_ = new doubles;
-  electrons_Q_ = new ints;
-  electrons_type_ = new uints();
+  electrons_pt_  = new doubles;
+  electrons_eta_ = new doubles;
+  electrons_phi_ = new doubles;
+  electrons_m_   = new doubles;
+  electrons_Q_      = new ints;
+  electrons_type_   = new uints;
   electrons_relIso_ = new doubles;
 
   electrons_mva_ = new doubles;
   electrons_scEta_ = new doubles;
 
-  jets_pt_ = new doubles; jets_eta_ = new doubles; jets_phi_ = new doubles; jets_m_ = new doubles;
+  jets_pt_  = new doubles;
+  jets_eta_ = new doubles;
+  jets_phi_ = new doubles;
+  jets_m_   = new doubles;
   jets_bTag_ = new doubles;
-  jets_JESUp_ = new doubles; jets_JESDn_ = new doubles;
+  jets_JESUp_ = new doubles;
+  jets_JESDn_ = new doubles;
 
-  jpsis_pt_ = new doubles; jpsis_eta_ = new doubles; jpsis_phi_ = new doubles; jpsis_m_ = new doubles;
+  jpsis_pt_  = new doubles;
+  jpsis_eta_ = new doubles;
+  jpsis_phi_ = new doubles;
+  jpsis_m_   = new doubles;
   jpsis_lxy_ = new doubles;
-  jpsis_pt1_ = new doubles; jpsis_eta1_ = new doubles; jpsis_phi1_ = new doubles;
-  jpsis_pt2_ = new doubles; jpsis_eta2_ = new doubles; jpsis_phi2_ = new doubles;
+
+  jpsis_pt1_  = new doubles;
+  jpsis_eta1_ = new doubles;
+  jpsis_phi1_ = new doubles;
+  jpsis_pt2_  = new doubles;
+  jpsis_eta2_ = new doubles;
+  jpsis_phi2_ = new doubles;
 
   if ( isMC_ )
   {
     // JER
-    jets_JER_ = new doubles; jets_JERUp_ = new doubles; jets_JERDn_ = new doubles;
+    jets_JER_   = new doubles;
+    jets_JERUp_ = new doubles;
+    jets_JERDn_ = new doubles;
 
     // GenJets
-    genJets_pt_ = new doubles;
+    genJets_pt_  = new doubles;
     genJets_eta_ = new doubles;
     genJets_phi_ = new doubles;
     genJets_m_   = new doubles;
@@ -307,4 +327,67 @@ void GenericEvent::setBranch(TTree* tree)
   }
 }
 
+GenericEvent::~GenericEvent()
+{
+  delete muons_pt_ ;
+  delete muons_eta_;
+  delete muons_phi_;
+  delete muons_m_  ;
+  delete muons_Q_   ;
+  delete muons_type_;
+  delete muons_relIso_;
 
+  delete electrons_pt_ ;
+  delete electrons_eta_;
+  delete electrons_phi_;
+  delete electrons_m_  ;
+  delete electrons_Q_   ;
+  delete electrons_type_;
+  delete electrons_relIso_;
+
+  delete electrons_mva_;
+  delete electrons_scEta_;
+
+  delete jets_pt_ ;
+  delete jets_eta_;
+  delete jets_phi_;
+  delete jets_m_  ;
+  delete jets_bTag_;
+  delete jets_JESUp_;
+  delete jets_JESDn_;
+
+  delete jpsis_pt_ ;
+  delete jpsis_eta_;
+  delete jpsis_phi_;
+  delete jpsis_m_  ;
+  delete jpsis_lxy_;
+
+  delete jpsis_pt1_ ;
+  delete jpsis_eta1_;
+  delete jpsis_phi1_;
+  delete jpsis_pt2_ ;
+  delete jpsis_eta2_;
+  delete jpsis_phi2_;
+
+  if ( isMC_ )
+  {
+    // JER
+    delete jets_JER_  ;
+    delete jets_JERUp_;
+    delete jets_JERDn_;
+
+    // GenJets
+    delete genJets_pt_ ;
+    delete genJets_eta_;
+    delete genJets_phi_;
+    delete genJets_m_  ;
+
+    // Generator information
+    delete genParticles_pt_ ;
+    delete genParticles_eta_;
+    delete genParticles_phi_;
+    delete genParticles_m_  ;
+    delete genParticles_pdgId_ ;
+    delete genParticles_mother_;
+  }
+}

@@ -8,6 +8,7 @@ struct GenericEvent
 {
 public:
   GenericEvent(bool isMC=false);
+  ~GenericEvent();
   void clear();
   void book(TTree* tree); // book leaves to fill the tree
   void setBranch(TTree* tree);

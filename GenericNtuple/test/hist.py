@@ -7,8 +7,10 @@ from ROOT import *
 gROOT.ProcessLine(".x rootlogon.C")
 from KrAFT.GenericNtuple.NtupleAnalyzer import *
 
-def process(sample, mode):
-    ana = NtupleAnalyzer(mode, ["ntuple/%s__%s.root" % (sample, mode)], "hist/%s__%s.root" % (sample, mode))
+def process(sample, mode, files):
+    print "Making histogram", sample
+
+    ana = NtupleAnalyzer(mode, files, "hist/%s__%s.root" % (sample, mode))
     ana.setWeightVar("puWeight")
 
     cut_s1 = "z_m > 12 && lepton1_pt > 20 && lepton2_pt > 20 && lepton1_iso < 0.15 && lepton2_iso < 0.15 && z_Q == 0"
@@ -37,13 +39,24 @@ def process(sample, mode):
 
     ana.process()
 
+    print "Done", sample
+
 if __name__ == '__main__':
-    p = multiprocessing.Pool(multiprocessing.cpu_count())
+    samples = {}
     for mode in ["MuMu", "MuEl", "ElEl"]:
         for f in os.listdir("ntuple"):
             if len(f) < 12: continue
             if f[-11:] != ('__%s.root' % mode): continue
-            sample = f.replace("__%s.root" % mode, "")
+            s = f.replace("__%s.root" % mode, "")
+            sampleName = ('_'.join(s.split('_')[:-1]), mode)
+            if sampleName not in samples: samples[sampleName] = []
+            samples[sampleName].append("ntuple/%s" % f)
 
-            p.apply(process, [sample, mode])
+    p = multiprocessing.Pool(multiprocessing.cpu_count())
+    for key in samples.keys():
+        sample, mode = key
+        files = samples[key]
+        p.apply_async(process, [sample, mode, files])
+    p.close()
+    p.join()
 

@@ -29,7 +29,7 @@ class NtupleAnalyzer(object):
         if self.isMC: self.scale = max(1, self.nEventTotal)
         
         self.outFile = TFile(outFileName, "RECREATE")
-        self.outDir = self.outFile.mkdir(modeName)
+        self.outDir = self.outFile
         self.outDir.cd()
 
     def setWeightVar(self, weightVar):

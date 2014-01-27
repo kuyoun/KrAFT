@@ -91,6 +91,8 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
 
   if ( isMC_ )
   {
+    outTree_->Branch("decayMode", &decayMode_, "decayMode/I");
+
     outTree_->Branch("puWeight", &puWeight_, "puWeight/D");
     outTree_->Branch("puWeightUp", &puWeightUp_, "puWeightUp/D");
     outTree_->Branch("puWeightDn", &puWeightDn_, "puWeightDn/D");
@@ -129,6 +131,7 @@ bool KDileptonTreeReducer::analyze()
   bjetsDn_n_ = 0;
   if ( isMC_ )
   {
+    decayMode_ = 0;
     jetsResUp_pt_->clear(); jetsResUp_bTag_->clear();
     jetsResDn_pt_->clear(); jetsResDn_bTag_->clear();
     bjetsResUp_n_ = 0;
@@ -205,9 +208,27 @@ bool KDileptonTreeReducer::analyze()
     metJERDn_phi_ = event_->metJERDn_phi_;
   }
 
-  // Weights
   if ( isMC_ )
   {
+    // Decay mode
+    unsigned int nTop = 0, nMuon = 0, nElectron = 0, nTau = 0;
+    for ( int i=0, n=event_->genParticles_pdgId_->size(); i<n; ++i )
+    {
+      const int pdgId = abs(event_->genParticles_pdgId_->at(i));
+      if ( pdgId == 6 ) ++nTop;
+      else if ( pdgId == 11 ) ++nElectron;
+      else if ( pdgId == 13 ) ++nMuon;
+      else if ( pdgId == 15 ) ++nTau;
+    }
+    if ( nTop == 2 )
+    {
+      if ( nMuon == 2 ) decayMode_ = 1;
+      else if ( nElectron == 2 ) decayMode_ = 2;
+      else if ( nMuon == 1 and nElectron == 1 ) decayMode_ = 3;
+      else decayMode_ = 4;
+    }
+
+    // Weights
     puWeight_ = event_->puWeight_;
     puWeightUp_ = event_->puWeightUp_;
     puWeightDn_ = event_->puWeightDn_;

@@ -25,6 +25,7 @@ private:
 
 private:
   // Branch items for output tree
+  int decayMode_;
   int nVertex_;
   double puWeight_, puWeightUp_, puWeightDn_;
 

@@ -22,6 +22,10 @@ def process(sample, mode, files):
     if mode == "MuEl":
         cut_s2 = "1"
         cut_s4 = "1"
+    if "TTJets_MassiveBinDECAY" in sample:
+        cut_s1 += "&& decayMode < 1"
+    elif "TTJets" in sample or "TTTo" in sample or "TT_" in sample:
+        cut_s1 += "&& decayMode >= 1"
 
     ana.addH1("zM", "z_m", "MZ;M(l^{+}l^{-}) (GeV/c^{2});Events per 2 GeV/c^{2}", 100, 0, 200)
     ana.addH1("lepton1_pt", "lepton1_pt", "pt1;Leading lepton p_{T} (GeV/c);Events per 2GeV/c", 100, 0, 200)
@@ -59,4 +63,13 @@ if __name__ == '__main__':
         p.apply_async(process, [sample, mode, files])
     p.close()
     p.join()
+
+    for sample, mode in samples.keys():
+        if 'Run20' in sample: continue
+        os.system("hadd -f hist/%s__All.root hist/%s__MuMu.root hist/%s__ElEl.root hist/%s__MuEl.root" % (sample, sample, sample, sample))
+    os.system("hadd -f hist/Run2012__ElEl.root hist/DoubleElectron_Run2012*-22Jan2013__ElEl.root")
+    os.system("hadd -f hist/Run2012__MuMu.root hist/DoubleMu_Run2012*-22Jan2013__MuMu.root")
+    os.system("hadd -f hist/Run2012__MuEl.root hist/MuEG_Run2012*-22Jan2013__MuEl.root")
+    os.system("hadd -f hist/Run2012__All.root hist/Run2012__MuMu.root hist/Run2012__ElEl.root hist/Run2012__MuEl.root")
+    print "END"
 

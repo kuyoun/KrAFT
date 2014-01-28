@@ -41,12 +41,13 @@ def process(sample, mode, files):
     ana.addH1("vsumM", "ttbar_vsumM", "vsumM;M(l^{+}l^{-}j_{1}j_{2}MET) (GeV/c^{2});Events per 20GeV/c^{2}", 100, 0, 2000)
     ana.addH1("lb1M", "lb1_m", "lb1M;M(l_{1}^{#pm}b) (GeV/c^{2});Events per 5GeV/c^{2}", 100, 0, 500)
     ana.addH1("lb2M", "lb2_m", "lb2M;M(l_{2}^{#pm}b) (GeV/c^{2});Events per 5GeV/c^{2}", 100, 0, 500)
+    ana.addH1("st", "st", "st;S_{T} (GeV/c);Events per 50GeV/c^{2}", 100, 0, 5000)
 
     ana.addCutStep("S1", cut_s1, "zM,lepton1_pt,lepton2_pt,nVertex")
     ana.addCutStep("S2", cut_s2, "zM,njet,nbjet,met,nVertex")
     ana.addCutStep("S3", cut_s3, "njet,nbjet,met,nVertex")
-    ana.addCutStep("S4", cut_s4, "nbjet,met,nVertex,vsumM,lb1M,lb2M")
-    ana.addCutStep("S5", cut_s5, "nbjet,met,nVertex,vsumM,lb1M,lb2M")
+    ana.addCutStep("S4", cut_s4, "nbjet,met,nVertex,vsumM,lb1M,lb2M,st")
+    ana.addCutStep("S5", cut_s5, "nbjet,met,nVertex,vsumM,lb1M,lb2M,st")
 
     ana.process()
 

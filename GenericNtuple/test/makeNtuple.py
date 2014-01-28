@@ -10,7 +10,7 @@ def fed(args):
     mode, file = args
     sample = os.path.basename(file).replace('.root', '')
     print "Running", mode, sample 
-    ana = KDileptonTreeReducer(mode, file, "ntuple/%s__%s.root" % (sample, mode))
+    ana = KDileptonTreeAnalyzer(mode, file, "ntuple/%s__%s.root" % (sample, mode))
     ana.run()
     print "Done", mode, sample
 

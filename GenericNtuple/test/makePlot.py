@@ -63,19 +63,22 @@ for cutStep in sorted(histStr.keys()):
                         hSum.SetOption("hist")
                         hists.append(hSum)
                     hSum.Add(hSum, h, 1, scale)
+                if hSum == None: continue
+                hSum.AddBinContent(hSum.GetNbinsX(), hSum.GetBinContent(hSum.GetNbinsX()+1))
                 if hStack == None:
                     hStack = THStack("hStack_%s_%s_%s" % (cutStep, histName, channel), "%s/%s/%s;%s;%s" % (cutStep, histName, channel, xTitle, yTitle))
                 hStack.Add(hSum)
 
-                ymaxStack += max([hSum.GetBinContent(j+1) for j in range(hSum.GetNbinsX())])
+                ymaxStack += max([hSum.GetBinContent(j+1) for j in range(hSum.GetNbinsX()-1)])
             ymax = max(ymax, ymaxStack)
 
             fData = TFile("hist/Run2012__%s.root" % channel)
             gROOT.cd()
             hData = fData.Get("%s/%s" % (cutStep, histName)).Clone()
             hData.SetName("data_%s_%s_%s" % (channel, cutStep, histName))
+            hData.AddBinContent(hData.GetNbinsX(), hData.GetBinContent(hData.GetNbinsX()+1))
 
-            ymax = max(ymax, max([hData.GetBinContent(j+1) for j in range(hData.GetNbinsX())]))
+            ymax = max(ymax, max([hData.GetBinContent(j+1) for j in range(hData.GetNbinsX()-1)]))
 
             labels = TLegend(0.65,0.65,0.92,0.92)
             labels.SetBorderSize(0)

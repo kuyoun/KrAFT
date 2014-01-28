@@ -1,11 +1,11 @@
-#include "KrAFT/GenericNtuple/interface/KLeptonJetTreeReducer.h"
+#include "KrAFT/GenericNtuple/interface/KLeptonJetTreeAnalyzer.h"
 
 using namespace std;
 
-KLeptonJetTreeReducer::KLeptonJetTreeReducer(const std::string modeName,
+KLeptonJetTreeAnalyzer::KLeptonJetTreeAnalyzer(const std::string modeName,
                                            const std::string inputFileName,
                                            const std::string outputFileName):
-  KFlatTreeReducerBase(modeName, inputFileName, outputFileName)
+  KFlatTreeAnalyzerBase(modeName, inputFileName, outputFileName)
 {
 
   outTree_->Branch("lepton_pt" , &lepton_pt_ , "lepton_pt/D" );
@@ -28,7 +28,7 @@ KLeptonJetTreeReducer::KLeptonJetTreeReducer(const std::string modeName,
   }
 }
 
-bool KLeptonJetTreeReducer::analyze()
+bool KLeptonJetTreeAnalyzer::analyze()
 {
   if ( event_->muons_type_->size() == 0 ) return false;
   if ( event_->muons_type_->at(0) == 0 ) return false;

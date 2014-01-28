@@ -1,11 +1,11 @@
-#include "KrAFT/GenericNtuple/interface/KDileptonTreeReducer.h"
+#include "KrAFT/GenericNtuple/interface/KDileptonTreeAnalyzer.h"
 
 using namespace std;
 
-KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
+KDileptonTreeAnalyzer::KDileptonTreeAnalyzer(const std::string modeName,
                                            const std::string inputFileName,
                                            const std::string outputFileName):
-  KFlatTreeReducerBase(modeName, inputFileName, outputFileName)
+  KFlatTreeAnalyzerBase(modeName, inputFileName, outputFileName)
 {
   if ( !event_ ) return;
 
@@ -124,7 +124,7 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
   }
 }
 
-bool KDileptonTreeReducer::analyze()
+bool KDileptonTreeAnalyzer::analyze()
 {
   // Initialize tree
   z_Q_ = -999;

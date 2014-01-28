@@ -1,15 +1,15 @@
-#ifndef KrAFT_GenericNtuple_KDileptonTreeReducer_H
-#define KrAFT_GenericNtuple_KDileptonTreeReducer_H
+#ifndef KrAFT_GenericNtuple_KDileptonTreeAnalyzer_H
+#define KrAFT_GenericNtuple_KDileptonTreeAnalyzer_H
 
-#include "KrAFT/GenericNtuple/interface/KFlatTreeReducerBase.h"
+#include "KrAFT/GenericNtuple/interface/KFlatTreeAnalyzerBase.h"
 
-class KDileptonTreeReducer : public KFlatTreeReducerBase
+class KDileptonTreeAnalyzer : public KFlatTreeAnalyzerBase
 {
 public:
-  KDileptonTreeReducer(const std::string modeName,
+  KDileptonTreeAnalyzer(const std::string modeName,
                        const std::string inputFileName,
                        const std::string outputFileName);
-  void run() { KFlatTreeReducerBase::run(); }
+  void run() { KFlatTreeAnalyzerBase::run(); }
 
 private:
   virtual bool analyze();

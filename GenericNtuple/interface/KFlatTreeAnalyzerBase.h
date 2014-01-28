@@ -1,5 +1,5 @@
-#ifndef KFlatTreeReducerBase_h
-#define KFlatTreeReducerBase_h
+#ifndef KFlatTreeAnalyzerBase_h
+#define KFlatTreeAnalyzerBase_h
 
 #include <iostream>
 
@@ -24,13 +24,13 @@ typedef std::vector<int> ints;
 
 void printEntryFraction(int i, int n);
 
-class KFlatTreeReducerBase
+class KFlatTreeAnalyzerBase
 {
 public:
-  KFlatTreeReducerBase(const std::string modeName,
+  KFlatTreeAnalyzerBase(const std::string modeName,
                        const std::string inputFileName, 
                        const std::string outputFileName);
-  virtual ~KFlatTreeReducerBase();
+  virtual ~KFlatTreeAnalyzerBase();
 
   void run();
 

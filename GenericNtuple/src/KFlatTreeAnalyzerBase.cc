@@ -1,4 +1,4 @@
-#include "KrAFT/GenericNtuple/interface/KFlatTreeReducerBase.h"
+#include "KrAFT/GenericNtuple/interface/KFlatTreeAnalyzerBase.h"
 #include "TString.h"
 #include "TNamed.h"
 
@@ -21,7 +21,7 @@ void printEntryFraction(int i, int n)
   }
 }
 
-KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string inputFileName, const string outputFileName)
+KFlatTreeAnalyzerBase::KFlatTreeAnalyzerBase(const string modeName, const string inputFileName, const string outputFileName)
 {
   event_ = 0;
   outputFile_ = 0;
@@ -44,12 +44,12 @@ KFlatTreeReducerBase::KFlatTreeReducerBase(const string modeName, const string i
 
 }
 
-KFlatTreeReducerBase::~KFlatTreeReducerBase()
+KFlatTreeAnalyzerBase::~KFlatTreeAnalyzerBase()
 {
   if ( outputFile_ and outputFile_->IsOpen() ) outputFile_->Close();
 }
 
-void KFlatTreeReducerBase::run()
+void KFlatTreeAnalyzerBase::run()
 {
   if ( !event_ ) return;
 
@@ -67,7 +67,7 @@ void KFlatTreeReducerBase::run()
   outTree_->Write();
 }
 
-void KFlatTreeReducerBase::getP4(const doubles* pts, const doubles* etas, const doubles* phis, const doubles* ms, LorentzVectors& p4s)
+void KFlatTreeAnalyzerBase::getP4(const doubles* pts, const doubles* etas, const doubles* phis, const doubles* ms, LorentzVectors& p4s)
 {
   p4s.clear();
   LorentzVector p4;

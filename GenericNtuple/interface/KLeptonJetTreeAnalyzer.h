@@ -1,15 +1,15 @@
-#ifndef KrAFT_GenericNtuple_KLeptonJetTreeReducer_H
-#define KrAFT_GenericNtuple_KLeptonJetTreeReducer_H
+#ifndef KrAFT_GenericNtuple_KLeptonJetTreeAnalyzer_H
+#define KrAFT_GenericNtuple_KLeptonJetTreeAnalyzer_H
 
-#include "KrAFT/GenericNtuple/interface/KFlatTreeReducerBase.h"
+#include "KrAFT/GenericNtuple/interface/KFlatTreeAnalyzerBase.h"
 
-class KLeptonJetTreeReducer : public KFlatTreeReducerBase
+class KLeptonJetTreeAnalyzer : public KFlatTreeAnalyzerBase
 {
 public:
-  KLeptonJetTreeReducer(const std::string modeName,
+  KLeptonJetTreeAnalyzer(const std::string modeName,
                        const std::string inputFileName,
                        const std::string outputFileName);
-  void run() { KFlatTreeReducerBase::run(); }
+  void run() { KFlatTreeAnalyzerBase::run(); }
 
 private:
   virtual bool analyze();

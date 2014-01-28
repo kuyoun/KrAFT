@@ -31,7 +31,7 @@ private:
 
   double lepton1_pt_, lepton1_eta_, lepton1_phi_, lepton1_iso_;
   double lepton2_pt_, lepton2_eta_, lepton2_phi_, lepton2_iso_;
-  double z_m_, z_pt_;
+  double z_m_, z_pt_, z_dphi_;
   int z_Q_;
 
   unsigned int bjets_n_, bjetsUp_n_, bjetsDn_n_, bjetsResUp_n_, bjetsResDn_n_;
@@ -47,6 +47,9 @@ private:
   double metJER_pt_, metJER_phi_;
   double metJERUp_pt_, metJERUp_phi_;
   double metJERDn_pt_, metJERDn_phi_;
+
+  double lb1_m_, lb2_m_;
+  double ttbar_vsumM_;
 };
 
 #endif

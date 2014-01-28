@@ -63,6 +63,7 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
   outTree_->Branch("z_m" , &z_m_ , "z_m/D" );
   outTree_->Branch("z_pt", &z_pt_, "z_pt/D");
   outTree_->Branch("z_Q" , &z_Q_ , "z_Q/I" );
+  outTree_->Branch("z_dphi", &z_dphi_, "z_dphi/D");
 
   outTree_->Branch("met_pt" , &met_pt_ , "met_pt/D" );
   outTree_->Branch("met_phi", &met_phi_, "met_phi/D");
@@ -88,6 +89,10 @@ KDileptonTreeReducer::KDileptonTreeReducer(const std::string modeName,
   outTree_->Branch("bjets_n"  , &bjets_n_  , "bjets_n/i"  );
   outTree_->Branch("bjetsUp_n", &bjetsUp_n_, "bjestUp_n/i");
   outTree_->Branch("bjetsDn_n", &bjetsDn_n_, "bjetsDn_n/i");
+
+  outTree_->Branch("lb1_m", &lb1_m_, "lb1_m/D");
+  outTree_->Branch("lb2_m", &lb2_m_, "lb2_m/D");
+  outTree_->Branch("ttbar_vsumM", &ttbar_vsumM_, "ttbar_vsumM/D");
 
   if ( isMC_ )
   {
@@ -191,6 +196,7 @@ bool KDileptonTreeReducer::analyze()
   if ( z_Q_ == -999 ) return false;
   z_pt_ = zP4.Pt();
   z_m_  = zP4.M();
+  z_dphi_ = lepton1P4.DeltaPhi(lepton2P4);
 
   met_pt_  = event_->met_pt_ ;
   met_phi_ = event_->met_phi_;
@@ -207,6 +213,8 @@ bool KDileptonTreeReducer::analyze()
     metJERDn_pt_  = event_->metJERDn_pt_ ;
     metJERDn_phi_ = event_->metJERDn_phi_;
   }
+  TLorentzVector metP4;
+  metP4.SetPtEtaPhiM(met_pt_, 0, met_phi_, 0);
 
   if ( isMC_ )
   {
@@ -234,6 +242,7 @@ bool KDileptonTreeReducer::analyze()
     puWeightDn_ = event_->puWeightDn_;
   }
 
+  std::vector<TLorentzVector> jets;
   for ( int i=0, n=event_->jets_pt_->size(); i<n; ++i )
   {
     const double jetPt = event_->jets_pt_->at(i);
@@ -246,8 +255,27 @@ bool KDileptonTreeReducer::analyze()
     //if ( jetBtag > 0.898 ) ++bjets_n_;
     jets_bTag_->push_back(jetBtag);
 
-//    LorentzVector jetP4;
-//    jetP4.SetPtEtaPhiM(jetPt, event_->jets_eta_->at(i), event_->jets_phi_->at(i), event_->jets_m_->at(i));
+    LorentzVector jetP4;
+    jetP4.SetPtEtaPhiM(jetPt, event_->jets_eta_->at(i), event_->jets_phi_->at(i), event_->jets_m_->at(i));
+    jets.push_back(jetP4);
+  }
+
+  ttbar_vsumM_ = -1;
+  if ( jets.size() >= 2 )
+  {
+    const double lb1122_dphi = abs(lepton1P4.DeltaPhi(jets[0]))+abs(lepton2P4.DeltaPhi(jets[1]));
+    const double lb1221_dphi = abs(lepton1P4.DeltaPhi(jets[1]))+abs(lepton2P4.DeltaPhi(jets[0]));
+    if ( lb1122_dphi < lb1221_dphi )
+    {
+      lb1_m_ = (lepton1P4+jets[0]).M();
+      lb2_m_ = (lepton2P4+jets[1]).M();
+    }
+    else
+    {
+      lb1_m_ = (lepton1P4+jets[1]).M();
+      lb2_m_ = (lepton2P4+jets[0]).M();
+    }
+    ttbar_vsumM_ = (zP4+metP4+jets[0]+jets[1]).M();
   }
 
   return true;

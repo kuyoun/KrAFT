@@ -24,7 +24,7 @@ def process(sample, mode, files):
         cut_s4 = "1"
     if "TTJets_MassiveBinDECAY" in sample:
         cut_s1 += "&& decayMode < 1"
-    elif "TTJets" in sample or "TTTo" in sample or "TT_" in sample:
+    elif "TTJets" == sample[:5] or "TTTo" == sample[:4] or "TT_" == sample[:3]:
         cut_s1 += "&& decayMode >= 1"
     elif "QCD" == sample:
         #cut_s1 = "z_m > 12 && lepton1_pt > 20 && lepton2_pt > 20 && lepton1_iso > 0.15 && lepton2_iso > 0.15 && z_Q != 0"

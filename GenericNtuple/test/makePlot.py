@@ -4,7 +4,11 @@ from ROOT import *
 gROOT.ProcessLine(".x rootlogon.C")
 from xml.dom.minidom import parse
 
+## Set lumi value and label
 lumi = 19.6*1000
+label = "#splitline{CMS Work in progress 2012}{#sqrt{s}=8TeV %.1f fb^{-1}}" % (lumi/1000)
+#label = "#splitline{CMS Preliminary 2012}{#sqrt{s}=8TeV %.1f fb^{-1}}" % (lumi/1000)
+#label = "#splitline{CMS 2012 #sqrt{s}=8TeV %.1f fb^{-1}}" % (lumi/1000)
 
 ## Load plot styles for all samples
 plotStyles = []
@@ -32,6 +36,7 @@ for cutStep in [x.GetName() for x in f.GetListOfKeys()]:
         if not h.IsA().InheritsFrom("TH1"): continue
         histStr[cutStep].append(histName)
 
+## Draw everything
 canvases = []
 plotSets = []
 for cutStep in sorted(histStr.keys()):
@@ -80,17 +85,17 @@ for cutStep in sorted(histStr.keys()):
 
             ymax = max(ymax, max([hData.GetBinContent(j+1) for j in range(hData.GetNbinsX()-1)]))
 
-            labels = TLegend(0.65,0.65,0.92,0.92)
-            labels.SetBorderSize(0)
-            labels.SetFillStyle(0)
-            labels.AddEntry(hData, "Data", "lp")
+            legends = TLegend(0.70,0.62,0.95,0.90)
+            legends.SetBorderSize(0)
+            legends.SetFillStyle(0)
+            legends.AddEntry(hData, "Data", "lp")
             for h in reversed(hists):
-                labels.AddEntry(h, h.GetTitle(), "f")
+                legends.AddEntry(h, h.GetTitle(), "f")
             c.cd(i+1)
             hStack.Draw("hist")
             hData.Draw("same")
-            labels.Draw()
-            plotSet.append((hStack, hData, hists, labels))
+            legends.Draw()
+            plotSet.append([hStack, hData, hists, legends])
 
         for i in range(4):
             pad = c.cd(i+1)
@@ -101,6 +106,15 @@ for cutStep in sorted(histStr.keys()):
             else:
                 plotSet[i+1][0].SetMinimum(0)
                 plotSet[i+1][0].SetMaximum(ymax*1.2)
+
+            leftMargin, topMargin = pad.GetLeftMargin(), pad.GetTopMargin()
+            l = TLatex(leftMargin+0.04, 1-topMargin-0.04*2, label)
+            l.SetTextAlign(12)
+            l.SetNDC()
+            l.SetTextSize(0.04)
+            l.Draw()
+            plotSet[i+1].append(l)
+
         canvases.append(c)
 
         plotSets.append(plotSet)

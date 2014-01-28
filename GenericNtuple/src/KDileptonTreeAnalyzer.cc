@@ -90,6 +90,7 @@ KDileptonTreeAnalyzer::KDileptonTreeAnalyzer(const std::string modeName,
   outTree_->Branch("bjetsUp_n", &bjetsUp_n_, "bjestUp_n/i");
   outTree_->Branch("bjetsDn_n", &bjetsDn_n_, "bjetsDn_n/i");
 
+  outTree_->Branch("st", &st_, "st/D");
   outTree_->Branch("lb1_m", &lb1_m_, "lb1_m/D");
   outTree_->Branch("lb2_m", &lb2_m_, "lb2_m/D");
   outTree_->Branch("ttbar_vsumM", &ttbar_vsumM_, "ttbar_vsumM/D");
@@ -134,6 +135,7 @@ bool KDileptonTreeAnalyzer::analyze()
   bjets_n_ = 0;
   bjetsUp_n_ = 0;
   bjetsDn_n_ = 0;
+  st_ = 0;
   if ( isMC_ )
   {
     decayMode_ = 0;
@@ -198,6 +200,22 @@ bool KDileptonTreeAnalyzer::analyze()
   z_m_  = zP4.M();
   z_dphi_ = lepton1P4.DeltaPhi(lepton2P4);
 
+  // Run lepton loop again for st calculation
+  for ( int i=0, n=event_->muons_pt_->size(); i<n; ++i )
+  {
+    const double muonPt = event_->muons_pt_->at(i);
+    const double muonEta = abs(event_->muons_eta_->at(i));
+    if ( muonPt < 20 or muonEta > 2.5 ) continue;
+    st_ += muonPt;
+  }
+  for ( int i=0, n=event_->electrons_pt_->size(); i<n; ++i )
+  {
+    const double electronPt = event_->electrons_pt_->at(i);
+    const double electronEta = abs(event_->electrons_eta_->at(i));
+    if ( electronPt < 20 or electronEta > 2.5 ) continue;
+    st_ += event_->electrons_pt_->at(i);
+  }
+
   met_pt_  = event_->met_pt_ ;
   met_phi_ = event_->met_phi_;
   metJESUp_pt_  = event_->metJESUp_pt_ ;
@@ -215,6 +233,7 @@ bool KDileptonTreeAnalyzer::analyze()
   }
   TLorentzVector metP4;
   metP4.SetPtEtaPhiM(met_pt_, 0, met_phi_, 0);
+  st_ += met_pt_;
 
   if ( isMC_ )
   {
@@ -248,6 +267,7 @@ bool KDileptonTreeAnalyzer::analyze()
     const double jetPt = event_->jets_pt_->at(i);
     if ( jetPt < 30 ) continue;
     jets_pt_->push_back(jetPt);
+    st_ += jetPt;
 
     const double jetBtag = event_->jets_bTag_->at(i);
     //if ( jetBtag > 0.244 ) ++bjets_n_;

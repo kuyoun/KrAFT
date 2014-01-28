@@ -48,6 +48,7 @@ private:
   double metJERUp_pt_, metJERUp_phi_;
   double metJERDn_pt_, metJERDn_phi_;
 
+  double st_;
   double lb1_m_, lb2_m_;
   double ttbar_vsumM_;
 };

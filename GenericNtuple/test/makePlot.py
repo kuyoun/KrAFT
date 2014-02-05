@@ -5,10 +5,11 @@ gROOT.ProcessLine(".x rootlogon.C")
 from xml.dom.minidom import parse
 
 ## Set lumi value and label
-lumi = 19.6*1000
-label = "#splitline{CMS Work in progress 2012}{#sqrt{s}=8TeV %.1f fb^{-1}}" % (lumi/1000)
-#label = "#splitline{CMS Preliminary 2012}{#sqrt{s}=8TeV %.1f fb^{-1}}" % (lumi/1000)
-#label = "#splitline{CMS 2012 #sqrt{s}=8TeV %.1f fb^{-1}}" % (lumi/1000)
+lumi = 19.6*1000 # in pb-1
+header = "CMS Work in progress"
+#header = "CMS Preliminary"
+#header = "CMS"
+label  = "#intLdt=%.1f fb^{-1}, #sqrt{s}=8TeV" % (lumi/1000)
 
 ## Load plot styles for all samples
 plotStyles = []
@@ -102,18 +103,21 @@ for cutStep in sorted(histStr.keys()):
             if histName in ("zM", "njet", "nbjet"):
                 pad.SetLogy()
                 plotSet[i+1][0].SetMinimum(0.1)
-                plotSet[i+1][0].SetMaximum(ymax*10)
+                plotSet[i+1][0].SetMaximum(ymax*100)
             else:
                 plotSet[i+1][0].SetMinimum(0)
-                plotSet[i+1][0].SetMaximum(ymax*1.2)
+                plotSet[i+1][0].SetMaximum(ymax*1.5)
 
             leftMargin, topMargin = pad.GetLeftMargin(), pad.GetTopMargin()
-            l = TLatex(leftMargin+0.04, 1-topMargin-0.04*2, label)
-            l.SetTextAlign(12)
-            l.SetNDC()
-            l.SetTextSize(0.04)
-            l.Draw()
-            plotSet[i+1].append(l)
+            lh = TLatex(leftMargin+0.04, 1-topMargin-0.08, header)
+            ll = TLatex(leftMargin+0.04, 1-topMargin-0.15, label)
+            lh.SetNDC()
+            ll.SetNDC()
+            lh.SetTextSize(0.045)
+            ll.SetTextSize(0.035)
+            ll.Draw()
+            lh.Draw()
+            plotSet[i+1].extend([lh, ll])
 
         canvases.append(c)
 
@@ -121,3 +125,4 @@ for cutStep in sorted(histStr.keys()):
 
 for c in canvases:
     c.Update()
+    c.Print("%s.png" % c.GetName())

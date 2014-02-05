@@ -1,9 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 
 jpsiToMuMu = cms.EDFilter("KVertexToMuMuProducer",
+    src = cms.InputTag("muons"),
     track = cms.PSet(
-        src = cms.InputTag("generalTracks"),
-        minPt = cms.double(4.0),
+        minPt = cms.double(1.0),
         maxEta = cms.double(2.5),
         chi2 = cms.double(5.),
         nHit = cms.int32(6),
@@ -12,14 +12,9 @@ jpsiToMuMu = cms.EDFilter("KVertexToMuMuProducer",
     ),
     vertex = cms.PSet(
         chi2 = cms.double(7.),
-        minLxy = cms.double(-40),
-        maxLxy = cms.double(40),
+        minLxy = cms.double(-100),
+        maxLxy = cms.double(100),
         signif = cms.double(-5.0),
-    ),
-    muon = cms.PSet(
-        src = cms.InputTag("muons"),
-        dPtRel = cms.double(0.01),
-        dR     = cms.double(0.01),
     ),
     pdgId = cms.uint32(443),
     leg1Id = cms.uint32(13),

@@ -78,6 +78,8 @@ private:
 
 KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
 {
+  muonLabel_ = pset.getParameter<edm::InputTag>("src");
+
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
   cut_minPt_ = trackPSet.getParameter<double>("minPt");
   cut_maxEta_ = trackPSet.getParameter<double>("maxEta");
@@ -91,9 +93,6 @@ KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
   cut_minLxy_ = vertexPSet.getParameter<double>("minLxy");
   cut_maxLxy_ = vertexPSet.getParameter<double>("maxLxy");
   cut_vtxSignif_ = vertexPSet.getParameter<double>("signif");
-
-  edm::ParameterSet muonPSet = pset.getParameter<edm::ParameterSet>("muon");
-  muonLabel_ = muonPSet.getParameter<edm::InputTag>("src");
 
   pdgId_ = pset.getParameter<unsigned int>("pdgId");
   rawMassMin_ = pset.getParameter<double>("rawMassMin");
@@ -140,7 +139,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
     const pat::Muon& muon1 = muonHandle->at(i);
-    if ( !muon1.isPFMuon() ) continue;
+    //if ( !muon1.isPFMuon() ) continue;
     if ( !muon1.isTrackerMuon() and !muon1.isGlobalMuon() ) continue;
     TrackRef trackRef1 = muon1.isGlobalMuon() ? muon1.globalTrack() : muon1.track();
     // Positive particle in the 1st index (pi+, proton, K+...)
@@ -154,7 +153,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
     for ( int j=0; j<n; ++j )
     {
       const pat::Muon& muon2 = muonHandle->at(j);
-      if ( !muon2.isPFMuon() ) continue;
+      //if ( !muon2.isPFMuon() ) continue;
       if ( !muon2.isTrackerMuon() and !muon2.isGlobalMuon() ) continue;
       TrackRef trackRef2 = muon2.isGlobalMuon() ? muon2.globalTrack() : muon2.track();
       // Negative particle in the 2nd index (pi-, anti-proton, K-...)

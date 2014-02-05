@@ -49,6 +49,8 @@ def process(sample, mode, files):
     ana.addCutStep("S4", cut_s4, "nbjet,met,nVertex,vsumM,lb1M,lb2M,st")
     ana.addCutStep("S5", cut_s5, "nbjet,met,nVertex,vsumM,lb1M,lb2M,st")
 
+    ana.storeNtuple("S4")
+
     ana.process()
 
     print "Done", sample

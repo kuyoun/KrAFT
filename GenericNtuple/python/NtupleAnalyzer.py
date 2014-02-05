@@ -13,6 +13,7 @@ class NtupleAnalyzer(object):
         self.h1 = {}
         self.h2 = {}
         self.cutSteps = []
+        self.ntupleStep = None
 
         ## Load input tree and event number for scalers
         self.chain = TChain("%s/ntuple" % modeName)
@@ -71,6 +72,9 @@ class NtupleAnalyzer(object):
             return
         self.h2[name] = (varexp, title, binsX, binsY)
 
+    def storeNtuple(self, step):
+        self.ntupleStep = step
+
     def process(self):
         self.outDir.cd()
         nCutStep = len(self.cutSteps)
@@ -78,6 +82,7 @@ class NtupleAnalyzer(object):
         hWeight = TH1F("hWeight", "hWeight", nCutStep+2, 1, nCutStep+3)
 
         hNEvent.GetXaxis().SetBinLabel(1, "Total")
+        hWeight.GetXaxis().SetBinLabel(1, "Total")
         hNEvent.SetBinContent(1, self.nEventTotal)
         hWeight.SetBinContent(1, self.nEventTotal)
 
@@ -91,7 +96,6 @@ class NtupleAnalyzer(object):
 
         for i, cutStepInfo in enumerate(self.cutSteps):
             name, cut, histNames = cutStepInfo
-            print "Cut step %d/%d (%s)" % (i+1, len(self.cutSteps), name)
 
             self.outDir.cd()
             stackedCut = "(%s) && (%s)" % (stackedCut, cut)
@@ -101,6 +105,8 @@ class NtupleAnalyzer(object):
             hWeight.GetXaxis().SetBinLabel(i+3, name)
             if self.isMC: self.chain.Draw("%d>>+hWeight" % (i+3), "(%s)*(%s)" % (self.weightVar, stackedCut), "goff")
             else: self.chain.Draw("%d>>+hWeight" % (i+3), "%s" % stackedCut, "goff")
+
+            print "Cut step %d/%d (%s) : %.1f %.1f" % (i+1, len(self.cutSteps), name, hNEvent.GetBinContent(i+3), hWeight.GetBinContent(i+3))
 
             cutStepDir = self.outDir.mkdir(name)
             cutStepDir.cd()
@@ -127,6 +133,12 @@ class NtupleAnalyzer(object):
                 h.Scale(1./self.scale)
                 h.Write()
                 h = None
+
+            if self.ntupleStep != None and name == self.ntupleStep:
+                print "Store ntuple"
+                ntuple = self.chain.CopyTree(stackedCut)
+                ntuple.Write()
+                print "Stored ntuple"
 
         self.outDir.cd()
         hNEvent.Write()

@@ -44,6 +44,9 @@ GenericEvent::GenericEvent(bool isMC)
   jpsis_eta2_ = new doubles;
   jpsis_phi2_ = new doubles;
 
+  jpsis_nPixHits1_ = new ints;
+  jpsis_nPixHits2_ = new ints;
+
   if ( isMC_ )
   {
     // JER
@@ -129,6 +132,9 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("jpsis_eta2", jpsis_eta2_);
   tree_->Branch("jpsis_phi2", jpsis_phi2_);
 
+  tree_->Branch("jpsis_nPixHits1", jpsis_nPixHits1_);
+  tree_->Branch("jpsis_nPixHits2", jpsis_nPixHits2_);
+
   if ( isMC_ )
   {
     tree_->Branch("jets_JER"  , jets_JER_);
@@ -208,6 +214,9 @@ void GenericEvent::clear()
   jpsis_pt2_ ->clear();
   jpsis_eta2_->clear();
   jpsis_phi2_->clear();
+
+  jpsis_nPixHits1_->clear();
+  jpsis_nPixHits2_->clear();
 
   if ( isMC_ )
   {
@@ -291,6 +300,9 @@ void GenericEvent::setBranch(TTree* tree)
   tree_->SetBranchAddress("jpsis_eta2", &jpsis_eta2_);
   tree_->SetBranchAddress("jpsis_phi2", &jpsis_phi2_);
 
+  tree_->SetBranchAddress("jpsis_nPixHits1", &jpsis_nPixHits1_);
+  tree_->SetBranchAddress("jpsis_nPixHits2", &jpsis_nPixHits2_);
+
   if ( isMC_ )
   {
     tree_->SetBranchAddress("jets_JER"  , &jets_JER_  );
@@ -368,6 +380,9 @@ GenericEvent::~GenericEvent()
   delete jpsis_pt2_ ;
   delete jpsis_eta2_;
   delete jpsis_phi2_;
+
+  delete jpsis_nPixHits1_;
+  delete jpsis_nPixHits2_;
 
   if ( isMC_ )
   {

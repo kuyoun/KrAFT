@@ -394,8 +394,8 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   for ( int i=0, n=jpsiHandle->size(); i<n; ++i )
   {
     const reco::VertexCompositeCandidate& jpsiCand = jpsiHandle->at(i);
-    const reco::Candidate* muon1 = jpsiCand.daughter(0);
-    const reco::Candidate* muon2 = jpsiCand.daughter(1);
+    const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(0));
+    const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(1));
     fevent_->jpsis_pt_ ->push_back(jpsiCand.pt()  );
     fevent_->jpsis_eta_->push_back(jpsiCand.eta() );
     fevent_->jpsis_phi_->push_back(jpsiCand.phi() );
@@ -408,6 +408,11 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->jpsis_pt2_ ->push_back(muon2->pt() );
     fevent_->jpsis_eta2_->push_back(muon2->eta());
     fevent_->jpsis_phi2_->push_back(muon2->phi());
+
+    reco::TrackRef muonTrack1 = muon1->improvedMuonBestTrack();
+    reco::TrackRef muonTrack2 = muon2->improvedMuonBestTrack();
+    fevent_->jpsis_nPixHits1_->push_back(muonTrack1->hitPattern().numberOfValidPixelHits());
+    fevent_->jpsis_nPixHits2_->push_back(muonTrack2->hitPattern().numberOfValidPixelHits());
   }
 
   // Now put jets in current event to the event cache

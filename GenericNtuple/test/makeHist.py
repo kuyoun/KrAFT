@@ -7,11 +7,11 @@ from ROOT import *
 gROOT.ProcessLine(".x rootlogon.C")
 from KrAFT.GenericNtuple.NtupleAnalyzer import *
 
-def process(sample, mode, files):
+def process(sample, mode, files, weightVar="puWeight"):
     print "Making histogram", sample
 
     ana = NtupleAnalyzer(mode, files, "hist/%s__%s.root" % (sample, mode))
-    ana.setWeightVar("puWeight")
+    ana.setWeightVar(weightVar)
 
     cut_s1 = "z_m > 12 && lepton1_pt > 20 && lepton2_pt > 20 && lepton1_iso < 0.15 && lepton2_iso < 0.15 && z_Q == 0"
     cut_s2 = "abs(z_m-91.2) > 15"
@@ -49,7 +49,7 @@ def process(sample, mode, files):
     ana.addCutStep("S4", cut_s4, "nbjet,met,nVertex,vsumM,lb1M,lb2M,st")
     ana.addCutStep("S5", cut_s5, "nbjet,met,nVertex,vsumM,lb1M,lb2M,st")
 
-    ana.storeNtuple("S4")
+    #ana.storeNtuple("S5")
 
     ana.process()
 
@@ -74,6 +74,9 @@ if __name__ == '__main__':
         sample, mode = key
         files = samples[key]
         p.apply_async(process, [sample, mode, files])
+        if 'QCD' not in sample and 'Run201' not in sample:
+            p.apply_async(process, [sample+"puHi", mode, files, "puWeightUp"])
+            p.apply_async(process, [sample+"puLo", mode, files, "puWeightDn"])
     p.close()
     p.join()
 

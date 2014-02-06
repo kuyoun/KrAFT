@@ -139,9 +139,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
     const pat::Muon& muon1 = muonHandle->at(i);
-    //if ( !muon1.isPFMuon() ) continue;
-    if ( !muon1.isTrackerMuon() and !muon1.isGlobalMuon() ) continue;
-    TrackRef trackRef1 = muon1.isGlobalMuon() ? muon1.globalTrack() : muon1.track();
+    TrackRef trackRef1 = muon1.improvedMuonBestTrack();
     // Positive particle in the 1st index (pi+, proton, K+...)
     if ( trackRef1->charge() < 0 ) continue;
     if ( !isGoodTrack(trackRef1, beamSpotHandle.product()) ) continue;
@@ -153,9 +151,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
     for ( int j=0; j<n; ++j )
     {
       const pat::Muon& muon2 = muonHandle->at(j);
-      //if ( !muon2.isPFMuon() ) continue;
-      if ( !muon2.isTrackerMuon() and !muon2.isGlobalMuon() ) continue;
-      TrackRef trackRef2 = muon2.isGlobalMuon() ? muon2.globalTrack() : muon2.track();
+      TrackRef trackRef2 = muon2.improvedMuonBestTrack();
       // Negative particle in the 2nd index (pi-, anti-proton, K-...)
       if ( trackRef2->charge() > 0 ) continue;
       if ( !isGoodTrack(trackRef2, beamSpotHandle.product()) ) continue;

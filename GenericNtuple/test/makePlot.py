@@ -14,11 +14,11 @@ label  = "#intLdt=%.1f fb^{-1}, #sqrt{s}=8TeV" % (lumi/1000)
 ## Load plot styles for all samples
 plotStyles = []
 xml_doc = parse("../data/samples.xml")
-for xml_proc in xml_doc.getElementsByTagName("proc"):
+for xml_proc in xml_doc.getElementsByTagName("signal") + xml_doc.getElementsByTagName("background"):
     plotColl = []
     title = xml_proc.getAttribute("title")
     color = gROOT.ProcessLine(xml_proc.getAttribute("color")+";")
-    for xml_sub in xml_proc.getElementsByTagName("sub"):
+    for xml_sub in xml_proc.getElementsByTagName("sample"):
         xsec = eval(xml_sub.getAttribute("xsec"))
         sampleName = xml_sub.firstChild.nodeValue
         plotColl.append( (xsec, sampleName) )

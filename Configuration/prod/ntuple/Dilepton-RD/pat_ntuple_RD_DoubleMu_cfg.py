@@ -9,7 +9,7 @@ import os
 hostName = os.environ['HOSTNAME']
 if 'cern.ch' in hostName:
     process.source.fileNames = [
-        '/store/data/Run2012D/DoubleElectron/AOD/22Jan2013-v1/10000/FEED5E9F-6A8F-E211-91C4-00261894391C.root',
+        '/store/data/Run2012D/DoubleMuParked/AOD/22Jan2013-v1/20000/FEF2A4B5-2082-E211-BC3E-E0CB4EA0A904.root',
     ]
 elif 'uos.ac.kr' in hostName:
     process.source.fileNames = [

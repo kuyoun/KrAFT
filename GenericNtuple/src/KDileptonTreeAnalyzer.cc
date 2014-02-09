@@ -1,6 +1,15 @@
 #include "KrAFT/GenericNtuple/interface/KDileptonTreeAnalyzer.h"
+#include<boost/iterator/counting_iterator.hpp>
+#include<boost/range/algorithm/sort.hpp>
 
 using namespace std;
+
+struct GreaterByBtag
+{
+  GreaterByBtag(std::vector<double>* x):x_(x) {};
+  bool operator()(size_t i, size_t j) { return x_->at(i) > x_->at(j); }
+  std::vector<double>* x_;
+};
 
 KDileptonTreeAnalyzer::KDileptonTreeAnalyzer(const std::string modeName,
                                            const std::string inputFileName,
@@ -261,23 +270,34 @@ bool KDileptonTreeAnalyzer::analyze()
     puWeightDn_ = event_->puWeightDn_;
   }
 
+  // Get jet indices by bTag
+  const int nJets = event_->jets_pt_->size();
+  std::vector<int> jetIndices(nJets);
+  std::copy(boost::counting_iterator<int>(0),
+            boost::counting_iterator<int>(nJets), jetIndices.begin());
+  GreaterByBtag greaterByBtag(event_->jets_bTag_);
+  boost::sort(jetIndices, greaterByBtag);
+
+  // Make jets four vector, insert in bTag-order
   std::vector<TLorentzVector> jets;
-  for ( int i=0, n=event_->jets_pt_->size(); i<n; ++i )
+  for ( int i=0; i<nJets; ++i )
   {
-    const double jetPt = event_->jets_pt_->at(i);
-    if ( jetPt < 30 ) continue;
-    jets_pt_->push_back(jetPt);
-    st_ += jetPt;
+    const int j = jetIndices[i];
 
-    const double jetBtag = event_->jets_bTag_->at(i);
-    //if ( jetBtag > 0.244 ) ++bjets_n_;
-    if ( jetBtag > 0.679 ) ++bjets_n_;
-    //if ( jetBtag > 0.898 ) ++bjets_n_;
-    jets_bTag_->push_back(jetBtag);
+    const double pt   = event_->jets_pt_->at(j);
+    const double eta  = event_->jets_eta_->at(j);
+    const double phi  = event_->jets_phi_->at(j);
+    const double m    = event_->jets_m_->at(j);
+    const double bTag = event_->jets_bTag_->at(j);
 
-    LorentzVector jetP4;
-    jetP4.SetPtEtaPhiM(jetPt, event_->jets_eta_->at(i), event_->jets_phi_->at(i), event_->jets_m_->at(i));
-    jets.push_back(jetP4);
+    jets_pt_->push_back(pt);
+    jets_bTag_->push_back(bTag);
+
+    st_ += pt;
+
+    jets.push_back(LorentzVector());
+    jets.back().SetPtEtaPhiM(pt, eta, phi, m);
+
   }
 
   ttbar_vsumM_ = -1;

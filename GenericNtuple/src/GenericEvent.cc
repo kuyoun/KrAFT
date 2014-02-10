@@ -28,6 +28,7 @@ GenericEvent::GenericEvent(bool isMC)
   jets_phi_ = new doubles;
   jets_m_   = new doubles;
   jets_bTag_ = new doubles;
+  jets_partonflavor_ = new doubles;
   jets_JESUp_ = new doubles;
   jets_JESDn_ = new doubles;
 
@@ -107,6 +108,7 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("jets_phi" , jets_phi_ );
   tree_->Branch("jets_m"   , jets_m_   );
   tree_->Branch("jets_bTag", jets_bTag_);
+  tree_->Branch("jets_partonflavor", jets_partonflavor_);
 
   tree_->Branch("jets_JESUp", jets_JESUp_);
   tree_->Branch("jets_JESDn", jets_JESDn_);
@@ -198,6 +200,7 @@ void GenericEvent::clear()
   jets_phi_->clear();
   jets_m_->clear();
   jets_bTag_->clear();
+  jets_partonflavor_->clear();
 
   jets_JESUp_->clear();
   jets_JESDn_->clear();
@@ -275,6 +278,7 @@ void GenericEvent::setBranch(TTree* tree)
   tree_->SetBranchAddress("jets_phi" , &jets_phi_ );
   tree_->SetBranchAddress("jets_m"   , &jets_m_   );
   tree_->SetBranchAddress("jets_bTag", &jets_bTag_);
+  tree_->SetBranchAddress("jets_partonflavor", &jets_partonflavor_);
 
   tree_->SetBranchAddress("jets_JESUp", &jets_JESUp_);
   tree_->SetBranchAddress("jets_JESDn", &jets_JESDn_);
@@ -365,6 +369,7 @@ GenericEvent::~GenericEvent()
   delete jets_phi_;
   delete jets_m_  ;
   delete jets_bTag_;
+  delete jets_partonflavor_;
   delete jets_JESUp_;
   delete jets_JESDn_;
 

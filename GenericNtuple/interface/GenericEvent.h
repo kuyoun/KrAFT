@@ -42,7 +42,7 @@ public:
   doublesP electrons_scEta_;
 
   doublesP jets_pt_, jets_eta_, jets_phi_, jets_m_;
-  doublesP jets_bTag_;
+  doublesP jets_bTag_, jets_partonflavor_;
   doublesP jets_JESUp_, jets_JESDn_;
   doublesP jets_JER_, jets_JERUp_, jets_JERDn_;
 

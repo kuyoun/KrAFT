@@ -374,6 +374,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->jets_phi_->push_back(jet.phi());
     fevent_->jets_m_  ->push_back(jet.mass());
     fevent_->jets_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
+    fevent_->jets_partonflavor_->push_back(jet.partonFlavour());
 
     fevent_->jets_JESUp_->push_back(fJESUp);
     fevent_->jets_JESDn_->push_back(fJESDn);

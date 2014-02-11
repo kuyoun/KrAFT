@@ -18,7 +18,7 @@ public:
 
   int run_, lumi_, event_;
   double puWeight_, puWeightUp_, puWeightDn_;
-  int nVertex_;
+  int nVertex_, npileup_;
 
   typedef std::vector<int> ints;
   typedef std::vector<unsigned int> uints;

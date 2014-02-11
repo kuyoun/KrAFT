@@ -171,17 +171,15 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
   edm::Handle<reco::VertexCollection> vertexHandle;
   event.getByLabel(vertexLabel_, vertexHandle);
-//  fevent_->nVertex_ = vertexHandle->size();
   const reco::Vertex& pv = vertexHandle->at(0);
 
-  int nv = 0 ;
-
-  for(reco::VertexCollection::const_iterator v=vertexHandle->begin();  v!=vertexHandle->end(); ++v){
-    if (!(v->isFake()) && (v->ndof()>4) && (fabs(v->z())<=24.0) && (v->position().Rho()<=2.0) ) {
-      nv++;
-    }
+//  fevent_->nVertex_ = vertexHandle->size();
+  fevent_->nVertex_ = 0;
+  for ( int i=0, n=vertexHandle->size(); i<n; ++i )
+  {
+    const reco::Vertex& v = vertexHandle->at(i);
+    if ( !v.isFake() and v.ndof()>4 and std::abs(v.z())<=24.0 and v.position().Rho()<=2.0 ) ++(fevent_->nVertex_);
   }
-  fevent_->nVertex_ = nv;
 
   if ( !isMC_ )
   {

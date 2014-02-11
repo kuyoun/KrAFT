@@ -64,6 +64,7 @@ private:
   edm::InputTag genJetLabel_;
   edm::InputTag puWeightLabel_;
   edm::InputTag vertexLabel_;
+  edm::InputTag puNVertexLabel_;
 
   edm::InputTag muonLabel_;
   edm::InputTag electronLabel_;
@@ -99,6 +100,7 @@ KGenericNtupleMaker::KGenericNtupleMaker(const edm::ParameterSet& pset)
   // Input labels
   puWeightLabel_ = pset.getParameter<edm::InputTag>("puWeight");
   vertexLabel_ = pset.getParameter<edm::InputTag>("vertex");
+  puNVertexLabel_ = pset.getParameter<edm::InputTag>("puNVertex");
 
   edm::ParameterSet electronPSet = pset.getParameter<edm::ParameterSet>("electron");
   electronMinNumber_ = electronPSet.getParameter<unsigned int>("minNumber");
@@ -169,8 +171,17 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
   edm::Handle<reco::VertexCollection> vertexHandle;
   event.getByLabel(vertexLabel_, vertexHandle);
-  fevent_->nVertex_ = vertexHandle->size();
+//  fevent_->nVertex_ = vertexHandle->size();
   const reco::Vertex& pv = vertexHandle->at(0);
+
+  int nv = 0 ;
+
+  for(reco::VertexCollection::const_iterator v=vertexHandle->begin();  v!=vertexHandle->end(); ++v){
+    if (!(v->isFake()) && (v->ndof()>4) && (fabs(v->z())<=24.0) && (v->position().Rho()<=2.0) ) {
+      nv++;
+    }
+  }
+  fevent_->nVertex_ = nv;
 
   if ( !isMC_ )
   {
@@ -187,7 +198,13 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->puWeight_   = *(puWeightHandle.product()  );
     fevent_->puWeightUp_ = *(puWeightUpHandle.product());
     fevent_->puWeightDn_ = *(puWeightDnHandle.product());
+
+    edm::Handle<int>  npileup_;
+    event.getByLabel(puNVertexLabel_, npileup_);
+
+    fevent_->npileup_ = *npileup_;
   }
+
 
   edm::Handle<Electrons> electronHandle;
   event.getByLabel(electronLabel_, electronHandle);

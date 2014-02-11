@@ -83,7 +83,7 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("puWeightUp", &puWeightUp_, "puWeightUp/D");
   tree_->Branch("puWeightDn", &puWeightDn_, "puWeightDn/D");
   tree_->Branch("nVertex", &nVertex_, "nVertex/I");
-  tree_->Branch("npileup", &npileup_, "npileup/I");
+  tree_->Branch("nPileup", &nPileup_, "nPileup/I");
 
   tree_->Branch("muons_pt"  , muons_pt_  );
   tree_->Branch("muons_eta" , muons_eta_ );
@@ -254,7 +254,7 @@ void GenericEvent::setBranch(TTree* tree)
   tree_->SetBranchAddress("puWeightUp", &puWeightUp_);
   tree_->SetBranchAddress("puWeightDn", &puWeightDn_);
   tree_->SetBranchAddress("nVertex", &nVertex_);
-  tree_->SetBranchAddress("npileup", &npileup_);
+  tree_->SetBranchAddress("nPileup", &nPileup_);
 
   tree_->SetBranchAddress("muons_pt"  , &muons_pt_  );
   tree_->SetBranchAddress("muons_eta" , &muons_eta_ );

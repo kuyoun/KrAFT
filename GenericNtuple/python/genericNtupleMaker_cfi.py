@@ -11,7 +11,6 @@ event = cms.EDAnalyzer("KGenericNtupleMaker",
 
     puWeight = cms.InputTag("pileupWeight"),
     vertex = cms.InputTag("goodOfflinePrimaryVertices"),
-    puNVertex = cms.InputTag("pileupWeight",'nTrueInteraction'),
     eventCounters = cms.vstring(),
 
     electron = cms.PSet(

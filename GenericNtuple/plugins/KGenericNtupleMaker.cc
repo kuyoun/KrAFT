@@ -188,21 +188,24 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->puWeight_   = 1.0;
     fevent_->puWeightUp_ = 1.0;
     fevent_->puWeightDn_ = 1.0;
+    fevent_->nPileup_    = -1;
   }
   else
   {
+    const std::string& puWeightName = puWeightLabel_.label();
+
     edm::Handle<double> puWeightHandle, puWeightUpHandle, puWeightDnHandle;
     event.getByLabel(puWeightLabel_, puWeightHandle);
-    event.getByLabel(edm::InputTag(puWeightLabel_.label(), "up"), puWeightUpHandle);
-    event.getByLabel(edm::InputTag(puWeightLabel_.label(), "dn"), puWeightDnHandle);
+    event.getByLabel(edm::InputTag(puWeightName, "up"), puWeightUpHandle);
+    event.getByLabel(edm::InputTag(puWeightName, "dn"), puWeightDnHandle);
     fevent_->puWeight_   = *(puWeightHandle.product()  );
     fevent_->puWeightUp_ = *(puWeightUpHandle.product());
     fevent_->puWeightDn_ = *(puWeightDnHandle.product());
 
-    edm::Handle<int>  npileup_;
-    event.getByLabel(puNVertexLabel_, npileup_);
+    edm::Handle<int> nPileupHandle;
+    event.getByLabel(edm::InputTag(puWeightName, "nTrueInteraction"), nPileupHandle);
 
-    fevent_->npileup_ = *npileup_;
+    fevent_->nPileup_ = *nPileupHandle;
   }
 
 

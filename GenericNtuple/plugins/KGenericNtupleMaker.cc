@@ -64,7 +64,6 @@ private:
   edm::InputTag genJetLabel_;
   edm::InputTag puWeightLabel_;
   edm::InputTag vertexLabel_;
-  edm::InputTag puNVertexLabel_;
 
   edm::InputTag muonLabel_;
   edm::InputTag electronLabel_;
@@ -100,7 +99,6 @@ KGenericNtupleMaker::KGenericNtupleMaker(const edm::ParameterSet& pset)
   // Input labels
   puWeightLabel_ = pset.getParameter<edm::InputTag>("puWeight");
   vertexLabel_ = pset.getParameter<edm::InputTag>("vertex");
-  puNVertexLabel_ = pset.getParameter<edm::InputTag>("puNVertex");
 
   edm::ParameterSet electronPSet = pset.getParameter<edm::ParameterSet>("electron");
   electronMinNumber_ = electronPSet.getParameter<unsigned int>("minNumber");

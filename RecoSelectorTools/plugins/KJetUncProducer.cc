@@ -142,9 +142,9 @@ void KJetUncProducer::produce(edm::Event& event, const edm::EventSetup& eventSet
         double cJER, cJERUp, cJERDn;
         getJERFactor(jetEta, cJER, cJERUp, cJERDn);
 
-        fJER   = max(1e-9, (genJetPt+dPt*cJER  )/jetPt);
-        fJERUp = max(1e-9, (genJetPt+dPt*cJERUp)/jetPt);
-        fJERDn = max(1e-9, (genJetPt+dPt*cJERDn)/jetPt);
+        fJER   = max(0, (genJetPt+dPt*cJER  )/jetPt);
+        fJERUp = max(0, (genJetPt+dPt*cJERUp)/jetPt);
+        fJERDn = max(0, (genJetPt+dPt*cJERDn)/jetPt);
 
         const double metDx   = rawPx*(1-fJER  );
         const double metDxUp = rawPx*(1-fJERUp);

@@ -51,6 +51,8 @@ GenericEvent::GenericEvent(bool isMC)
 
   if ( isMC_ )
   {
+    pdfWeights_ = new doubles;
+
     // JER
     jets_JER_   = new doubles;
     jets_JERUp_ = new doubles;
@@ -142,6 +144,8 @@ void GenericEvent::book(TTree* tree)
 
   if ( isMC_ )
   {
+    tree_->Branch("pdfWeights", pdfWeights_);
+
     tree_->Branch("jets_JER"  , jets_JER_);
     tree_->Branch("jets_JERUp", jets_JERUp_);
     tree_->Branch("jets_JERDn", jets_JERDn_);
@@ -227,6 +231,8 @@ void GenericEvent::clear()
 
   if ( isMC_ )
   {
+    pdfWeights_->clear();
+
     jets_JER_->clear();
     jets_JERUp_->clear();
     jets_JERDn_->clear();
@@ -315,6 +321,8 @@ void GenericEvent::setBranch(TTree* tree)
 
   if ( isMC_ )
   {
+    tree_->SetBranchAddress("pdfWeights", &pdfWeights_);
+
     tree_->SetBranchAddress("jets_JER"  , &jets_JER_  );
     tree_->SetBranchAddress("jets_JERUp", &jets_JERDn_);
     tree_->SetBranchAddress("jets_JERDn", &jets_JERDn_);
@@ -398,6 +406,8 @@ GenericEvent::~GenericEvent()
 
   if ( isMC_ )
   {
+    delete pdfWeights_;
+
     // JER
     delete jets_JER_  ;
     delete jets_JERUp_;

@@ -64,6 +64,7 @@ private:
   edm::InputTag genJetLabel_;
   edm::InputTag puWeightLabel_;
   edm::InputTag vertexLabel_;
+  edm::InputTag pdfWeightsLabel_;
 
   edm::InputTag muonLabel_;
   edm::InputTag electronLabel_;
@@ -125,6 +126,7 @@ KGenericNtupleMaker::KGenericNtupleMaker(const edm::ParameterSet& pset)
   if ( isMC_ )
   {
     genEventInfoLabel_ = pset.getParameter<edm::InputTag>("genEventInfo");
+    pdfWeightsLabel_ = pset.getParameter<edm::InputTag>("pdfWeights");
     genParticleLabel_ = pset.getParameter<edm::InputTag>("genParticle");
     genJetLabel_ = pset.getParameter<edm::InputTag>("genJet");
   }
@@ -202,6 +204,10 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     event.getByLabel(edm::InputTag(puWeightName, "nTrueInteraction"), nPileupHandle);
 
     fevent_->nPileup_ = *nPileupHandle;
+
+    edm::Handle<std::vector<double> > pdfWeightsHandle;
+    event.getByLabel(pdfWeightsLabel_, pdfWeightsHandle);
+    std::copy(pdfWeightsHandle->begin(), pdfWeightsHandle->end(), std::back_inserter(*fevent_->pdfWeights_));
   }
 
   edm::Handle<Electrons> electronHandle;

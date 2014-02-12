@@ -66,6 +66,7 @@ public:
   double genWeight_;
   int pdf_id1_, pdf_id2_;
   double pdf_q_, pdf_x1_, pdf_x2_;
+  doublesP pdfWeights_;
 
   doublesP genJets_pt_, genJets_eta_, genJets_phi_, genJets_m_;
   doublesP genParticles_pt_, genParticles_eta_, genParticles_phi_, genParticles_m_;

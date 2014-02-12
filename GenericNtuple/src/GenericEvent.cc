@@ -22,6 +22,7 @@ GenericEvent::GenericEvent(bool isMC)
 
   electrons_mva_ = new doubles;
   electrons_scEta_ = new doubles;
+  electrons_qConsistent_ = new uints;
 
   jets_pt_  = new doubles;
   jets_eta_ = new doubles;
@@ -103,6 +104,7 @@ void GenericEvent::book(TTree* tree)
 
   tree_->Branch("electrons_mva", electrons_mva_);
   tree_->Branch("electrons_scEta", electrons_scEta_);
+  tree_->Branch("electrons_qConsistent", electrons_qConsistent_);
 
   tree_->Branch("jets_pt"  , jets_pt_  );
   tree_->Branch("jets_eta" , jets_eta_ );
@@ -187,6 +189,7 @@ void GenericEvent::clear()
 
   electrons_mva_->clear();
   electrons_scEta_->clear();
+  electrons_qConsistent_->clear();
 
   muons_pt_->clear();
   muons_eta_->clear();
@@ -274,6 +277,7 @@ void GenericEvent::setBranch(TTree* tree)
 
   tree_->SetBranchAddress("electrons_mva", &electrons_mva_);
   tree_->SetBranchAddress("electrons_scEta", &electrons_scEta_);
+  tree_->SetBranchAddress("electrons_qConsistent", &electrons_qConsistent_);
 
   tree_->SetBranchAddress("jets_pt"  , &jets_pt_  );
   tree_->SetBranchAddress("jets_eta" , &jets_eta_ );
@@ -365,6 +369,7 @@ GenericEvent::~GenericEvent()
 
   delete electrons_mva_;
   delete electrons_scEta_;
+  delete electrons_qConsistent_;
 
   delete jets_pt_ ;
   delete jets_eta_;

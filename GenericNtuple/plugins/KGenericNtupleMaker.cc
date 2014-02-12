@@ -206,7 +206,6 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->nPileup_ = *nPileupHandle;
   }
 
-
   edm::Handle<Electrons> electronHandle;
   event.getByLabel(electronLabel_, electronHandle);
   for ( int i=0, n=electronHandle->size(); i<n; ++i )
@@ -243,6 +242,12 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
     fevent_->electrons_mva_->push_back(e.mva());
     fevent_->electrons_scEta_->push_back(scEta);
+
+    int qConsistent = 0;
+    if ( e.isGsfCtfScPixChargeConsistent() ) qConsistent = 3;
+    else if ( e.isGsfScPixChargeConsistent() ) qConsistent = 2;
+    else if ( e.isGsfCtfChargeConsistent() ) qConsistent = 1;
+    fevent_->electrons_qConsistent_->push_back(qConsistent);
   }
   if ( fevent_->electrons_pt_->size() < electronMinNumber_ ) return;
 

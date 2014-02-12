@@ -40,6 +40,7 @@ public:
 
   doublesP electrons_mva_;
   doublesP electrons_scEta_;
+  uintsP   electrons_qConsistent_;
 
   doublesP jets_pt_, jets_eta_, jets_phi_, jets_m_;
   doublesP jets_bTag_, jets_partonflavor_;

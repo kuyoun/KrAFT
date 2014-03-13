@@ -151,9 +151,12 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
     lepton.setUserIso(relIsoDbeta, 1);
     lepton.setUserIso(relIsoRho, 2);
 
+    const float dz = computeDz(srcLepton, pv);
+    lepton.addUserFloat("dz", dz);
+
     if ( !(*select_)(srcLepton) ) continue;
     if ( srcLepton.dB() > maxDxy_ ) continue;
-    if ( computeDz(srcLepton, pv) > maxDz_ ) continue;
+    if ( dz > maxDz_ ) continue;
 
     selectedLeptons->push_back(lepton);
   }

@@ -153,7 +153,7 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
 
     if ( !(*select_)(srcLepton) ) continue;
     if ( srcLepton.dB() > maxDxy_ ) continue;
-    if ( computeDz(srcLepton, pv) > maxDxy_ ) continue;
+    if ( computeDz(srcLepton, pv) > maxDz_ ) continue;
 
     selectedLeptons->push_back(lepton);
   }

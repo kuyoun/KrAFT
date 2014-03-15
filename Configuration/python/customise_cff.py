@@ -211,3 +211,8 @@ def addNtupleStep(process, runOnMC):
             process.nEventsPAT+(getattr(process, 'ntupleSequence'+mode))
         )
 
+        getattr(process, mode).eventCounters.extend([
+            "nEventsHLT%s" % mode, "nEventsNtuple%s" % mode,
+            "nEventsNtuple%s" % mode,
+        ])
+

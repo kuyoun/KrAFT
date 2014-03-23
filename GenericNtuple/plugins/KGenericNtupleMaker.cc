@@ -64,6 +64,7 @@ private:
   edm::InputTag genJetLabel_;
   edm::InputTag puWeightLabel_;
   edm::InputTag vertexLabel_;
+  edm::InputTag pdfWeightsLabel_;
 
   edm::InputTag muonLabel_;
   edm::InputTag electronLabel_;
@@ -125,6 +126,7 @@ KGenericNtupleMaker::KGenericNtupleMaker(const edm::ParameterSet& pset)
   if ( isMC_ )
   {
     genEventInfoLabel_ = pset.getParameter<edm::InputTag>("genEventInfo");
+    pdfWeightsLabel_ = pset.getParameter<edm::InputTag>("pdfWeights");
     genParticleLabel_ = pset.getParameter<edm::InputTag>("genParticle");
     genJetLabel_ = pset.getParameter<edm::InputTag>("genJet");
   }
@@ -169,24 +171,43 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
   edm::Handle<reco::VertexCollection> vertexHandle;
   event.getByLabel(vertexLabel_, vertexHandle);
-  fevent_->nVertex_ = vertexHandle->size();
   const reco::Vertex& pv = vertexHandle->at(0);
+
+//  fevent_->nVertex_ = vertexHandle->size();
+  fevent_->nVertex_ = 0;
+  for ( int i=0, n=vertexHandle->size(); i<n; ++i )
+  {
+    const reco::Vertex& v = vertexHandle->at(i);
+    if ( !v.isFake() and v.ndof()>4 and std::abs(v.z())<=24.0 and v.position().Rho()<=2.0 ) ++(fevent_->nVertex_);
+  }
 
   if ( !isMC_ )
   {
     fevent_->puWeight_   = 1.0;
     fevent_->puWeightUp_ = 1.0;
     fevent_->puWeightDn_ = 1.0;
+    fevent_->nPileup_    = -1;
   }
   else
   {
+    const std::string& puWeightName = puWeightLabel_.label();
+
     edm::Handle<double> puWeightHandle, puWeightUpHandle, puWeightDnHandle;
     event.getByLabel(puWeightLabel_, puWeightHandle);
-    event.getByLabel(edm::InputTag(puWeightLabel_.label(), "up"), puWeightUpHandle);
-    event.getByLabel(edm::InputTag(puWeightLabel_.label(), "dn"), puWeightDnHandle);
+    event.getByLabel(edm::InputTag(puWeightName, "up"), puWeightUpHandle);
+    event.getByLabel(edm::InputTag(puWeightName, "dn"), puWeightDnHandle);
     fevent_->puWeight_   = *(puWeightHandle.product()  );
     fevent_->puWeightUp_ = *(puWeightUpHandle.product());
     fevent_->puWeightDn_ = *(puWeightDnHandle.product());
+
+    edm::Handle<int> nPileupHandle;
+    event.getByLabel(edm::InputTag(puWeightName, "nTrueInteraction"), nPileupHandle);
+
+    fevent_->nPileup_ = *nPileupHandle;
+
+    edm::Handle<std::vector<double> > pdfWeightsHandle;
+    event.getByLabel(pdfWeightsLabel_, pdfWeightsHandle);
+    std::copy(pdfWeightsHandle->begin(), pdfWeightsHandle->end(), std::back_inserter(*fevent_->pdfWeights_));
   }
 
   edm::Handle<Electrons> electronHandle;
@@ -225,6 +246,12 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
     fevent_->electrons_mva_->push_back(e.mva());
     fevent_->electrons_scEta_->push_back(scEta);
+
+    int qConsistent = 0;
+    if ( e.isGsfCtfScPixChargeConsistent() ) qConsistent = 3;
+    else if ( e.isGsfScPixChargeConsistent() ) qConsistent = 2;
+    else if ( e.isGsfCtfChargeConsistent() ) qConsistent = 1;
+    fevent_->electrons_qConsistent_->push_back(qConsistent);
   }
   if ( fevent_->electrons_pt_->size() < electronMinNumber_ ) return;
 
@@ -374,6 +401,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->jets_phi_->push_back(jet.phi());
     fevent_->jets_m_  ->push_back(jet.mass());
     fevent_->jets_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
+    fevent_->jets_partonflavor_->push_back(jet.partonFlavour());
 
     fevent_->jets_JESUp_->push_back(fJESUp);
     fevent_->jets_JESDn_->push_back(fJESDn);

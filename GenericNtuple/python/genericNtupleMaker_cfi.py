@@ -9,6 +9,7 @@ event = cms.EDAnalyzer("KGenericNtupleMaker",
     recoToGenJetMap = cms.InputTag("recoToGenJetMap"),
     genJetToPartonsMap = cms.InputTag("genJetToPartonsMap"),
 
+    pdfWeights = cms.InputTag("pdfWeight"),
     puWeight = cms.InputTag("pileupWeight"),
     vertex = cms.InputTag("goodOfflinePrimaryVertices"),
     eventCounters = cms.vstring(),

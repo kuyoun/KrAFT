@@ -14,7 +14,7 @@ if 'cern.ch' in hostName:
     ]
 elif 'uos.ac.kr' in hostName:
     process.source.fileNames = [
-        '/store/mc/Summer12_DR53X/TTJets_FullLeptMGDecays_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7C-v2/10000/000560C1-FD97-E211-9F33-00304867924E.root'
+        '/store/mc/Summer12_DR53X/TTJets_FullLeptMGDecays_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7C-v2/10000/FECC62BD-3898-E211-82F9-003048FFD7BE.root'
     ]
 
 process.maxEvents.input = 100

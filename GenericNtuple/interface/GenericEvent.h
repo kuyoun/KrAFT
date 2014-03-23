@@ -18,7 +18,7 @@ public:
 
   int run_, lumi_, event_;
   double puWeight_, puWeightUp_, puWeightDn_;
-  int nVertex_;
+  int nVertex_, nPileup_;
 
   typedef std::vector<int> ints;
   typedef std::vector<unsigned int> uints;
@@ -40,9 +40,10 @@ public:
 
   doublesP electrons_mva_;
   doublesP electrons_scEta_;
+  uintsP   electrons_qConsistent_;
 
   doublesP jets_pt_, jets_eta_, jets_phi_, jets_m_;
-  doublesP jets_bTag_;
+  doublesP jets_bTag_, jets_partonflavor_;
   doublesP jets_JESUp_, jets_JESDn_;
   doublesP jets_JER_, jets_JERUp_, jets_JERDn_;
 
@@ -65,6 +66,7 @@ public:
   double genWeight_;
   int pdf_id1_, pdf_id2_;
   double pdf_q_, pdf_x1_, pdf_x2_;
+  doublesP pdfWeights_;
 
   doublesP genJets_pt_, genJets_eta_, genJets_phi_, genJets_m_;
   doublesP genParticles_pt_, genParticles_eta_, genParticles_phi_, genParticles_m_;

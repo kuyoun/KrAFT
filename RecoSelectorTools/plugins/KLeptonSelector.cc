@@ -11,7 +11,9 @@
 #include "DataFormats/Common/interface/View.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
-#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+//#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
 
 #include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
 
@@ -39,6 +41,8 @@ private:
   void makeIsoVeto(const pat::Muon& muon, reco::IsoDeposit::AbsVetos& vetos_ch, reco::IsoDeposit::AbsVetos& vetos_nh, reco::IsoDeposit::AbsVetos& vetos_ph);
   double getEffectiveArea(const pat::Electron& electron);
   double getEffectiveArea(const pat::Muon& muon);
+  double computeDz(const pat::Muon& muon, const reco::Vertex& vertex);
+  double computeDz(const pat::Electron& electron, const reco::Vertex& vertex);
 
   ElectronEffectiveArea::ElectronEffectiveAreaType electronEAType_;
   ElectronEffectiveArea::ElectronEffectiveAreaTarget electronEATarget_;
@@ -46,8 +50,10 @@ private:
 private:
   edm::InputTag rhoLabel_;
   edm::InputTag leptonLabel_;
+  edm::InputTag vertexLabel_;
   StringCutObjectSelector<Lepton, true>* preselect_;
   StringCutObjectSelector<Lepton, true>* select_;
+  double maxDz_, maxDxy_;
   unsigned int minNumber_, maxNumber_;
 
   bool isMC_;
@@ -64,8 +70,11 @@ KLeptonSelector<Lepton>::KLeptonSelector(const edm::ParameterSet& pset)
 
   rhoLabel_ = pset.getParameter<edm::InputTag>("rho");
   leptonLabel_ = pset.getParameter<edm::InputTag>("src");
+  vertexLabel_ = pset.getParameter<edm::InputTag>("vertex");
   std::string precut = pset.getParameter<std::string>("precut");
   std::string cut = pset.getParameter<std::string>("cut");
+  maxDz_ = pset.getParameter<double>("maxDz");
+  maxDxy_ = pset.getParameter<double>("maxDxy");
   preselect_ = new StringCutObjectSelector<Lepton, true>(precut);
   select_ = new StringCutObjectSelector<Lepton, true>(cut);
   minNumber_ = pset.getParameter<unsigned int>("minNumber");
@@ -111,6 +120,10 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
   event.getByLabel(rhoLabel_, rhoHandle);
   const double rho = *(rhoHandle.product());
 
+  edm::Handle<reco::VertexCollection> vertexHandle;
+  event.getByLabel(vertexLabel_, vertexHandle);
+  const reco::Vertex& pv = vertexHandle->at(0);
+
   std::auto_ptr<std::vector<Lepton> > selectedLeptons(new std::vector<Lepton>());
 
   for ( int i=0, n=leptonHandle->size(); i<n; ++i )
@@ -138,7 +151,12 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
     lepton.setUserIso(relIsoDbeta, 1);
     lepton.setUserIso(relIsoRho, 2);
 
+    const float dz = computeDz(srcLepton, pv);
+    lepton.addUserFloat("dz", dz);
+
     if ( !(*select_)(srcLepton) ) continue;
+    if ( srcLepton.dB() > maxDxy_ ) continue;
+    if ( dz > maxDz_ ) continue;
 
     selectedLeptons->push_back(lepton);
   }
@@ -179,6 +197,18 @@ template<typename Lepton>
 double KLeptonSelector<Lepton>::getEffectiveArea(const pat::Muon& muon)
 {
   return 1;
+}
+
+template<typename Lepton>
+double KLeptonSelector<Lepton>::computeDz(const pat::Muon& muon, const reco::Vertex& vertex)
+{
+  return muon.muonBestTrack()->dz(vertex.position());
+}
+
+template<typename Lepton>
+double KLeptonSelector<Lepton>::computeDz(const pat::Electron& electron, const reco::Vertex& vertex)
+{
+  return electron.gsfTrack()->dz(vertex.position());
 }
 
 

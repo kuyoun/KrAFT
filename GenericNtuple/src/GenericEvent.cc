@@ -22,12 +22,14 @@ GenericEvent::GenericEvent(bool isMC)
 
   electrons_mva_ = new doubles;
   electrons_scEta_ = new doubles;
+  electrons_qConsistent_ = new uints;
 
   jets_pt_  = new doubles;
   jets_eta_ = new doubles;
   jets_phi_ = new doubles;
   jets_m_   = new doubles;
   jets_bTag_ = new doubles;
+  jets_partonflavor_ = new doubles;
   jets_JESUp_ = new doubles;
   jets_JESDn_ = new doubles;
 
@@ -49,6 +51,8 @@ GenericEvent::GenericEvent(bool isMC)
 
   if ( isMC_ )
   {
+    pdfWeights_ = new doubles;
+
     // JER
     jets_JER_   = new doubles;
     jets_JERUp_ = new doubles;
@@ -82,6 +86,7 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("puWeightUp", &puWeightUp_, "puWeightUp/D");
   tree_->Branch("puWeightDn", &puWeightDn_, "puWeightDn/D");
   tree_->Branch("nVertex", &nVertex_, "nVertex/I");
+  tree_->Branch("nPileup", &nPileup_, "nPileup/I");
 
   tree_->Branch("muons_pt"  , muons_pt_  );
   tree_->Branch("muons_eta" , muons_eta_ );
@@ -101,12 +106,14 @@ void GenericEvent::book(TTree* tree)
 
   tree_->Branch("electrons_mva", electrons_mva_);
   tree_->Branch("electrons_scEta", electrons_scEta_);
+  tree_->Branch("electrons_qConsistent", electrons_qConsistent_);
 
   tree_->Branch("jets_pt"  , jets_pt_  );
   tree_->Branch("jets_eta" , jets_eta_ );
   tree_->Branch("jets_phi" , jets_phi_ );
   tree_->Branch("jets_m"   , jets_m_   );
   tree_->Branch("jets_bTag", jets_bTag_);
+  tree_->Branch("jets_partonflavor", jets_partonflavor_);
 
   tree_->Branch("jets_JESUp", jets_JESUp_);
   tree_->Branch("jets_JESDn", jets_JESDn_);
@@ -137,6 +144,8 @@ void GenericEvent::book(TTree* tree)
 
   if ( isMC_ )
   {
+    tree_->Branch("pdfWeights", pdfWeights_);
+
     tree_->Branch("jets_JER"  , jets_JER_);
     tree_->Branch("jets_JERUp", jets_JERUp_);
     tree_->Branch("jets_JERDn", jets_JERDn_);
@@ -184,6 +193,7 @@ void GenericEvent::clear()
 
   electrons_mva_->clear();
   electrons_scEta_->clear();
+  electrons_qConsistent_->clear();
 
   muons_pt_->clear();
   muons_eta_->clear();
@@ -198,6 +208,7 @@ void GenericEvent::clear()
   jets_phi_->clear();
   jets_m_->clear();
   jets_bTag_->clear();
+  jets_partonflavor_->clear();
 
   jets_JESUp_->clear();
   jets_JESDn_->clear();
@@ -220,6 +231,8 @@ void GenericEvent::clear()
 
   if ( isMC_ )
   {
+    pdfWeights_->clear();
+
     jets_JER_->clear();
     jets_JERUp_->clear();
     jets_JERDn_->clear();
@@ -250,6 +263,7 @@ void GenericEvent::setBranch(TTree* tree)
   tree_->SetBranchAddress("puWeightUp", &puWeightUp_);
   tree_->SetBranchAddress("puWeightDn", &puWeightDn_);
   tree_->SetBranchAddress("nVertex", &nVertex_);
+  tree_->SetBranchAddress("nPileup", &nPileup_);
 
   tree_->SetBranchAddress("muons_pt"  , &muons_pt_  );
   tree_->SetBranchAddress("muons_eta" , &muons_eta_ );
@@ -269,12 +283,14 @@ void GenericEvent::setBranch(TTree* tree)
 
   tree_->SetBranchAddress("electrons_mva", &electrons_mva_);
   tree_->SetBranchAddress("electrons_scEta", &electrons_scEta_);
+  tree_->SetBranchAddress("electrons_qConsistent", &electrons_qConsistent_);
 
   tree_->SetBranchAddress("jets_pt"  , &jets_pt_  );
   tree_->SetBranchAddress("jets_eta" , &jets_eta_ );
   tree_->SetBranchAddress("jets_phi" , &jets_phi_ );
   tree_->SetBranchAddress("jets_m"   , &jets_m_   );
   tree_->SetBranchAddress("jets_bTag", &jets_bTag_);
+  tree_->SetBranchAddress("jets_partonflavor", &jets_partonflavor_);
 
   tree_->SetBranchAddress("jets_JESUp", &jets_JESUp_);
   tree_->SetBranchAddress("jets_JESDn", &jets_JESDn_);
@@ -305,6 +321,8 @@ void GenericEvent::setBranch(TTree* tree)
 
   if ( isMC_ )
   {
+    tree_->SetBranchAddress("pdfWeights", &pdfWeights_);
+
     tree_->SetBranchAddress("jets_JER"  , &jets_JER_  );
     tree_->SetBranchAddress("jets_JERUp", &jets_JERDn_);
     tree_->SetBranchAddress("jets_JERDn", &jets_JERDn_);
@@ -359,12 +377,14 @@ GenericEvent::~GenericEvent()
 
   delete electrons_mva_;
   delete electrons_scEta_;
+  delete electrons_qConsistent_;
 
   delete jets_pt_ ;
   delete jets_eta_;
   delete jets_phi_;
   delete jets_m_  ;
   delete jets_bTag_;
+  delete jets_partonflavor_;
   delete jets_JESUp_;
   delete jets_JESDn_;
 
@@ -386,6 +406,8 @@ GenericEvent::~GenericEvent()
 
   if ( isMC_ )
   {
+    delete pdfWeights_;
+
     // JER
     delete jets_JER_  ;
     delete jets_JERUp_;

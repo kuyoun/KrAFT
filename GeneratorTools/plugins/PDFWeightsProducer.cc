@@ -45,7 +45,12 @@ void PDFWeightsProducer::beginJob()
 
 void PDFWeightsProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  if ( event.isRealData() ) return;
+  std::auto_ptr<std::vector<double> > weights(new std::vector<double>);
+  if ( event.isRealData() )
+  {
+    event.put(weights);
+    return;
+  }
 
   edm::Handle<GenEventInfoProduct> genInfoHandle;
   event.getByLabel(genInfoLabel_, genInfoHandle);
@@ -60,7 +65,6 @@ void PDFWeightsProducer::produce(edm::Event& event, const edm::EventSetup& event
   const double xpdf2 = LHAPDF::xfx(1, x2, q, id2);
   const double w0 = xpdf1*xpdf2;
 
-  std::auto_ptr<std::vector<double> > weights(new std::vector<double>);
   for ( unsigned int i=1, n=LHAPDF::numberPDF(1); i<=n; ++i )
   {
     LHAPDF::usePDFMember(1, i);

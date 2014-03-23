@@ -9,6 +9,8 @@ TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
 )
 
+pdfWeight = cms.EDProducer("PDFWeightsProducer")
+
 from KrAFT.GenericNtuple.genericNtupleMaker_cfi import *
 event.eventCounters = ["nEventsTotal", "nEventsClean", "nEventsPAT",]
 
@@ -35,7 +37,7 @@ nEventsNtupleMuJets = cms.EDProducer("EventCountProducer")
 nEventsNtupleElJets = cms.EDProducer("EventCountProducer")
 
 ntupleSequenceElEl = cms.Sequence(
-    pileupWeight
+    pileupWeight + pdfWeight
   + nEventsNtupleElEl
   + jetUnc
   + goodMuons + goodElectrons * goodJets
@@ -44,7 +46,7 @@ ntupleSequenceElEl = cms.Sequence(
 )
 
 ntupleSequenceMuMu = cms.Sequence(
-    pileupWeight
+    pileupWeight + pdfWeight
   + nEventsNtupleMuMu
   + jetUnc
   + goodMuons + goodElectrons * goodJets
@@ -53,7 +55,7 @@ ntupleSequenceMuMu = cms.Sequence(
 )
 
 ntupleSequenceMuEl = cms.Sequence(
-    pileupWeight
+    pileupWeight + pdfWeight
   + nEventsNtupleMuEl
   + jetUnc
   + goodMuons + goodElectrons * goodJets
@@ -62,7 +64,7 @@ ntupleSequenceMuEl = cms.Sequence(
 )
 
 ntupleSequenceMuJets = cms.Sequence(
-    pileupWeight
+    pileupWeight + pdfWeight
   + nEventsNtupleMuJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
@@ -71,7 +73,7 @@ ntupleSequenceMuJets = cms.Sequence(
 )
 
 ntupleSequenceElJets = cms.Sequence(
-    pileupWeight
+    pileupWeight + pdfWeight
   + nEventsNtupleElJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets

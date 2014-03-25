@@ -133,7 +133,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
   //glbTkGeom_ = glbTkGeomHandle.product();
 
-  edm::Handle<reco::MuonCollection> muonHandle;
+  edm::Handle<std::vector<pat::Muon> > muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
 
   for ( int i=0, n=muonHandle->size(); i<n; ++i )

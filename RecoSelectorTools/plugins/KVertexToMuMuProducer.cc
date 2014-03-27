@@ -42,6 +42,15 @@
 #include <string>
 #include <fstream>
 
+//#define DEBUGPLOT
+
+#ifdef DEBUGPLOT
+#include "TH1F.h"
+#include "TH2F.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+#endif
+
 class KVertexToMuMuProducer : public edm::EDFilter
 {
 public:
@@ -74,6 +83,10 @@ private:
 
   //const TrackerGeometry* trackerGeom_;
   const MagneticField* bField_;
+#ifdef DEBUGPLOT
+  TH1F* hRawMass_, * hFitMass_;
+  TH2F* hRawMassVsFitMass_;
+#endif
 };
 
 KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
@@ -105,6 +118,14 @@ KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
 
   produces<reco::VertexCompositeCandidateCollection>();
   produces<std::vector<double> >("lxy");
+  produces<std::vector<double> >("l3D");
+
+#ifdef DEBUGPLOT
+  edm::Service<TFileService> fs;
+  hRawMass_ = fs->make<TH1F>("hRawMass", "raw mass;Raw mass (GeV/c^{2});Entries", 100, 0, 5);
+  hFitMass_ = fs->make<TH1F>("hFitMass", "fit mass;Fit mass (GeV/c^{2});Entries", 100, 0, 5);
+  hRawMassVsFitMass_ = fs->make<TH2F>("hRawMassVsFitMass", "raw vs fit;Raw mass (GeV/c^{2};Fit mass (GeV/c^{2}", 100, 0, 5, 100, 0, 5);
+#endif
 }
 
 bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
@@ -117,9 +138,13 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
 
   std::auto_ptr<VCCandColl> decayCands(new VCCandColl);
   std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
+  std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
 
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   event.getByLabel("offlineBeamSpot", beamSpotHandle);
+  const double pvx = beamSpotHandle->position().x();
+  const double pvy = beamSpotHandle->position().y();
+  const double pvz = beamSpotHandle->position().z();
 
   edm::ESHandle<MagneticField> bFieldHandle;
   eventSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle);
@@ -133,15 +158,17 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
   //glbTkGeom_ = glbTkGeomHandle.product();
 
-  edm::Handle<std::vector<pat::Muon> > muonHandle;
+  edm::Handle<std::vector<reco::Muon> > muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
 
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
-    const pat::Muon& muon1 = muonHandle->at(i);
-    TrackRef trackRef1 = muon1.improvedMuonBestTrack();
-    // Positive particle in the 1st index (pi+, proton, K+...)
-    if ( trackRef1->charge() < 0 ) continue;
+    const reco::Muon& muon1 = muonHandle->at(i);
+    if ( muon1.charge() >= 0 ) continue;
+    TrackRef trackRef1;
+    if ( muon1.isGlobalMuon() ) trackRef1 = muon1.globalTrack();
+    else if ( muon1.isTrackerMuon() ) trackRef1 = muon1.innerTrack();
+    else continue;
     if ( !isGoodTrack(trackRef1, beamSpotHandle.product()) ) continue;
 
     TransientTrack transTrack1(*trackRef1, bField_, glbTkGeomHandle);
@@ -150,10 +177,12 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
 
     for ( int j=0; j<n; ++j )
     {
-      const pat::Muon& muon2 = muonHandle->at(j);
-      TrackRef trackRef2 = muon2.improvedMuonBestTrack();
-      // Negative particle in the 2nd index (pi-, anti-proton, K-...)
-      if ( trackRef2->charge() > 0 ) continue;
+      const reco::Muon& muon2 = muonHandle->at(j);
+      if ( muon2.charge() <= 0 ) continue;
+      TrackRef trackRef2;
+      if ( muon2.isGlobalMuon() ) trackRef2 = muon2.globalTrack();
+      else if ( muon2.isTrackerMuon() ) trackRef2 = muon2.innerTrack();
+      else continue;
       if ( !isGoodTrack(trackRef2, beamSpotHandle.product()) ) continue;
 
       TransientTrack transTrack2(*trackRef2, bField_, glbTkGeomHandle);
@@ -176,6 +205,10 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       const double rawEnergy = std::hypot(caState1.momentum().mag(), muonMass_) 
                              + std::hypot(caState2.momentum().mag(), muonMass_);
       const double rawMass = sqrt(rawEnergy*rawEnergy - (caState1.momentum()+caState2.momentum()).mag2());
+
+#ifdef DEBUGPLOT
+      hRawMass_->Fill(rawMass);
+#endif
       if ( rawMassMin_ > rawMass or rawMassMax_ < rawMass ) continue;
 
       // Build Vertex
@@ -197,16 +230,16 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       typedef ROOT::Math::SVector<double, 3> SVector3;
 
       GlobalPoint vtxPos(vertex.x(), vertex.y(), vertex.z());
-      GlobalPoint beamSpotPos(beamSpotHandle->position().x(),
-                              beamSpotHandle->position().y(),
-                              beamSpotHandle->position().z());
 
       SMatrixSym3D totalCov = beamSpotHandle->rotatedCovariance3D() + vertex.covariance();
-      SVector3 distanceVector(vertex.x() - beamSpotPos.x(), vertex.y() - beamSpotPos.y(), 0.);
+      SVector3 distanceVectorXY(vertex.x() - pvx, vertex.y() - pvy, 0.);
 
-      double rVtxMag = ROOT::Math::Mag(distanceVector);
-      double sigmaRvtxMag = sqrt(ROOT::Math::Similarity(totalCov, distanceVector)) / rVtxMag;
+      double rVtxMag = ROOT::Math::Mag(distanceVectorXY);
+      double sigmaRvtxMag = sqrt(ROOT::Math::Similarity(totalCov, distanceVectorXY)) / rVtxMag;
       if( rVtxMag < cut_minLxy_ or rVtxMag > cut_maxLxy_ or rVtxMag / sigmaRvtxMag < cut_vtxSignif_ ) continue;
+
+      SVector3 distanceVector3D(vertex.x() - pvx, vertex.y() - pvy, vertex.z() - pvz);
+      const double rVtxMag3D = ROOT::Math::Mag(distanceVector3D);
 
       // Cuts finished, now we create the candidates and push them back into the collections.
       
@@ -224,7 +257,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
         for ( std::vector<TransientTrack>::iterator refTrack = refittedTracks.begin();
               refTrack != refittedTracks.end(); ++refTrack )
         {
-          if ( refTrack->track().charge() > 0 ) refTrack1 = &*refTrack;
+          if ( refTrack->track().charge() < 0 ) refTrack1 = &*refTrack;
           else refTrack2 = &*refTrack;
         }
         if ( refTrack1 == 0 or refTrack2 == 0 ) continue;
@@ -250,11 +283,15 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       const double candE2 = hypot(mom2.mag(), muonMass_);
 
       Particle::LorentzVector candLVec(mom.x(), mom.y(), mom.z(), candE1+candE2);
+#ifdef DEBUGPLOT
+      hFitMass_->Fill(candLVec.mass());
+      hRawMassVsFitMass_->Fill(rawMass, candLVec.mass());
+#endif
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
 
       // Match to muons
-      pat::Muon newMuon1(muon1);
-      pat::Muon newMuon2(muon2);
+      reco::Muon newMuon1(muon1);
+      reco::Muon newMuon2(muon2);
       newMuon1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
       newMuon2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);
@@ -267,6 +304,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
 
       decayCands->push_back(*cand);
       decayLengths->push_back(rVtxMag);
+      decayLengths3D->push_back(rVtxMag3D);
       
     }
   }
@@ -274,23 +312,25 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   const unsigned int nCands = decayCands->size();
   event.put(decayCands);
   event.put(decayLengths, "lxy");
+  event.put(decayLengths3D, "l3D");
 
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
 
 bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const
 {
-  const static reco::TrackBase::TrackQuality trackQual = reco::TrackBase::qualityByName("loose");
-  if ( !track->quality(trackQual) ) return false;
-  if ( track->normalizedChi2() >= cut_trackChi2_ ) return false;
-  if ( track->numberOfValidHits() < cut_trackNHit_ ) return false;
+  //Turn off quality cuts - we discovered muon tracks does not pass this selection
+  //const static reco::TrackBase::TrackQuality trackQual = reco::TrackBase::qualityByName("loose");
+  //if ( !track->quality(trackQual) ) return false;
+  //if ( track->normalizedChi2() >= cut_trackChi2_ ) return false;
+  //if ( track->numberOfValidHits() < cut_trackNHit_ ) return false;
   if ( track->pt() < cut_minPt_ or abs(track->eta()) > cut_maxEta_ ) return false;
 
   FreeTrajectoryState initialFTS = trajectoryStateTransform::initialFreeState(*track, bField_);
   TSCBLBuilderNoMaterial blsBuilder;
   TrajectoryStateClosestToBeamLine tscb( blsBuilder(initialFTS, *beamSpot) );
   if ( !tscb.isValid() ) return false;
-  if ( tscb.transverseImpactParameter().significance() <= cut_trackSignif_ ) return false;
+  //if ( tscb.transverseImpactParameter().significance() <= cut_trackSignif_ ) return false;
 
   return true;
 }

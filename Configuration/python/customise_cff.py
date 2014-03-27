@@ -209,10 +209,6 @@ def addNtupleStep(process, runOnMC):
         if not hasattr(process, 'p'+mode): continue
 
         getattr(process, mode).isMC = runOnMC
-        #getattr(process, 'p'+mode).replace(
-        #    process.nEventsPAT,
-        #    process.nEventsPAT+(getattr(process, 'ntupleSequence'+mode))
-        #)
         p = getattr(process, 'p'+mode)
         p += getattr(process, 'ntupleSequence'+mode)
 

@@ -42,6 +42,15 @@
 #include <string>
 #include <fstream>
 
+//#define DEBUGPLOT
+
+#ifdef DEBUGPLOT
+#include "TH1F.h"
+#include "TH2F.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+#endif
+
 class KVertexToMuMuProducer : public edm::EDFilter
 {
 public:
@@ -74,6 +83,10 @@ private:
 
   //const TrackerGeometry* trackerGeom_;
   const MagneticField* bField_;
+#ifdef DEBUGPLOT
+  TH1F* hRawMass_, * hFitMass_;
+  TH2F* hRawMassVsFitMass_;
+#endif
 };
 
 KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
@@ -106,6 +119,13 @@ KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
   produces<reco::VertexCompositeCandidateCollection>();
   produces<std::vector<double> >("lxy");
   produces<std::vector<double> >("l3D");
+
+#ifdef DEBUGPLOT
+  edm::Service<TFileService> fs;
+  hRawMass_ = fs->make<TH1F>("hRawMass", "raw mass;Raw mass (GeV/c^{2});Entries", 100, 0, 5);
+  hFitMass_ = fs->make<TH1F>("hFitMass", "fit mass;Fit mass (GeV/c^{2});Entries", 100, 0, 5);
+  hRawMassVsFitMass_ = fs->make<TH2F>("hRawMassVsFitMass", "raw vs fit;Raw mass (GeV/c^{2};Fit mass (GeV/c^{2}", 100, 0, 5, 100, 0, 5);
+#endif
 }
 
 bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
@@ -186,6 +206,9 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
                              + std::hypot(caState2.momentum().mag(), muonMass_);
       const double rawMass = sqrt(rawEnergy*rawEnergy - (caState1.momentum()+caState2.momentum()).mag2());
 
+#ifdef DEBUGPLOT
+      hRawMass_->Fill(rawMass);
+#endif
       if ( rawMassMin_ > rawMass or rawMassMax_ < rawMass ) continue;
 
       // Build Vertex
@@ -234,7 +257,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
         for ( std::vector<TransientTrack>::iterator refTrack = refittedTracks.begin();
               refTrack != refittedTracks.end(); ++refTrack )
         {
-          if ( refTrack->track().charge() > 0 ) refTrack1 = &*refTrack;
+          if ( refTrack->track().charge() < 0 ) refTrack1 = &*refTrack;
           else refTrack2 = &*refTrack;
         }
         if ( refTrack1 == 0 or refTrack2 == 0 ) continue;
@@ -260,6 +283,10 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       const double candE2 = hypot(mom2.mag(), muonMass_);
 
       Particle::LorentzVector candLVec(mom.x(), mom.y(), mom.z(), candE1+candE2);
+#ifdef DEBUGPLOT
+      hFitMass_->Fill(candLVec.mass());
+      hRawMassVsFitMass_->Fill(rawMass, candLVec.mass());
+#endif
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
 
       // Match to muons

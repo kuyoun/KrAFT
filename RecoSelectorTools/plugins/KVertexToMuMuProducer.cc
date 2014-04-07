@@ -61,12 +61,12 @@ public:
 
 private:
   bool isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const;
-  const reco::Muon* matchMuon(const reco::TrackRef trackRef,
-                              reco::MuonCollection::const_iterator muonsBegin,
-                              reco::MuonCollection::const_iterator muonsEnd);
+  const pat::Muon* matchMuon(const reco::TrackRef trackRef,
+                             pat::MuonCollection::const_iterator muonsBegin,
+                             pat::MuonCollection::const_iterator muonsEnd);
 
 private:
-  constexpr static double muonMass_ = 0.1056583715; 
+  constexpr static double muonMass_ = 0.1056583715;
   edm::InputTag muonLabel_;
 
   unsigned int pdgId_;
@@ -158,12 +158,12 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
   //glbTkGeom_ = glbTkGeomHandle.product();
 
-  edm::Handle<std::vector<reco::Muon> > muonHandle;
+  edm::Handle<std::vector<pat::Muon> > muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
 
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
-    const reco::Muon& muon1 = muonHandle->at(i);
+    const pat::Muon& muon1 = muonHandle->at(i);
     if ( muon1.charge() >= 0 ) continue;
     TrackRef trackRef1;
     if ( muon1.isGlobalMuon() ) trackRef1 = muon1.globalTrack();
@@ -177,7 +177,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
 
     for ( int j=0; j<n; ++j )
     {
-      const reco::Muon& muon2 = muonHandle->at(j);
+      const pat::Muon& muon2 = muonHandle->at(j);
       if ( muon2.charge() <= 0 ) continue;
       TrackRef trackRef2;
       if ( muon2.isGlobalMuon() ) trackRef2 = muon2.globalTrack();
@@ -196,13 +196,13 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       const float dca = fabs(cApp.distance());
       if ( dca < 0. || dca > cut_DCA_ ) continue;
       GlobalPoint cxPt = cApp.crossingPoint();
-      if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue; 
+      if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue;
 
       TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
       TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
       if ( !caState1.isValid() or !caState2.isValid() ) continue;
 
-      const double rawEnergy = std::hypot(caState1.momentum().mag(), muonMass_) 
+      const double rawEnergy = std::hypot(caState1.momentum().mag(), muonMass_)
                              + std::hypot(caState2.momentum().mag(), muonMass_);
       const double rawMass = sqrt(rawEnergy*rawEnergy - (caState1.momentum()+caState2.momentum()).mag2());
 
@@ -242,7 +242,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       const double rVtxMag3D = ROOT::Math::Mag(distanceVector3D);
 
       // Cuts finished, now we create the candidates and push them back into the collections.
-      
+
       std::auto_ptr<TrajectoryStateClosestToPoint> traj1;
       std::auto_ptr<TrajectoryStateClosestToPoint> traj2;
 
@@ -290,8 +290,8 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
 
       // Match to muons
-      reco::Muon newMuon1(muon1);
-      reco::Muon newMuon2(muon2);
+      pat::Muon newMuon1(muon1);
+      pat::Muon newMuon2(muon2);
       newMuon1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
       newMuon2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);
@@ -305,7 +305,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       decayCands->push_back(*cand);
       decayLengths->push_back(rVtxMag);
       decayLengths3D->push_back(rVtxMag3D);
-      
+
     }
   }
 
@@ -335,9 +335,9 @@ bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco:
   return true;
 }
 
-const reco::Muon* KVertexToMuMuProducer::matchMuon(const reco::TrackRef trackRef, 
-                                                   reco::MuonCollection::const_iterator muonsBegin,
-                                                   reco::MuonCollection::const_iterator muonsEnd)
+const pat::Muon* KVertexToMuMuProducer::matchMuon(const reco::TrackRef trackRef,
+                                                  pat::MuonCollection::const_iterator muonsBegin,
+                                                  pat::MuonCollection::const_iterator muonsEnd)
 {
   const double trackPt = trackRef->pt();
   const double trackEta = trackRef->eta();

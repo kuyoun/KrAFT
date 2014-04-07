@@ -72,6 +72,14 @@ def initialise(runOnMC, decayMode, doOutModule=False, doPAT=True):
     # verbose flags for the PF2PAT modules
     process.pfNoMuonPFlow.verbose = False
 
+    # Use non-isolated muons and electrons
+    process.patMuonsPFlow.pfMuonSource = "pfMuonsPFlow"
+    process.patElectronsPFlow.pfElectronSource = "pfElectronsPFlow"
+
+    # And turn on delta-beta corrections while building pfIsolated*PFlow
+    process.pfIsolatedMuonsPFlow.doDeltaBetaCorrection = True
+    process.pfIsolatedElectronsPFlow.doDeltaBetaCorrection = True
+
     # Change DR cone size to 0.3
     process.pfIsolatedMuonsPFlow.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('muPFIsoValueCharged03PFlow'))
     process.pfIsolatedMuonsPFlow.deltaBetaIsolationValueMap = cms.InputTag('muPFIsoValuePU03PFlow')

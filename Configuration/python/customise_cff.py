@@ -218,7 +218,11 @@ def addNtupleStep(process, runOnMC):
 
         getattr(process, mode).isMC = runOnMC
         p = getattr(process, 'p'+mode)
-        p += getattr(process, 'ntupleSequence'+mode)
+        ntupleStep = getattr(process, 'ntupleSequence'+mode)
+        if not runOnMC:
+            ntupleStep.remove(process.pdfWeight)
+            ntupleStep.remove(process.pileupWeight)
+        p += ntupleStep
 
         getattr(process, mode).eventCounters.extend([
             "nEventsHLT%s" % mode, "nEventsNtuple%s" % mode,

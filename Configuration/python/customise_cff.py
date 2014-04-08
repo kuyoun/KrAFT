@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
-def initialise(runOnMC, decayMode, doOutModule=False):
-    process = cms.Process("PAT")
+def initialise(runOnMC, decayMode, doOutModule=False, doPAT=True):
+    process = cms.Process("KrAFT")
 
     process.load("Configuration.StandardSequences.Services_cff")
     process.load("Configuration.Geometry.GeometryDB_cff")
@@ -72,6 +72,14 @@ def initialise(runOnMC, decayMode, doOutModule=False):
     # verbose flags for the PF2PAT modules
     process.pfNoMuonPFlow.verbose = False
 
+    # Use non-isolated muons and electrons
+    process.patMuonsPFlow.pfMuonSource = "pfMuonsPFlow"
+    process.patElectronsPFlow.pfElectronSource = "pfElectronsPFlow"
+
+    # And turn on delta-beta corrections while building pfIsolated*PFlow
+    process.pfIsolatedMuonsPFlow.doDeltaBetaCorrection = True
+    process.pfIsolatedElectronsPFlow.doDeltaBetaCorrection = True
+
     # Change DR cone size to 0.3
     process.pfIsolatedMuonsPFlow.isolationValueMapsCharged  = cms.VInputTag(cms.InputTag('muPFIsoValueCharged03PFlow'))
     process.pfIsolatedMuonsPFlow.deltaBetaIsolationValueMap = cms.InputTag('muPFIsoValuePU03PFlow')
@@ -134,7 +142,7 @@ def initialise(runOnMC, decayMode, doOutModule=False):
 
     process.commonFilterSequence = cms.Sequence(
         process.goodOfflinePrimaryVertices
-      * process.eventCleaning
+      #* process.eventCleaning
       + process.nEventsClean
     )
 
@@ -151,22 +159,22 @@ def initialise(runOnMC, decayMode, doOutModule=False):
             process.nEventsTotal
           + process.commonFilterSequence
           + process.hltElEl + process.nEventsHLTElEl
-          + process.patSequenceComplete
         )
+        if doPAT: process.pElEl += process.patSequenceComplete
     if decayMode in ("all", "dilepton", "MuMu", "mumu"):
         process.pMuMu = cms.Path(
             process.nEventsTotal
           + process.commonFilterSequence
           + process.hltMuMu + process.nEventsHLTMuMu
-          + process.patSequenceComplete
         )
+        if doPAT: process.pMuMu += process.patSequenceComplete
     if decayMode in ("all", "dilepton", "MuEl", "emu"):
         process.pMuEl = cms.Path(
             process.nEventsTotal
           + process.commonFilterSequence
           + process.hltMuEl + process.nEventsHLTMuEl
-          + process.patSequenceComplete
         )
+        if doPAT: process.pMuEl += process.patSequenceComplete
     if decayMode in ("all", "MuJets"):
         process.selectedPatMuonsPFlow.cut = 'isPFMuon && (isGlobalMuon || isTrackerMuon) && pt > 10 && abs(eta) < 2.5 && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
         process.selectedPatElectronsPFlow.cut = 'pt > 20 && abs(eta) < 2.5 && electronID("mvaTrigV0") > 0. && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
@@ -176,9 +184,11 @@ def initialise(runOnMC, decayMode, doOutModule=False):
             process.nEventsTotal
           + process.commonFilterSequence
           + process.hltMuJets + process.nEventsHLTMuJets
-          + process.patSequenceComplete
-          * process.muonVetoFilter + process.electronVetoFilter
         )
+        if doPAT: process.pMuJets += process.patSequenceComplete
+        process.pMuJets *= process.muonVetoFilter
+        process.pMuJets += process.electronVetoFilter
+
         if runOnMC: process.pMuJets.remove(process.hltMuJets)
     if decayMode in ("all", "ElJets"):
         process.selectedPatMuonsPFlow.cut = 'isPFMuon && (isGlobalMuon || isTrackerMuon) && pt > 10 && abs(eta) < 2.5 && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
@@ -189,9 +199,10 @@ def initialise(runOnMC, decayMode, doOutModule=False):
             process.nEventsTotal
           + process.commonFilterSequence
           + process.hltElJets + process.nEventsHLTElJets
-          + process.patSequenceComplete
-          * process.muonVetoFilter + process.electronVetoFilter
         )
+        if doPAT: process.pElJets += process.patSequenceComplete
+        process.pElJets *= process.muonVetoFilter
+        process.pElJets += process.electronVetoFilter
 
         if runOnMC: process.pElJets.remove(process.hltElJets)
 
@@ -206,10 +217,12 @@ def addNtupleStep(process, runOnMC):
         if not hasattr(process, 'p'+mode): continue
 
         getattr(process, mode).isMC = runOnMC
-        getattr(process, 'p'+mode).replace(
-            process.nEventsPAT,
-            process.nEventsPAT+(getattr(process, 'ntupleSequence'+mode))
-        )
+        p = getattr(process, 'p'+mode)
+        ntupleStep = getattr(process, 'ntupleSequence'+mode)
+        if not runOnMC:
+            ntupleStep.remove(process.pdfWeight)
+            ntupleStep.remove(process.pileupWeight)
+        p += ntupleStep
 
         getattr(process, mode).eventCounters.extend([
             "nEventsHLT%s" % mode, "nEventsNtuple%s" % mode,

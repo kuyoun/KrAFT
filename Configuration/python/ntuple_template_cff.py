@@ -41,7 +41,7 @@ ntupleSequenceElEl = cms.Sequence(
   + nEventsNtupleElEl
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
+  + goodMuonsForJpsi * goodElectronsForJpsi * jpsiToMuMu
   * ElEl
 )
 
@@ -50,7 +50,7 @@ ntupleSequenceMuMu = cms.Sequence(
   + nEventsNtupleMuMu
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
+  + goodMuonsForJpsi * goodElectronsForJpsi * jpsiToMuMu
   * MuMu
 )
 
@@ -59,7 +59,7 @@ ntupleSequenceMuEl = cms.Sequence(
   + nEventsNtupleMuEl
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
+  + goodMuonsForJpsi * goodElectronsForJpsi * jpsiToMuMu
   * MuEl
 )
 

@@ -133,10 +133,13 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
   //glbTkGeom_ = glbTkGeomHandle.product();
 
-  edm::Handle<reco::MuonCollection> muonHandle;
+  //edm::Handle<reco::MuonCollection> muonHandle;
+  edm::Handle<pat::MuonCollection> muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
+	
 
-  for ( int i=0, n=muonHandle->size(); i<n; ++i )
+
+  for ( int i=0, n= muonHandle->size() ; i<n; ++i )
   {
     const pat::Muon& muon1 = muonHandle->at(i);
     TrackRef trackRef1 = muon1.improvedMuonBestTrack();
@@ -167,7 +170,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       const float dca = fabs(cApp.distance());
       if ( dca < 0. || dca > cut_DCA_ ) continue;
       GlobalPoint cxPt = cApp.crossingPoint();
-      if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue; 
+      //if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue; 
 
       TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
       TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
@@ -251,7 +254,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
 
       Particle::LorentzVector candLVec(mom.x(), mom.y(), mom.z(), candE1+candE2);
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
-
+//	std::cout<<"all step passed!"<<std::endl;
       // Match to muons
       pat::Muon newMuon1(muon1);
       pat::Muon newMuon2(muon2);
@@ -272,11 +275,14 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   }
 
   const unsigned int nCands = decayCands->size();
+	  //std::cout<<"Event : "<<event.id()<<"   total passed :  "<<nCands<<std::endl;
   event.put(decayCands);
   event.put(decayLengths, "lxy");
 
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
+
+
 
 bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const
 {

@@ -163,6 +163,7 @@ void KGenericNtupleMaker::endLuminosityBlock(const edm::LuminosityBlock& lumi, c
 
 void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
+  //std::cout<<"Event : "<<event.id()<<std::endl;
   using namespace std;
 
   fevent_->clear();
@@ -253,7 +254,12 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     else if ( e.isGsfCtfChargeConsistent() ) qConsistent = 1;
     fevent_->electrons_qConsistent_->push_back(qConsistent);
   }
-  if ( fevent_->electrons_pt_->size() < electronMinNumber_ ) return;
+	//std::cout<<"MinNumber"<<electronMinNumber_<<"    electron size : "<<fevent_->electrons_pt_->size()<<std::endl;
+  if ( fevent_->electrons_pt_->size() < electronMinNumber_ ) 
+  { 
+	//std::cout<<"Wow! electron minimum out!!"<<std::endl; 
+	return; 
+  }
 
   edm::Handle<Muons> muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
@@ -278,7 +284,12 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->muons_type_->push_back(muType  );
     fevent_->muons_relIso_->push_back(mu.userIso(1)); // dBeta corrected isolation
   }
-  if ( fevent_->muons_pt_->size() < muonMinNumber_ ) return;
+	//std::cout<<"MinNumber"<<muonMinNumber_<<"    muon size : "<<fevent_->muons_pt_->size()<<std::endl;
+  if ( fevent_->muons_pt_->size() < muonMinNumber_ ) 
+  { 
+	//std::cout<<"Wow! muon minimum out!!"<<std::endl; 
+	return; 
+  }
 
   edm::Handle<METs> metHandle, metJESUpHandle, metJESDnHandle;
   edm::Handle<METs> metJERHandle, metJERUpHandle, metJERDnHandle;
@@ -412,15 +423,22 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
       fevent_->jets_JERDn_->push_back(fJERDn);
     }
   }
-  if ( fevent_->jets_pt_->size() < jetMinNumber_ ) return;
+	//std::cout<<"MinNumber"<<jetMinNumber_<<"    jet size : "<<fevent_->jets_pt_->size()<<std::endl;
+  if ( fevent_->jets_pt_->size() < jetMinNumber_ ) 
+  { 
+	//std::cout<<"Wow! jet minimum out!!"<<std::endl; 
+	return; 
+  }
 
   // Do Jpsi
   edm::Handle<std::vector<reco::VertexCompositeCandidate> > jpsiHandle;
   event.getByLabel(jpsiLabel_, jpsiHandle);
   edm::Handle<doubles> jpsiLxyHandle;
   event.getByLabel(edm::InputTag(jpsiLabel_.label(), "lxy"), jpsiLxyHandle);
-  for ( int i=0, n=jpsiHandle->size(); i<n; ++i )
+  int n = jpsiHandle->size();
+  for ( int i=0; i<n; ++i )
   {
+    //std::cout<<"Start Loop "<<std::endl;
     const reco::VertexCompositeCandidate& jpsiCand = jpsiHandle->at(i);
     const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(0));
     const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(1));
@@ -429,6 +447,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->jpsis_phi_->push_back(jpsiCand.phi() );
     fevent_->jpsis_m_  ->push_back(jpsiCand.mass());
     fevent_->jpsis_lxy_->push_back(jpsiLxyHandle->at(i));
+    //std::cout<<"jpsiCand.pt() : "<<jpsiCand.pt()<<std::endl;
 
     fevent_->jpsis_pt1_ ->push_back(muon1->pt() );
     fevent_->jpsis_eta1_->push_back(muon1->eta());

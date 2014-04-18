@@ -27,6 +27,8 @@ public:
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
 
 private:
+  std::string pdfName_;
+  std::vector<std::string> altPdfNames_;
   edm::InputTag genInfoLabel_;
 };
 
@@ -34,13 +36,19 @@ PDFWeightsProducer::PDFWeightsProducer(const edm::ParameterSet& pset)
 {
   //genInfoLabel_ = pset.getParameter<edm::InputTag>("genEventInfo");
   genInfoLabel_ = edm::InputTag("generator");
+  pdfName_ = pset.getParameter<std::string>("pdfName");
+  altPdfNames_ = pset.getParameter<std::vector<std::string> >("altPdfNames");
 
   produces<std::vector<double> >();
 }
 
 void PDFWeightsProducer::beginJob()
 {
-  LHAPDF::initPDFSet(1, "cteq66.LHgrid");
+  LHAPDF::initPDFSet(1, pdfName_.c_str());
+  for ( int i=0, n=altPdfNames_.size(); i<n; ++i )
+  {
+    LHAPDF::initPDFSet(i+2, altPdfNames_[i].c_str());
+  }
 }
 
 void PDFWeightsProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
@@ -68,6 +76,13 @@ void PDFWeightsProducer::produce(edm::Event& event, const edm::EventSetup& event
   for ( unsigned int i=1, n=LHAPDF::numberPDF(1); i<=n; ++i )
   {
     LHAPDF::usePDFMember(1, i);
+    const double xpdf1_new = LHAPDF::xfx(1, x1, q, id1);
+    const double xpdf2_new = LHAPDF::xfx(1, x2, q, id2);
+    weights->push_back(xpdf1_new*xpdf2_new/w0);
+  }
+  for ( unsigned int i=0, n=altPdfNames_.size(); i<n; ++i )
+  {
+    LHAPDF::usePDFMember(i+2, 0);
     const double xpdf1_new = LHAPDF::xfx(1, x1, q, id1);
     const double xpdf2_new = LHAPDF::xfx(1, x2, q, id2);
     weights->push_back(xpdf1_new*xpdf2_new/w0);

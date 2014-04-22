@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 from KrAFT.GeneratorTools.pileupWeight_cff import *
+from KrAFT.GeneratorTools.pdfWeight_cff import *
 from KrAFT.RecoSelectorTools.leptonSelector_cfi import *
 from KrAFT.RecoSelectorTools.jetSelector_cfi import *
 from KrAFT.RecoSelectorTools.jpsiToMuMu_cfi import *
@@ -8,8 +9,6 @@ from KrAFT.RecoSelectorTools.jpsiToMuMu_cfi import *
 TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
 )
-
-pdfWeight = cms.EDProducer("PDFWeightsProducer")
 
 from KrAFT.GenericNtuple.genericNtupleMaker_cfi import *
 event.eventCounters = ["nEventsTotal", "nEventsClean", "nEventsPAT",]

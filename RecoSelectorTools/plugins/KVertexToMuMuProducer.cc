@@ -297,8 +297,15 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       newMuon1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
       newMuon2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);
-      cand->addDaughter(newMuon1);
-      cand->addDaughter(newMuon2);
+			
+			if ( newMuon1.pt() > newMuon2.pt()) {
+				cand->addDaughter(newMuon1);
+	      cand->addDaughter(newMuon2);
+			}
+			else { 
+				cand->addDaughter(newMuon2);
+	      cand->addDaughter(newMuon1);
+			}
 
       cand->setPdgId(pdgId_);
       AddFourMomenta addP4;

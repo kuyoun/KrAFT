@@ -245,7 +245,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->electrons_type_  ->push_back(eType     );
     fevent_->electrons_relIso_->push_back(e.userIso(2)); // rho corrected isolation
 
-    fevent_->electrons_mva_->push_back(e.mva());
+    fevent_->electrons_mva_->push_back(mva);
     fevent_->electrons_scEta_->push_back(scEta);
 
     int qConsistent = 0;

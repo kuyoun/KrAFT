@@ -46,6 +46,8 @@ GenericEvent::GenericEvent(bool isMC)
   jpsis_eta2_ = new doubles;
   jpsis_phi2_ = new doubles;
 
+  jpsis_vProb_ = new doubles;
+
   jpsis_nPixHits1_ = new ints;
   jpsis_nPixHits2_ = new ints;
 
@@ -131,6 +133,7 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("jpsis_phi", jpsis_phi_);
   tree_->Branch("jpsis_m"  , jpsis_m_  );
   tree_->Branch("jpsis_lxy", jpsis_lxy_);
+  tree_->Branch("jpsis_vProb", jpsis_vProb_);
 
   tree_->Branch("jpsis_pt1" , jpsis_pt1_ );
   tree_->Branch("jpsis_eta1", jpsis_eta1_);

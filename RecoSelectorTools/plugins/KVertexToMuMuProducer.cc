@@ -146,6 +146,22 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   const double pvy = beamSpotHandle->position().y();
   const double pvz = beamSpotHandle->position().z();
 
+/*
+  edm::Handle<reco::VertexCollection> primaryVertex;
+	event.getByLabel("offlinePrimaryVertices",primaryVertex);
+
+  std::auto_ptr< std::vector<reco::Vertex> > goodOfflinePrimaryVertices( new std::vector<reco::Vertex>() );
+  int nvertex = 0 ;
+  for(unsigned int i=0; i < recVtxs_->size(); ++i){
+    reco::Vertex v = recVtxs_->at(i);
+    if (!(v.isFake()) && (v.ndof()>4) && (fabs(v.z())<=24.0) && (v.position().Rho()<=2.0) ) {
+      goodOfflinePrimaryVertices->push_back((*recVtxs_)[i]);
+      nvertex++;
+    }
+  }
+*/
+
+
   edm::ESHandle<MagneticField> bFieldHandle;
   eventSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle);
   bField_ = bFieldHandle.product();
@@ -346,6 +362,26 @@ bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco:
 
   return true;
 }
+
+/*
+bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco::Track beamSpot) const
+{
+  //Turn off quality cuts - we discovered muon tracks does not pass this selection
+  //const static reco::TrackBase::TrackQuality trackQual = reco::TrackBase::qualityByName("loose");
+  //if ( !track->quality(trackQual) ) return false;
+  //if ( track->normalizedChi2() >= cut_trackChi2_ ) return false;
+  //if ( track->numberOfValidHits() < cut_trackNHit_ ) return false;
+  if ( track->pt() < cut_minPt_ or abs(track->eta()) > cut_maxEta_ ) return false;
+
+  FreeTrajectoryState initialFTS = trajectoryStateTransform::initialFreeState(*track, bField_);
+  TSCBLBuilderNoMaterial blsBuilder;
+  TrajectoryStateClosestToBeamLine tscb( blsBuilder(initialFTS, *beamSpot) );
+  if ( !tscb.isValid() ) return false;
+  //if ( tscb.transverseImpactParameter().significance() <= cut_trackSignif_ ) return false;
+
+  return true;
+}
+*/
 
 const pat::Muon* KVertexToMuMuProducer::matchMuon(const reco::TrackRef trackRef,
                                                   pat::MuonCollection::const_iterator muonsBegin,

@@ -7,8 +7,10 @@ jetUnc = cms.EDProducer("KJetUncProducer",
     jet = cms.InputTag("patJetsPFlow"),
     met = cms.InputTag("patMETsPFlow"),
 
-    jecFileRD = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_Uncertainty_AK5PFchs.txt"),
-    jecFileMC = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_MC_Uncertainty_AK5PFchs.txt"),
+    jecFile = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_UncertaintySources_AK5PFchs.txt"),
+    jecLevel = cms.string("Total"),
+    #jecFile = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_Uncertainty_AK5PFchs.txt"),
+    #jecFile = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_MC_Uncertainty_AK5PFchs.txt"),
 )
 
 goodJets = cms.EDFilter("KJetSelector",

@@ -11,6 +11,7 @@
 #include "DataFormats/Common/interface/View.h"
 
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 
 #include "KrAFT/RecoSelectorTools/interface/Types.h"
@@ -60,10 +61,9 @@ KJetUncProducer::KJetUncProducer(const edm::ParameterSet& pset)
   metLabel_ = pset.getParameter<edm::InputTag>("met");
 
   // JEC correction
-  edm::FileInPath jecFilePathRD(pset.getParameter<string>("jecFileRD"));
-  edm::FileInPath jecFilePathMC(pset.getParameter<string>("jecFileMC"));
-  if ( isMC_ ) jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathMC.fullPath());
-  else jecUncCalculator_ = new JetCorrectionUncertainty(jecFilePathRD.fullPath());
+  edm::FileInPath jecFilePath(pset.getParameter<string>("jecFile"));
+  const std::string uncLevel = pset.getParameter<string>("uncLevel");
+  jecUncCalculator_ = new JetCorrectionUncertainty(JetCorrectorParameters(jecFilePath.fullPath(), uncLevel));
 
   produces<pat::JetToValue>("up");
   produces<pat::JetToValue>("dn");

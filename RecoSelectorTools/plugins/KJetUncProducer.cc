@@ -62,8 +62,8 @@ KJetUncProducer::KJetUncProducer(const edm::ParameterSet& pset)
 
   // JEC correction
   edm::FileInPath jecFilePath(pset.getParameter<string>("jecFile"));
-  const std::string uncLevel = pset.getParameter<string>("uncLevel");
-  jecUncCalculator_ = new JetCorrectionUncertainty(JetCorrectorParameters(jecFilePath.fullPath(), uncLevel));
+  const std::string jecLevel = pset.getParameter<string>("jecLevel");
+  jecUncCalculator_ = new JetCorrectionUncertainty(JetCorrectorParameters(jecFilePath.fullPath(), jecLevel));
 
   produces<pat::JetToValue>("up");
   produces<pat::JetToValue>("dn");

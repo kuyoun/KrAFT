@@ -34,5 +34,7 @@ event = cms.EDAnalyzer("KGenericNtupleMaker",
     ),
     jpsi = cms.PSet(
         src = cms.InputTag("jpsiToMuMu"),
+        minNumber = cms.uint32(0),
+        maxNumber = cms.uint32(999),
     ),
 )

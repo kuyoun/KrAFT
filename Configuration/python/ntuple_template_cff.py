@@ -5,7 +5,11 @@ from KrAFT.GeneratorTools.pdfWeight_cff import *
 from KrAFT.RecoSelectorTools.leptonSelector_cfi import *
 from KrAFT.RecoSelectorTools.jetSelector_cfi import *
 from KrAFT.RecoSelectorTools.jpsiToMuMu_cfi import *
+<<<<<<< HEAD
 from KrAFT.RecoSelectorTools.jpsiToElEl_cfi import *
+=======
+from KrAFT.JpsiAnalysis.isoleptonSelector_cfi import *
+>>>>>>> 08c38d4e68fce7a9c37cadd8e1e32d64ada87a6d
 
 TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
@@ -18,10 +22,11 @@ MuMu = event.clone()
 ElEl = event.clone()
 MuEl = event.clone()
 MuMu.muon.minNumber = 2
+
 ElEl.electron.minNumber = 2
+
 MuEl.muon.minNumber = 1
 MuEl.electron.minNumber = 1
-
 MuJets = event.clone()
 MuJets.muon.minNumber = 1
 MuJets.jetMET.minNumber = 3
@@ -40,8 +45,8 @@ ntupleSequenceElEl = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleElEl
   + jetUnc
-  + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu + jpsiToElEl
+  + goodMuons*goodMuonsForJpsi + goodElectrons*goodElectronsForJpsi * goodJets
+  + jpsiToMuMu
   * ElEl
 )
 
@@ -49,8 +54,8 @@ ntupleSequenceMuMu = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleMuMu
   + jetUnc
-  + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu + jpsiToElEl
+  + goodMuons*goodMuonsForJpsi + goodElectrons*goodElectronsForJpsi * goodJets
+  + jpsiToMuMu
   * MuMu
 )
 
@@ -58,8 +63,8 @@ ntupleSequenceMuEl = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleMuEl
   + jetUnc
-  + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu + jpsiToElEl
+  + goodMuons*goodMuonsForJpsi + goodElectrons*goodElectronsForJpsi * goodJets
+  + jpsiToMuMu
   * MuEl
 )
 
@@ -68,7 +73,7 @@ ntupleSequenceMuJets = cms.Sequence(
   + nEventsNtupleMuJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu + jpsiToElEl
+  + jpsiToMuMu #+ jpsiToElEl
   * MuJets
 )
 
@@ -77,7 +82,7 @@ ntupleSequenceElJets = cms.Sequence(
   + nEventsNtupleElJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu + jpsiToElEl
+  + jpsiToMuMu #+ jpsiToElEl
   * ElJets
 )
 

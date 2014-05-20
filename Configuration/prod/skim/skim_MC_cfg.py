@@ -6,12 +6,13 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("Configuration.StandardSequences.Services_cff")
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
-process.MessageLogger.cerr.FwkReport.reportEvery = 10000
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
 process.source.fileNames = [
-    '/store/mc/Summer12_DR53X/TTJets_FullLeptMGDecays_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7C-v2/10000/FEEEC639-4A98-E211-BE1C-002618943919.root'
+#    '/store/mc/Summer12_DR53X/TTJets_FullLeptMGDecays_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7C-v2/10000/FEEEC639-4A98-E211-BE1C-002618943919.root'
+     'file:mc_aod.root'
 ]
 
 process.out = cms.OutputModule("PoolOutputModule",

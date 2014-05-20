@@ -212,7 +212,7 @@ def addNtupleStep(process, runOnMC):
     # Add ntuple production
     process.load("KrAFT.Configuration.ntuple_template_cff")
     process.goodJets.isMC = runOnMC
-
+		
     for mode in ('ElEl', 'MuMu', 'MuEl', 'ElJets', 'MuJets'):
         if not hasattr(process, 'p'+mode): continue
 
@@ -223,9 +223,6 @@ def addNtupleStep(process, runOnMC):
             ntupleStep.remove(process.pdfWeight)
             ntupleStep.remove(process.pileupWeight)
         p += ntupleStep
-
         getattr(process, mode).eventCounters.extend([
-            "nEventsHLT%s" % mode, "nEventsNtuple%s" % mode,
-            "nEventsNtuple%s" % mode,
+            "nEventsHLT%s" % mode, "nEventsNtuple%s" % mode
         ])
-

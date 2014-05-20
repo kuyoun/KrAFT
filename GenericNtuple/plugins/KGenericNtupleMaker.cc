@@ -430,12 +430,8 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 		TLorentzVector mu2(muon2->px(), muon2->py(), muon2->pz(), muon2->energy());
 		TLorentzVector sumMu = mu1+mu2;
 		TVector3 sumBoost( sumMu.BoostVector());
-		std::cout<<mu1.Px()<<"  "<<mu1.Py()<<"  "<<mu1.Pz() <<std::endl;
-		std::cout<<mu2.Px()<<"  "<<mu2.Py()<<"  "<<mu2.Pz() <<std::endl;
 		mu1.Boost(-1*sumBoost);
 		mu2.Boost(-1*sumBoost);
-		std::cout<<mu1.Px()<<"  "<<mu1.Py()<<"  "<<mu1.Pz() <<std::endl;
-		std::cout<<mu2.Px()<<"  "<<mu2.Py()<<"  "<<mu2.Pz() <<std::endl;
 
     fevent_->jpsis_pt_ ->push_back(jpsiCand.pt()  );
     fevent_->jpsis_eta_->push_back(jpsiCand.eta() );

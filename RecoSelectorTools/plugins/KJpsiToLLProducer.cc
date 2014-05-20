@@ -39,7 +39,7 @@
 #include "Geometry/CommonDetUnit/interface/GeomDet.h"
 
 #include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
-
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include <string>
 #include <fstream>
 #include<TVector3.h>
@@ -65,8 +65,8 @@ public:
 
 private:
   bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
-  reco::TransientTrack GetTransientTrack( pat::Muon muon,const MagneticField* bField_, edm::ESHandle<GlobalTrackingGeometry> gtg);
-  reco::TransientTrack GetTransientTrack( pat::Electron muon,const MagneticField* bField_, edm::ESHandle<GlobalTrackingGeometry> gtg);
+  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon);
+  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron);
   double GetMass( pat::Muon muon);
   double GetMass( pat::Electron electron);
   /*
@@ -91,7 +91,6 @@ private:
   unsigned int minNumber_, maxNumber_;
 
   //const TrackerGeometry* trackerGeom_;
-  const MagneticField* bField_;
 #ifdef DEBUGPLOT
   TH1F* hRawMass_, * hFitMass_;
   TH2F* hRawMassVsFitMass_;
@@ -177,21 +176,23 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
   const double pvz = goodPV.position().z();
   //GlobalPoint pvPoint = GlobalPoint( pvx, pvy, pvz) ;
 
-  edm::ESHandle<MagneticField> bFieldHandle;
-  eventSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle);
-  bField_ = bFieldHandle.product();
 
   //edm::ESHandle<TrackerGeometry> trackerGeomHandle;
   //eventSetup.get<TrackerDigiGeometryRecord>().get(trackerGeomHandle);
   //trackerGeom_ = trackerGeomHandle.product();
 
-  edm::ESHandle<GlobalTrackingGeometry> glbTkGeomHandle;
-  eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
+  //edm::ESHandle<GlobalTrackingGeometry> glbTkGeomHandle;
+  //eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
   //glbTkGeom_ = glbTkGeomHandle.product();
 
   
   edm::Handle<std::vector<Lepton> > leptonHandle;
   event.getByLabel(leptonLabel_, leptonHandle);
+
+  edm::ESHandle<TransientTrackBuilder> theB;
+  eventSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
+
+
   for ( int i=0, n=leptonHandle->size(); i<n; ++i )
   {
     const Lepton& lep1 = leptonHandle->at(i);
@@ -200,7 +201,7 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
     //trackRef1 = GetTrackFromLepton(lep1);
 		//if ( trackRef1 == 0 ) continue;
     //if ( !isGoodTrack(trackRef1,pvPoint )) continue;
-		TransientTrack transTrack1 = GetTransientTrack( lep1, bField_, glbTkGeomHandle);
+		TransientTrack transTrack1 = GetTransientTrack(theB, lep1);
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
     double leptonMass = GetMass( lep1);
@@ -214,7 +215,7 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
 			//if( nullptr == trackRef2 ) continue;
       //if ( !isGoodTrack(trackRef2, pvPoint ) ) continue;
 		  	
-      TransientTrack transTrack2= GetTransientTrack(lep2, bField_, glbTkGeomHandle);
+      TransientTrack transTrack2= GetTransientTrack(theB, lep2);
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
 
@@ -374,20 +375,18 @@ double KJpsiToLLProducer<Lepton>::GetMass( pat::Electron muon) {
 }
 
 template<typename Lepton>
-reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( pat::Muon muon,const MagneticField* bField_, edm::ESHandle<GlobalTrackingGeometry> gtg) {
+reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon) {
 	reco::TrackRef track;
   if ( muon.isGlobalMuon() ) track = muon.globalTrack();
   else if ( muon.isTrackerMuon() ) track = muon.innerTrack();
 	//else return nullptr;
-	TransientTrackBuilder bld( bField_, gtg) ;
-	return bld.build( track );
+	return theB->build( track) ; 
 
 }
 template<typename Lepton>
-reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( pat::Electron electron,const MagneticField* bField_, edm::ESHandle<GlobalTrackingGeometry> gtg) {
-	reco::GsfTrackRef track = electron.gsfTrack();
-	TransientTrackBuilder bld ( bField_, gtg);
-	return bld.build( track);
+reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron) {
+	//if ( electron.gsfTrack().isNull() ) return nullptr;
+	return theB->build( electron.gsfTrack() );
 }
  
 /*

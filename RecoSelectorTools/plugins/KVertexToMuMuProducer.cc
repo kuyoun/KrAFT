@@ -146,6 +146,22 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   const double pvy = beamSpotHandle->position().y();
   const double pvz = beamSpotHandle->position().z();
 
+/*
+  edm::Handle<reco::VertexCollection> primaryVertex;
+	event.getByLabel("offlinePrimaryVertices",primaryVertex);
+
+  std::auto_ptr< std::vector<reco::Vertex> > goodOfflinePrimaryVertices( new std::vector<reco::Vertex>() );
+  int nvertex = 0 ;
+  for(unsigned int i=0; i < recVtxs_->size(); ++i){
+    reco::Vertex v = recVtxs_->at(i);
+    if (!(v.isFake()) && (v.ndof()>4) && (fabs(v.z())<=24.0) && (v.position().Rho()<=2.0) ) {
+      goodOfflinePrimaryVertices->push_back((*recVtxs_)[i]);
+      nvertex++;
+    }
+  }
+*/
+
+
   edm::ESHandle<MagneticField> bFieldHandle;
   eventSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle);
   bField_ = bFieldHandle.product();
@@ -160,8 +176,10 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
 
   edm::Handle<std::vector<pat::Muon> > muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
+	
 
-  for ( int i=0, n=muonHandle->size(); i<n; ++i )
+
+  for ( int i=0, n= muonHandle->size() ; i<n; ++i )
   {
     const pat::Muon& muon1 = muonHandle->at(i);
     if ( muon1.charge() >= 0 ) continue;
@@ -288,15 +306,22 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       hRawMassVsFitMass_->Fill(rawMass, candLVec.mass());
 #endif
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
-
+//	std::cout<<"all step passed!"<<std::endl;
       // Match to muons
       pat::Muon newMuon1(muon1);
       pat::Muon newMuon2(muon2);
       newMuon1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
       newMuon2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);
-      cand->addDaughter(newMuon1);
-      cand->addDaughter(newMuon2);
+			
+			if ( newMuon1.pt() > newMuon2.pt()) {
+				cand->addDaughter(newMuon1);
+	      cand->addDaughter(newMuon2);
+			}
+			else { 
+				cand->addDaughter(newMuon2);
+	      cand->addDaughter(newMuon1);
+			}
 
       cand->setPdgId(pdgId_);
       AddFourMomenta addP4;
@@ -310,12 +335,15 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   }
 
   const unsigned int nCands = decayCands->size();
+	  //std::cout<<"Event : "<<event.id()<<"   total passed :  "<<nCands<<std::endl;
   event.put(decayCands);
   event.put(decayLengths, "lxy");
   event.put(decayLengths3D, "l3D");
 
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
+
+
 
 bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const
 {
@@ -334,6 +362,26 @@ bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco:
 
   return true;
 }
+
+/*
+bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco::Track beamSpot) const
+{
+  //Turn off quality cuts - we discovered muon tracks does not pass this selection
+  //const static reco::TrackBase::TrackQuality trackQual = reco::TrackBase::qualityByName("loose");
+  //if ( !track->quality(trackQual) ) return false;
+  //if ( track->normalizedChi2() >= cut_trackChi2_ ) return false;
+  //if ( track->numberOfValidHits() < cut_trackNHit_ ) return false;
+  if ( track->pt() < cut_minPt_ or abs(track->eta()) > cut_maxEta_ ) return false;
+
+  FreeTrajectoryState initialFTS = trajectoryStateTransform::initialFreeState(*track, bField_);
+  TSCBLBuilderNoMaterial blsBuilder;
+  TrajectoryStateClosestToBeamLine tscb( blsBuilder(initialFTS, *beamSpot) );
+  if ( !tscb.isValid() ) return false;
+  //if ( tscb.transverseImpactParameter().significance() <= cut_trackSignif_ ) return false;
+
+  return true;
+}
+*/
 
 const pat::Muon* KVertexToMuMuProducer::matchMuon(const reco::TrackRef trackRef,
                                                   pat::MuonCollection::const_iterator muonsBegin,

@@ -21,9 +21,9 @@ if __name__ == '__main__':
     if not os.path.isdir("ntuple"): os.makedirs("ntuple")
 
     samples = []
-    basedir = "MC/"  #"/data/local/data01/jhgoh/CMS/ntuple/Generic/20140120_1/"
+    basedir = "MC/"
     samples.extend([basedir+x for x in os.listdir(basedir) if 'root' in x])
-    basedir = "RD/"  #/data/local/data01/jhgoh/CMS/ntuple/Generic/20140120_2/"
+    basedir = "RD/"
     samples.extend([basedir+x for x in os.listdir(basedir) if 'root' in x])
     p = multiprocessing.Pool(multiprocessing.cpu_count())
     p.map(fed, [(x, y) for x in ("MuMu", "ElEl", "MuEl") for y in samples])

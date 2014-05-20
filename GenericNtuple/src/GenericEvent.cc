@@ -53,6 +53,8 @@ GenericEvent::GenericEvent(bool isMC)
   jpsis_phi2_ = new doubles;
   jpsis_cos2_ = new doubles;
 
+  jpsis_vProb_ = new doubles;
+
   jpsis_nPixHits1_ = new ints;
   jpsis_nPixHits2_ = new ints;
 

@@ -437,8 +437,6 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   event.getByLabel(edm::InputTag(jpsiLabel_.label(), "lxy"), jpsiLxyHandle);
   event.getByLabel(edm::InputTag(jpsiLabel_.label(), "l3D"), jpsiL3DHandle);
   for ( int i=0, n=jpsiHandle->size(); i<n; ++i )
-  int n = jpsiHandle->size();
-  for ( int i=0; i<n; ++i )
   {
     //std::cout<<"Start Loop "<<std::endl;
     const reco::VertexCompositeCandidate& jpsiCand = jpsiHandle->at(i);

@@ -42,6 +42,7 @@
 
 #include <string>
 #include <fstream>
+#include<TVector3.h>
 
 //#define DEBUGPLOT
 
@@ -68,9 +69,11 @@ private:
   reco::TransientTrack GetTransientTrack( pat::Electron muon,const MagneticField* bField_, edm::ESHandle<GlobalTrackingGeometry> gtg);
   double GetMass( pat::Muon muon);
   double GetMass( pat::Electron electron);
+  /*
   const pat::Muon* matchMuon(const reco::TrackRef trackRef,
                              pat::MuonCollection::const_iterator muonsBegin,
                              pat::MuonCollection::const_iterator muonsEnd);
+  */
 
 private:
   edm::InputTag leptonLabel_;
@@ -296,6 +299,10 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
       GlobalVector mom1(traj1->momentum());
       GlobalVector mom2(traj2->momentum());
       GlobalVector mom(mom1+mom2);
+
+      //TVector3 vec1( mom1.x()-vertex.x(), mom1.y()-vertex.y(),mom1.z()-vertex.z());     
+      //TVector3 vec2( mom2.x()-vertex.x(), mom2.y()-vertex.y(),mom2.z()-vertex.z());     
+
 
       //cleanup stuff we don't need anymore
       traj1.reset();

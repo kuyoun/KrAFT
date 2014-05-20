@@ -5,6 +5,7 @@ from KrAFT.GeneratorTools.pdfWeight_cff import *
 from KrAFT.RecoSelectorTools.leptonSelector_cfi import *
 from KrAFT.RecoSelectorTools.jetSelector_cfi import *
 from KrAFT.RecoSelectorTools.jpsiToMuMu_cfi import *
+from KrAFT.RecoSelectorTools.jpsiToElEl_cfi import *
 
 TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
@@ -40,7 +41,7 @@ ntupleSequenceElEl = cms.Sequence(
   + nEventsNtupleElEl
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
+  + jpsiToMuMu+ jpsiToElEl
   * ElEl
 )
 
@@ -49,7 +50,7 @@ ntupleSequenceMuMu = cms.Sequence(
   + nEventsNtupleMuMu
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
+  + jpsiToMuMu+ jpsiToElEl
   * MuMu
 )
 
@@ -58,7 +59,7 @@ ntupleSequenceMuEl = cms.Sequence(
   + nEventsNtupleMuEl
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
+  + jpsiToMuMu+ jpsiToElEl
   * MuEl
 )
 
@@ -67,7 +68,7 @@ ntupleSequenceMuJets = cms.Sequence(
   + nEventsNtupleMuJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
+  + jpsiToMuMu+ jpsiToElEl
   * MuJets
 )
 
@@ -76,7 +77,7 @@ ntupleSequenceElJets = cms.Sequence(
   + nEventsNtupleElJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
+  + jpsiToMuMu+ jpsiToElEl
   * ElJets
 )
 

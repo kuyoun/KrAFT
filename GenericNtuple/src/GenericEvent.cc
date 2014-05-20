@@ -40,7 +40,6 @@ GenericEvent::GenericEvent(bool isMC)
   jpsis_lxy_ = new doubles;
   jpsis_l3D_ = new doubles;
   jpsis_vProb_ = new doubles;
-  jpsis_jetDR_ = new doubles;
   jpsis_cos_ = new doubles;
 
   jpsis_pt1_  = new doubles;
@@ -141,7 +140,6 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("jpsis_m"  , jpsis_m_  );
   tree_->Branch("jpsis_lxy", jpsis_lxy_);
   tree_->Branch("jpsis_l3D", jpsis_l3D_);
-  tree_->Branch("jpsis_jetDR", jpsis_jetDR_);
   tree_->Branch("jpsis_cos", jpsis_cos_);
   tree_->Branch("jpsis_vProb", jpsis_vProb_);
 
@@ -236,7 +234,6 @@ void GenericEvent::clear()
   jpsis_lxy_->clear();
   jpsis_l3D_->clear();
   jpsis_cos_->clear();
-  jpsis_jetDR_->clear();
   jpsis_vProb_->clear();
 
   jpsis_pt1_ ->clear();
@@ -332,7 +329,6 @@ void GenericEvent::setBranch(TTree* tree)
   tree_->SetBranchAddress("jpsis_m"  , &jpsis_m_  );
   tree_->SetBranchAddress("jpsis_lxy", &jpsis_lxy_);
   tree_->SetBranchAddress("jpsis_vProb", &jpsis_vProb_);
-  tree_->SetBranchAddress("jpsis_jetDR", &jpsis_jetDR_);
   tree_->SetBranchAddress("jpsis_cos", &jpsis_cos_);
   tree_->SetBranchAddress("jpsis_l3D", &jpsis_l3D_);
 

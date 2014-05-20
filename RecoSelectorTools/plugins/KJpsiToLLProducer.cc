@@ -201,7 +201,7 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
     //trackRef1 = GetTrackFromLepton(lep1);
 		//if ( trackRef1 == 0 ) continue;
     //if ( !isGoodTrack(trackRef1,pvPoint )) continue;
-		TransientTrack transTrack1 = GetTransientTrack(theB, lep1);
+		auto transTrack1 = GetTransientTrack(theB, lep1);
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
     double leptonMass = GetMass( lep1);
@@ -215,7 +215,7 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
 			//if( nullptr == trackRef2 ) continue;
       //if ( !isGoodTrack(trackRef2, pvPoint ) ) continue;
 		  	
-      TransientTrack transTrack2= GetTransientTrack(theB, lep2);
+      auto transTrack2= GetTransientTrack(theB, lep2);
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
 

@@ -65,8 +65,8 @@ public:
 
 private:
   bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
-  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon);
-  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron);
+  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon, bool& trig);
+  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron, bool& trig);
   double GetMass( pat::Muon muon);
   double GetMass( pat::Electron electron);
   /*
@@ -201,7 +201,11 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
     //trackRef1 = GetTrackFromLepton(lep1);
 		//if ( trackRef1 == 0 ) continue;
     //if ( !isGoodTrack(trackRef1,pvPoint )) continue;
-		auto transTrack1 = GetTransientTrack(theB, lep1);
+		bool trigger = false;
+		bool& trig = trigger;
+		auto transTrack1 = GetTransientTrack(theB, lep1, trig);
+		if ( trig ) continue;
+    //if (transTrack1.trackBaseRef().isNull() ) continue;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
     double leptonMass = GetMass( lep1);
@@ -214,8 +218,8 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
 			//trackRef2 = GetTrackFromLepton(lep2);
 			//if( nullptr == trackRef2 ) continue;
       //if ( !isGoodTrack(trackRef2, pvPoint ) ) continue;
-		  	
-      auto transTrack2= GetTransientTrack(theB, lep2);
+      auto transTrack2= GetTransientTrack(theB, lep2, trig);
+      if ( trig ) continue;
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
 
@@ -375,16 +379,19 @@ double KJpsiToLLProducer<Lepton>::GetMass( pat::Electron muon) {
 }
 
 template<typename Lepton>
-reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon) {
+reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon, bool& trig) {
 	reco::TrackRef track;
-  if ( muon.isGlobalMuon() ) track = muon.globalTrack();
+  if ( muon.isGlobalMuon() ) track = muon.globalTrack(); 
   else if ( muon.isTrackerMuon() ) track = muon.innerTrack();
-	//else return nullptr;
+	else { 
+			trig = true;
+			return reco::TransientTrack(); 
+	}
 	return theB->build( track) ; 
 
 }
 template<typename Lepton>
-reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron) {
+reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron,bool& trig) {
 	//if ( electron.gsfTrack().isNull() ) return nullptr;
 	return theB->build( electron.gsfTrack() );
 }

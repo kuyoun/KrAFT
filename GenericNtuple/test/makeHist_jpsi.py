@@ -15,13 +15,13 @@ def process(sample, mode, files, weightVar="puWeight"):
 
     cut_s1 = "z_m > 12 && lepton1_pt > 20 && lepton2_pt > 20 && lepton1_iso < 0.15 && lepton2_iso < 0.15 && z_Q == 0"
     cut_s2 = "abs(z_m-91.2) > 15"
-    cut_s3 = "@jets_pt.size() >= 1 && jets_pt>30"
-    cut_s4 = "@jpsis_pt.size() >= 1 && abs()&& met_pt > 30"
-    cut_s5 = "bjets_n >= 1"
+    cut_s3 = "@jets_pt.size() >= 1"# && jets_pt>30"
+    cut_s4 = "@jpsis_pt.size() >= 1 && abs(jpsis_eta1)< 2.4 && abs(jpsis_eta2)< 2.4 && jpsis_pt1 > 4 && jpsis_pt2 > 4 && jpsis_m>3.0 && jpsis_m<3.2 && jpsis_jetdR<0.5"
+    cut_s5 = "jpsis_vProb>0.001&& jpsis_l3D< 2"
 
     if mode == "MuEl":
         cut_s2 = "1"
-        cut_s4 = "1"
+        #cut_s4 = "1"
     if "TTJets_MassiveBinDECAY" in sample:
         cut_s1 += "&& decayMode < 1"
     elif "TTJets" == sample[:5] or "TTTo" == sample[:4] or "TT_" == sample[:3]:
@@ -35,19 +35,18 @@ def process(sample, mode, files, weightVar="puWeight"):
     ana.addH1("lepton1_pt", "lepton1_pt", "pt1;Leading lepton p_{T} (GeV/c);Events per 2GeV/c", 100, 0, 200)
     ana.addH1("lepton2_pt", "lepton2_pt", "pt2;2nd leading lepton p_{T} (GeV/c);Events per 2GeV/c", 100, 0, 200)
     ana.addH1("njet", "@jets_pt.size()", "njet;Jet multiplicity;Events", 10, 0, 10)
-    ana.addH1("nbjet", "bjets_n", "nbjet;B jet multiplicity;Events", 10, 0, 10)
-    ana.addH1("met", "met_pt", "met;Missing transverse momentum p_{T} (GeV/c);Events per 2GeV/c", 100, 0, 200)
-    ana.addH1("nVertex", "nVertex", "nVertex;Vertex multiplicity;Events", 60, 0, 60)
-    ana.addH1("vsumM", "ttbar_vsumM", "vsumM;M(l^{+}l^{-}j_{1}j_{2}MET) (GeV/c^{2});Events per 20GeV/c^{2}", 100, 0, 2000)
-    ana.addH1("lb1M", "lb1_m", "lb1M;M(l_{1}^{#pm}b) (GeV/c^{2});Events per 5GeV/c^{2}", 100, 0, 500)
-    ana.addH1("lb2M", "lb2_m", "lb2M;M(l_{2}^{#pm}b) (GeV/c^{2});Events per 5GeV/c^{2}", 100, 0, 500)
-    ana.addH1("st", "st", "st;S_{T} (GeV/c);Events per 50GeV/c^{2}", 100, 0, 5000)
+    ana.addH1("njpsi","@jpsis_pt.size()","Number of J/#psi;Number of J/#psi;Entries ",10,0,10);
+    ana.addH1("jpsi_mass","jpsis_m","J/#psi mass (GeV/c^{2})",100,2.8,3.4);
+    ana.addH1("jpsi_pt","jpsis_pt","J/#psi pT ; pT(GeV/c);Entires",100,0.0,100.0);
+    ana.addH1("l1jpsi_m","l1jpsi_m","Mass of Lepton + J/#psi; Mass(GeV/c^{2}); Entries",100,0.0,100.0);
+    ana.addH1("l2jpsi_m","l2jpsi_m","Mass of Lepton + J/#psi; Mass(GeV/c^{2}); Entries",100,0.0,100.0);
+    ana.addH1("event","nEvent","Event; Entries",100,0.0,100.0);
 
-    ana.addCutStep("S1", cut_s1, "zM,lepton1_pt,lepton2_pt,nVertex")
-    ana.addCutStep("S2", cut_s2, "zM,njet,nbjet,met,nVertex")
-    ana.addCutStep("S3", cut_s3, "njet,nbjet,met,nVertex")
-    ana.addCutStep("S4", cut_s4, "nbjet,met,nVertex,vsumM,lb1M,lb2M,st")
-    ana.addCutStep("S5", cut_s5, "nbjet,met,nVertex,vsumM,lb1M,lb2M,st")
+    ana.addCutStep("S1", cut_s1, "zM,lepton1_pt,lepton2_pt,jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m")
+    ana.addCutStep("S2", cut_s2, "zM,jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m")
+    ana.addCutStep("S3", cut_s3, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m")
+    ana.addCutStep("S4", cut_s4, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m")
+    ana.addCutStep("S5", cut_s5, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m")
 
     #ana.storeNtuple("S5")
 

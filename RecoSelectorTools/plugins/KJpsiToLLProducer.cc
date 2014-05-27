@@ -69,11 +69,6 @@ private:
   reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron, bool& trig);
   double GetMass( pat::Muon muon);
   double GetMass( pat::Electron electron);
-  /*
-  const pat::Muon* matchMuon(const reco::TrackRef trackRef,
-                             pat::MuonCollection::const_iterator muonsBegin,
-                             pat::MuonCollection::const_iterator muonsEnd);
-  */
 
 private:
   edm::InputTag leptonLabel_;
@@ -149,10 +144,6 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
   std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
   std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
 
-/*
-  edm::Handle<reco::BeamSpot> beamSpotHandle;
-  event.getByLabel("offlineBeamSpot", beamSpotHandle);
-*/
  
   edm::Handle< std::vector<reco::Vertex> > primaryVertex;
 	event.getByLabel("offlinePrimaryVertices",primaryVertex);
@@ -170,21 +161,10 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
   if ( nvertex != 0 ) {
       goodPV = goodOfflinePrimaryVertices->at(0);
   }
-
+	else return false; 
   const double pvx = goodPV.position().x();
   const double pvy = goodPV.position().y();
   const double pvz = goodPV.position().z();
-  //GlobalPoint pvPoint = GlobalPoint( pvx, pvy, pvz) ;
-
-
-  //edm::ESHandle<TrackerGeometry> trackerGeomHandle;
-  //eventSetup.get<TrackerDigiGeometryRecord>().get(trackerGeomHandle);
-  //trackerGeom_ = trackerGeomHandle.product();
-
-  //edm::ESHandle<GlobalTrackingGeometry> glbTkGeomHandle;
-  //eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
-  //glbTkGeom_ = glbTkGeomHandle.product();
-
   
   edm::Handle<std::vector<Lepton> > leptonHandle;
   event.getByLabel(leptonLabel_, leptonHandle);
@@ -197,15 +177,10 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
   {
     const Lepton& lep1 = leptonHandle->at(i);
     if ( lep1.charge() >= 0 ) continue;
-    //TrackRef trackRef1;
-    //trackRef1 = GetTrackFromLepton(lep1);
-		//if ( trackRef1 == 0 ) continue;
-    //if ( !isGoodTrack(trackRef1,pvPoint )) continue;
 		bool trigger = false;
 		bool& trig = trigger;
 		auto transTrack1 = GetTransientTrack(theB, lep1, trig);
 		if ( trig ) continue;
-    //if (transTrack1.trackBaseRef().isNull() ) continue;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
     double leptonMass = GetMass( lep1);
@@ -214,10 +189,6 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
     {
       const Lepton& lep2 = leptonHandle->at(j);
       if ( lep2.charge() <= 0 ) continue;
-      //TrackRef trackRef2;
-			//trackRef2 = GetTrackFromLepton(lep2);
-			//if( nullptr == trackRef2 ) continue;
-      //if ( !isGoodTrack(trackRef2, pvPoint ) ) continue;
       auto transTrack2= GetTransientTrack(theB, lep2, trig);
       if ( trig ) continue;
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
@@ -231,9 +202,10 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
       if ( dca < 0. || dca > cut_DCA_ ) continue;
       GlobalPoint cxPt = cApp.crossingPoint();
       if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue;
-
       TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
       TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
+      //TrajectoryStateClosestToPoint caState1 = GetTSCP(lep1, cxPt);
+      //TrajectoryStateClosestToPoint caState2 = GetTSCP(lep2, cxPt); 
       if ( !caState1.isValid() or !caState2.isValid() ) continue;
 
       const double rawEnergy = std::hypot(caState1.momentum().mag(), leptonMass)
@@ -355,20 +327,6 @@ bool KJpsiToLLProducer<Lepton>::filter(edm::Event& event, const edm::EventSetup&
 
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
-/*
-template<typename Lepton>
-reco::TrackRef KJpsiToLLProducer<Lepton>::GetTrackFromLepton( pat::Muon muon) {
-  if ( muon.isGlobalMuon() ) return muon.globalTrack();
-  else if ( muon.isTrackerMuon() ) return muon.innerTrack();
-	//else return nullptr;
-	reco::TrackRef track = TrackRef();
-	return track;
-}
-template<typename Lepton>
-reco::TrackRef KJpsiToLLProducer<Lepton>::GetTrackFromLepton( pat::Electron electron) {
-	return dynamic_cast<reco::TrackRef>(electron.gsfTrack());
-}
-*/
 template<typename Lepton>
 double KJpsiToLLProducer<Lepton>::GetMass( pat::Muon muon) {
 	return 0.1056583715; 
@@ -392,56 +350,9 @@ reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( edm::ESHandle
 }
 template<typename Lepton>
 reco::TransientTrack KJpsiToLLProducer<Lepton>::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron,bool& trig) {
-	//if ( electron.gsfTrack().isNull() ) return nullptr;
 	return theB->build( electron.gsfTrack() );
 }
  
-/*
-bool KJpsiToLLProducer::isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint ) const
-{
-  //Turn off quality cuts - we discovered muon tracks does not pass this selection
-  //const static reco::TrackBase::TrackQuality trackQual = reco::TrackBase::qualityByName("loose");
-  //if ( !track->quality(trackQual) ) return false;
-  //if ( track->normalizedChi2() >= cut_trackChi2_ ) return false;
-  //if ( track->numberOfValidHits() < cut_trackNHit_ ) return false;
-  if ( track->pt() < cut_minPt_ or abs(track->eta()) > cut_maxEta_ ) return false;
-  double pt_v = track->pt();
-  double& pt = pt_v;
-  FreeTrajectoryState initialFTS = trajectoryStateTransform::initialFreeState(*track, bField_);
-  PerigeeConversions pc;
-  PerigeeTrajectoryParameters ptp = pc.ftsToPerigeeParameters( initialFTS, pvPoint, pt );
-
-  TrajectoryStateClosestToPoint tscb = TrajectoryStateClosestToPoint( ptp, track->pt(), pvPoint, bField_) ;
-  if ( !tscb.isValid() ) return false;
-  //if ( tscb.transverseImpactParameter().significance() <= cut_trackSignif_ ) return false;
-
-  return true;
-}
-*/
-/*
-const pat::Muon* KJpsiToLLProducer::matchMuon(const reco::TrackRef trackRef,
-                                                  pat::MuonCollection::const_iterator muonsBegin,
-                                                  pat::MuonCollection::const_iterator muonsEnd)
-{
-  const double trackPt = trackRef->pt();
-  const double trackEta = trackRef->eta();
-  const double trackPhi = trackRef->phi();
-  for ( auto mu = muonsBegin; mu != muonsEnd; ++mu )
-  {
-    if ( !mu->isTrackerMuon() and !mu->isPFMuon() ) continue;
-    const reco::TrackRef muonTrackRef = mu->innerTrack();
-    if ( trackRef == muonTrackRef ) return &(*mu);
-
-    const double muonPt = mu->pt();
-    const double muonEta = mu->eta();
-    const double muonPhi = mu->phi();
-    if ( std::abs(muonPt-trackPt)/trackPt < muonDPt_ and
-         reco::deltaR(trackEta, muonEta, trackPhi, muonPhi) > muonDR_ ) return &(*mu);
-  }
-  return 0;
-
-}
-*/
 typedef KJpsiToLLProducer<pat::Muon> KJpsiMuMuProducer;
 typedef KJpsiToLLProducer<pat::Electron> KJpsiElElProducer;
 #include "FWCore/Framework/interface/MakerMacros.h"

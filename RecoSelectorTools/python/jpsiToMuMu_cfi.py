@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
-jpsiToMuMu = cms.EDFilter("KVertexToMuMuProducer",
-#jpsiToMuMu = cms.EDFilter("KJpsiMuMuProducer",
+#jpsiToMuMu = cms.EDFilter("KVertexToMuMuProducer",
+jpsiToMuMu = cms.EDFilter("KJpsiMuMuProducer",
     src = cms.InputTag("patMuonsPFlow"),
     track = cms.PSet(
         minPt = cms.double(1.0),
@@ -20,8 +20,8 @@ jpsiToMuMu = cms.EDFilter("KVertexToMuMuProducer",
     pdgId = cms.uint32(443),
     leg1Id = cms.uint32(13),
     leg2Id = cms.uint32(13),
-    rawMassMin = cms.double(2),
-    rawMassMax = cms.double(4),
+    rawMassMin = cms.double(0),
+    rawMassMax = cms.double(7),
     massMin = cms.double(2.80),
     massMax = cms.double(3.40),
     minNumber = cms.uint32(0),

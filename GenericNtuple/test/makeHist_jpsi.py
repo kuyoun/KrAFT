@@ -40,14 +40,14 @@ def process(sample, mode, files, weightVar="puWeight"):
     ana.addH1("jpsi_pt","jpsis_pt","J/#psi pT ; pT(GeV/c);Entires",28,0.0,140.0);
     ana.addH1("l1jpsi_m","l1jpsi_m","Mass of Lepton + J/#psi; Mass(GeV/c^{2}); Entries",100,0.0,100.0);
     ana.addH1("l2jpsi_m","l2jpsi_m","Mass of Lepton + J/#psi; Mass(GeV/c^{2}); Entries",100,0.0,100.0);
-    ana.addH1("jpsi_l3D","jpsi_l3D","Distribution of 3D distance; 3D distance PV-J/#psi [cm]; Events/(0.1cm)",22,0.0,2.2);
+    ana.addH1("L3D","jpsis_l3D","Distribution of 3D distance; 3D distance PV-J/#psi [cm]; Events/(0.1cm)",22,0.0,2.2);
     ana.addH1("event","nEvent","Event; Entries",100,0.0,100.0);
 
-    ana.addCutStep("S1", cut_s1, "zM,lepton1_pt,lepton2_pt,jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,jpsi_l3D")
-    ana.addCutStep("S2", cut_s2, "zM,jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,jpsi_l3D")
-    ana.addCutStep("S3", cut_s3, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,jpsi_l3D")
-    ana.addCutStep("S4", cut_s4, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,jpsi_l3D")
-    ana.addCutStep("S5", cut_s5, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,jpsi_l3D")
+    ana.addCutStep("S1", cut_s1, "zM,lepton1_pt,lepton2_pt,jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,L3D")
+    ana.addCutStep("S2", cut_s2, "zM,jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,L3D")
+    ana.addCutStep("S3", cut_s3, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,L3D")
+    ana.addCutStep("S4", cut_s4, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,L3D")
+    ana.addCutStep("S5", cut_s5, "jpsi_mass,jpsi_pt,l1jpsi_m,l2jpsi_m,L3D")
 
     #ana.storeNtuple("S5")
 

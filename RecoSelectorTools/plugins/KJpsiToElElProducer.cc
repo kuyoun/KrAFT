@@ -64,8 +64,6 @@ public:
   bool filter(edm::Event& event, const edm::EventSetup& eventSetup);
 
 private:
-  bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
-  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron, bool& trig);
   double GetMass( pat::Electron electron);
 
 private:
@@ -173,10 +171,7 @@ bool KJpsiToElElProducer::filter(edm::Event& event, const edm::EventSetup& event
   {
     const pat::Electron& lep1 = leptonHandle->at(i);
     if ( lep1.charge() >= 0 ) continue;
-		bool trigger = false;
-		bool& trig = trigger;
-		auto transTrack1 = GetTransientTrack(theB, lep1, trig);
-		if ( trig ) continue;
+		auto transTrack1 = theB->build( lep1.gsfTrack() ) ;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
     double leptonMass = GetMass( lep1);
@@ -185,12 +180,10 @@ bool KJpsiToElElProducer::filter(edm::Event& event, const edm::EventSetup& event
     {
       const pat::Electron& lep2 = leptonHandle->at(j);
       if ( lep2.charge() <= 0 ) continue;
-      auto transTrack2= GetTransientTrack(theB, lep2, trig);
-      if ( trig ) continue;
+      auto transTrack2 = theB->build( lep2.gsfTrack() );
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
 
-      /*
       // Measure distance between tracks at their closest approach
       ClosestApproachInRPhi cApp;
       cApp.calculate(ipState1, ipState2);
@@ -199,6 +192,7 @@ bool KJpsiToElElProducer::filter(edm::Event& event, const edm::EventSetup& event
       if ( dca < 0. || dca > cut_DCA_ ) continue;
       GlobalPoint cxPt = cApp.crossingPoint();
       if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue;
+			/*
       TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
       TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
       //TrajectoryStateClosestToPoint caState1 = GetTSCP(lep1, cxPt);
@@ -330,19 +324,6 @@ bool KJpsiToElElProducer::filter(edm::Event& event, const edm::EventSetup& event
 double KJpsiToElElProducer::GetMass( pat::Electron electron) {
 	return 0.1056583715; 
 }
-/*
-reco::TransientTrack KJpsiToElElProducer::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron, bool& trig) {
-	reco::TrackRef track;
-  if ( muon.isGlobalMuon() ) track = muon.globalTrack(); 
-  else if ( muon.isTrackerMuon() ) track = muon.innerTrack();
-	else { 
-			trig = true;
-			return reco::TransientTrack(); 
-	}
-	return theB->build( track) ; 
-
-}
-*/ 
 typedef KJpsiToElElProducer KJpsiElElProducer;
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(KJpsiElElProducer);

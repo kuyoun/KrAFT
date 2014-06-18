@@ -16,5 +16,10 @@ elif 'uos.ac.kr' in hostName:
         '/store/user/jhgoh/MuEG/Run2012A-22Jan2013-v1-KCMSSkim20131027_1/4407ef23eed415918ae815f01ecb7627/skim_1_1_2W6.root',
     ]
 
-process.maxEvents.input = 100
+process.maxEvents.input = -1
+
+process.pMuEl.remove(process.MuEl)
+index = process.pMuEl.index(process.jpsiToMuMu)
+process.pMuEl.insert(index+1, process.jpsiToElEl)
+process.pMuEl.insert(index+2, process.MuEl)
 

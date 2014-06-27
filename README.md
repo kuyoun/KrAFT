@@ -17,4 +17,4 @@ scram setup lhapdffull # Necessary to speed up PDF weight calculation
 scram b clean
 scram b -j 20
 git remote add geonmo-kraft git@github.com:geonmo/KrAFT.git
-git pull geonmo-kraft jpsi-update2
+git pull geonmo-kraft jpsi_update2

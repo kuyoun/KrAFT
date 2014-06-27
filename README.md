@@ -2,6 +2,7 @@ KrAFT
 =====
 
 Korea CMS Analysis Framwork for Top quark physics
+```bash
 cmsrel CMSSW_5_3_18
 cd CMSSW_5_3_18/src
 cmsenv
@@ -18,3 +19,4 @@ scram b clean
 scram b -j 20
 git remote add geonmo-kraft git@github.com:geonmo/KrAFT.git
 git pull geonmo-kraft jpsi_update2
+```

@@ -18,12 +18,12 @@ event.eventCounters = ["nEventsTotal", "nEventsClean", "nEventsPAT",]
 MuMu = event.clone()
 ElEl = event.clone()
 MuEl = event.clone()
+
 MuMu.muon.minNumber = 2
-
 ElEl.electron.minNumber = 2
-
 MuEl.muon.minNumber = 1
 MuEl.electron.minNumber = 1
+
 MuJets = event.clone()
 MuJets.muon.minNumber = 1
 MuJets.jetMET.minNumber = 3
@@ -70,7 +70,6 @@ ntupleSequenceMuJets = cms.Sequence(
   + nEventsNtupleMuJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu #+ jpsiToElEl
   * MuJets
 )
 
@@ -79,7 +78,6 @@ ntupleSequenceElJets = cms.Sequence(
   + nEventsNtupleElJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu #+ jpsiToElEl
   * ElJets
 )
 

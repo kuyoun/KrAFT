@@ -4,6 +4,8 @@ runOnMC = False
 from KrAFT.Configuration.customise_cff import *
 process = initialise(decayMode="ElEl", runOnMC=runOnMC)
 addNtupleStep(process, runOnMC=runOnMC)
+process.event.muon.src=cms.InputTag("goodMuonsForJpsi")
+process.event.muon.src=cms.InputTag("goodElectronsForJpsi")
 
 import os
 hostName = os.environ['HOSTNAME']
@@ -18,7 +20,9 @@ elif 'uos.ac.kr' in hostName:
 
 process.maxEvents.input = -1
 process.pElEl.remove(process.ElEl)
+"""
 index = process.pElEl.index(process.jpsiToMuMu)
 process.pElEl.insert(index+1, process.jpsiToElEl)
 process.pElEl.insert(index+2, process.ElEl)
+"""
 

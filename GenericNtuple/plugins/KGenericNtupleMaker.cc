@@ -425,13 +425,6 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(0));
     const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(1));
 
-    TLorentzVector mu1(muon1->px(), muon1->py(), muon1->pz(), muon1->energy());
-    TLorentzVector mu2(muon2->px(), muon2->py(), muon2->pz(), muon2->energy());
-    TLorentzVector sumMu = mu1+mu2;
-    TVector3 sumBoost( sumMu.BoostVector());
-    mu1.Boost(-1*sumBoost);
-    mu2.Boost(-1*sumBoost);
-
     fevent_->jpsis_pt_ ->push_back(jpsiCand.pt()  );
     fevent_->jpsis_eta_->push_back(jpsiCand.eta() );
     fevent_->jpsis_phi_->push_back(jpsiCand.phi() );
@@ -439,7 +432,6 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->jpsis_lxy_->push_back(jpsiLxyHandle->at(i));
     fevent_->jpsis_l3D_->push_back(jpsiL3DHandle->at(i));
     fevent_->jpsis_vProb_->push_back(TMath::Prob(  jpsiCand.vertexChi2(),(int)jpsiCand.vertexNdof()));
-    fevent_->jpsis_cos_->push_back( TMath::Cos( mu1.Angle(mu2.Vect() )) );
 
     fevent_->jpsis_pt1_ ->push_back(muon1->pt() );
     fevent_->jpsis_eta1_->push_back(muon1->eta());

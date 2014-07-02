@@ -55,7 +55,6 @@ public:
   double metJERDn_pt_, metJERDn_phi_;
 
   doublesP jpsis_pt_, jpsis_eta_, jpsis_phi_, jpsis_m_;
-  doublesP jpsis_cos_;
   doublesP jpsis_lxy_,jpsis_l3D_, jpsis_vProb_;
   doublesP jpsis_pt1_, jpsis_eta1_, jpsis_phi1_;
   doublesP jpsis_pt2_, jpsis_eta2_, jpsis_phi2_;

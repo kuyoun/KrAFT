@@ -5,6 +5,8 @@ from KrAFT.GeneratorTools.pdfWeight_cff import *
 from KrAFT.RecoSelectorTools.leptonSelector_cfi import *
 from KrAFT.RecoSelectorTools.jetSelector_cfi import *
 from KrAFT.RecoSelectorTools.jpsiToMuMu_cfi import *
+from KrAFT.RecoSelectorTools.jpsiToElEl_cfi import *
+from KrAFT.JpsiAnalysis.isoleptonSelector_cfi import *
 
 TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
@@ -16,6 +18,7 @@ event.eventCounters = ["nEventsTotal", "nEventsClean", "nEventsPAT",]
 MuMu = event.clone()
 ElEl = event.clone()
 MuEl = event.clone()
+
 MuMu.muon.minNumber = 2
 ElEl.electron.minNumber = 2
 MuEl.muon.minNumber = 1
@@ -39,7 +42,7 @@ ntupleSequenceElEl = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleElEl
   + jetUnc
-  + goodMuons + goodElectrons * goodJets
+  + goodMuons*goodMuonsForJpsi + goodElectrons*goodElectronsForJpsi * goodJets
   + jpsiToMuMu
   * ElEl
 )
@@ -48,7 +51,7 @@ ntupleSequenceMuMu = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleMuMu
   + jetUnc
-  + goodMuons + goodElectrons * goodJets
+  + goodMuons*goodMuonsForJpsi + goodElectrons*goodElectronsForJpsi * goodJets
   + jpsiToMuMu
   * MuMu
 )
@@ -57,7 +60,7 @@ ntupleSequenceMuEl = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleMuEl
   + jetUnc
-  + goodMuons + goodElectrons * goodJets
+  + goodMuons*goodMuonsForJpsi + goodElectrons*goodElectronsForJpsi * goodJets
   + jpsiToMuMu
   * MuEl
 )
@@ -67,7 +70,6 @@ ntupleSequenceMuJets = cms.Sequence(
   + nEventsNtupleMuJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
   * MuJets
 )
 
@@ -76,7 +78,6 @@ ntupleSequenceElJets = cms.Sequence(
   + nEventsNtupleElJets
   + jetUnc
   + goodMuons + goodElectrons * goodJets
-  + jpsiToMuMu
   * ElJets
 )
 

@@ -38,13 +38,18 @@ GenericEvent::GenericEvent(bool isMC)
   jpsis_phi_ = new doubles;
   jpsis_m_   = new doubles;
   jpsis_lxy_ = new doubles;
+  jpsis_l3D_ = new doubles;
+  jpsis_vProb_ = new doubles;
 
   jpsis_pt1_  = new doubles;
   jpsis_eta1_ = new doubles;
   jpsis_phi1_ = new doubles;
+
   jpsis_pt2_  = new doubles;
   jpsis_eta2_ = new doubles;
   jpsis_phi2_ = new doubles;
+
+  jpsis_vProb_ = new doubles;
 
   jpsis_nPixHits1_ = new ints;
   jpsis_nPixHits2_ = new ints;
@@ -131,10 +136,13 @@ void GenericEvent::book(TTree* tree)
   tree_->Branch("jpsis_phi", jpsis_phi_);
   tree_->Branch("jpsis_m"  , jpsis_m_  );
   tree_->Branch("jpsis_lxy", jpsis_lxy_);
+  tree_->Branch("jpsis_l3D", jpsis_l3D_);
+  tree_->Branch("jpsis_vProb", jpsis_vProb_);
 
   tree_->Branch("jpsis_pt1" , jpsis_pt1_ );
   tree_->Branch("jpsis_eta1", jpsis_eta1_);
   tree_->Branch("jpsis_phi1", jpsis_phi1_);
+
   tree_->Branch("jpsis_pt2" , jpsis_pt2_ );
   tree_->Branch("jpsis_eta2", jpsis_eta2_);
   tree_->Branch("jpsis_phi2", jpsis_phi2_);
@@ -218,10 +226,13 @@ void GenericEvent::clear()
   jpsis_phi_->clear();
   jpsis_m_->clear();
   jpsis_lxy_->clear();
+  jpsis_l3D_->clear();
+  jpsis_vProb_->clear();
 
   jpsis_pt1_ ->clear();
   jpsis_eta1_->clear();
   jpsis_phi1_->clear();
+
   jpsis_pt2_ ->clear();
   jpsis_eta2_->clear();
   jpsis_phi2_->clear();
@@ -308,10 +319,14 @@ void GenericEvent::setBranch(TTree* tree)
   tree_->SetBranchAddress("jpsis_phi", &jpsis_phi_);
   tree_->SetBranchAddress("jpsis_m"  , &jpsis_m_  );
   tree_->SetBranchAddress("jpsis_lxy", &jpsis_lxy_);
+  tree_->SetBranchAddress("jpsis_vProb", &jpsis_vProb_);
+  tree_->SetBranchAddress("jpsis_l3D", &jpsis_l3D_);
+
 
   tree_->SetBranchAddress("jpsis_pt1" , &jpsis_pt1_ );
   tree_->SetBranchAddress("jpsis_eta1", &jpsis_eta1_);
   tree_->SetBranchAddress("jpsis_phi1", &jpsis_phi1_);
+
   tree_->SetBranchAddress("jpsis_pt2" , &jpsis_pt2_ );
   tree_->SetBranchAddress("jpsis_eta2", &jpsis_eta2_);
   tree_->SetBranchAddress("jpsis_phi2", &jpsis_phi2_);
@@ -393,10 +408,13 @@ GenericEvent::~GenericEvent()
   delete jpsis_phi_;
   delete jpsis_m_  ;
   delete jpsis_lxy_;
+  delete jpsis_l3D_;
+  delete jpsis_vProb_;
 
   delete jpsis_pt1_ ;
   delete jpsis_eta1_;
   delete jpsis_phi1_;
+
   delete jpsis_pt2_ ;
   delete jpsis_eta2_;
   delete jpsis_phi2_;

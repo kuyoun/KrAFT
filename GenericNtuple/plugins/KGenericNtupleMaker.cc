@@ -34,14 +34,14 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <TLorentzVector.h>
 
 using namespace std;
-
 class KGenericNtupleMaker : public edm::EDAnalyzer
 {
 public:
   KGenericNtupleMaker(const edm::ParameterSet& pset);
-  ~KGenericNtupleMaker();
+  virtual ~KGenericNtupleMaker();
 
   void endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup);
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup);
@@ -160,7 +160,6 @@ void KGenericNtupleMaker::endLuminosityBlock(const edm::LuminosityBlock& lumi, c
     hEventCounter_->Fill(i+1, eventCounterHandle->value);
   }
 }
-
 void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
   using namespace std;
@@ -173,7 +172,6 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   event.getByLabel(vertexLabel_, vertexHandle);
   const reco::Vertex& pv = vertexHandle->at(0);
 
-//  fevent_->nVertex_ = vertexHandle->size();
   fevent_->nVertex_ = 0;
   for ( int i=0, n=vertexHandle->size(); i<n; ++i )
   {
@@ -253,7 +251,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     else if ( e.isGsfCtfChargeConsistent() ) qConsistent = 1;
     fevent_->electrons_qConsistent_->push_back(qConsistent);
   }
-  if ( fevent_->electrons_pt_->size() < electronMinNumber_ ) return;
+  if ( fevent_->electrons_pt_->size() < electronMinNumber_ ) return; 
 
   edm::Handle<Muons> muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
@@ -278,7 +276,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->muons_type_->push_back(muType  );
     fevent_->muons_relIso_->push_back(mu.userIso(1)); // dBeta corrected isolation
   }
-  if ( fevent_->muons_pt_->size() < muonMinNumber_ ) return;
+  if ( fevent_->muons_pt_->size() < muonMinNumber_ )  return;
 
   edm::Handle<METs> metHandle, metJESUpHandle, metJESDnHandle;
   edm::Handle<METs> metJERHandle, metJERUpHandle, metJERDnHandle;
@@ -418,21 +416,27 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   edm::Handle<std::vector<reco::VertexCompositeCandidate> > jpsiHandle;
   event.getByLabel(jpsiLabel_, jpsiHandle);
   edm::Handle<doubles> jpsiLxyHandle;
+  edm::Handle<doubles> jpsiL3DHandle;
   event.getByLabel(edm::InputTag(jpsiLabel_.label(), "lxy"), jpsiLxyHandle);
+  event.getByLabel(edm::InputTag(jpsiLabel_.label(), "l3D"), jpsiL3DHandle);
   for ( int i=0, n=jpsiHandle->size(); i<n; ++i )
   {
     const reco::VertexCompositeCandidate& jpsiCand = jpsiHandle->at(i);
     const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(0));
     const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(1));
+
     fevent_->jpsis_pt_ ->push_back(jpsiCand.pt()  );
     fevent_->jpsis_eta_->push_back(jpsiCand.eta() );
     fevent_->jpsis_phi_->push_back(jpsiCand.phi() );
     fevent_->jpsis_m_  ->push_back(jpsiCand.mass());
     fevent_->jpsis_lxy_->push_back(jpsiLxyHandle->at(i));
+    fevent_->jpsis_l3D_->push_back(jpsiL3DHandle->at(i));
+    fevent_->jpsis_vProb_->push_back(TMath::Prob(  jpsiCand.vertexChi2(),(int)jpsiCand.vertexNdof()));
 
     fevent_->jpsis_pt1_ ->push_back(muon1->pt() );
     fevent_->jpsis_eta1_->push_back(muon1->eta());
     fevent_->jpsis_phi1_->push_back(muon1->phi());
+
     fevent_->jpsis_pt2_ ->push_back(muon2->pt() );
     fevent_->jpsis_eta2_->push_back(muon2->eta());
     fevent_->jpsis_phi2_->push_back(muon2->phi());

@@ -238,11 +238,16 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
 bool PseudoTopObjectProducer::isFromHadron(const reco::Candidate& p, const int depth) const
 {
   if ( depth <= 0 ) return false;
+
   for ( int i=0, n=p.numberOfMothers(); i<n; ++i )
   {
     const reco::Candidate& mother = *p.mother(i);
-    const int absPdgId = abs(mother.pdgId());
-    if ( absPdgId > 100 or isFromHadron(mother, depth-1) ) return true;
+    const int pdgId = abs(mother.pdgId());
+
+    if ( pdgId == 23 or pdgId == 24 or pdgId == 35 ) return false;
+    else if ( pdgId == 22 ) return true;
+    else if ( pdgId > 100 ) return true;
+    else if ( isFromHadron(mother, depth-1) ) return true;
   }
   return false;
 }

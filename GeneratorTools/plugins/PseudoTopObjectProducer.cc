@@ -139,20 +139,22 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
     const std::vector<fastjet::PseudoJet> fjConstituents = fastjet::sorted_by_pt(fjJet.constituents());
     // Convert to CandidatePtr
     std::vector<reco::CandidatePtr> constituents;
-    bool hasLepton = false;
+    int pdgId = 0;
     for ( size_t j=0, m=fjConstituents.size(); j<m; ++j )
     {
       const size_t index = fjConstituents[j].user_index();
       reco::CandidatePtr cand = srcHandle->ptrAt(index);
       const int absPdgId = abs(cand->pdgId());
-      if ( absPdgId == 11 or absPdgId == 13 ) hasLepton = true;
+      if ( absPdgId == 11 or absPdgId == 13 ) pdgId = cand->pdgId();
       constituents.push_back(cand);
     }
-    if ( !hasLepton ) continue;
+    if ( pdgId == 0 ) continue;
 
     const reco::Particle::LorentzVector jetP4(fjJet.px(), fjJet.py(), fjJet.pz(), fjJet.E());
     reco::GenJet lepJet;
     reco::writeSpecific(lepJet, jetP4, genVertex_, constituents, eventSetup);
+
+    lepJet.setPdgId(pdgId);
 
     const double jetArea = fjJet.has_area() ? fjJet.area() : 0;
     lepJet.setJetArea(jetArea);
@@ -216,6 +218,7 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
       const size_t index = fjConstituents[j].user_index();
       if ( bHadronIdxs.find(index) != bHadronIdxs.end() ) hasBHadron = true;
       reco::CandidatePtr cand = srcHandle->ptrAt(index);
+      constituents.push_back(cand);
     }
     
     const reco::Particle::LorentzVector jetP4(fjJet.px(), fjJet.py(), fjJet.pz(), fjJet.E());
@@ -245,7 +248,7 @@ bool PseudoTopObjectProducer::isFromHadron(const reco::Candidate& p, const int d
     const int pdgId = abs(mother.pdgId());
 
     if ( pdgId == 23 or pdgId == 24 or pdgId == 35 ) return false;
-    else if ( pdgId == 22 ) return true;
+    else if ( pdgId == 22 or pdgId < 6 ) return true;
     else if ( pdgId > 100 ) return true;
     else if ( isFromHadron(mother, depth-1) ) return true;
   }

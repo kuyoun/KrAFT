@@ -10,6 +10,8 @@
 #include "DataFormats/Math/interface/deltaR.h"
 #include "KrAFT/GeneratorTools/interface/Types.h"
 
+#include "CommonTools/Utils/interface/PtComparator.h"
+
 #include "RecoJets/JetProducers/interface/JetSpecific.h"
 #include "fastjet/JetDefinition.hh"
 #include "fastjet/ClusterSequence.hh"
@@ -104,6 +106,9 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
       if ( isBHadron(&p) ) bHadronIdxs.insert(i);
     }
   }
+
+  // Sort neutrinos by pT.
+  std::sort(neutrinos->begin(), neutrinos->end(), GreaterByPt<reco::GenParticle>());
 
   // Make dressed leptons with anti-kt(0.1) algorithm
   //// Prepare input particle list

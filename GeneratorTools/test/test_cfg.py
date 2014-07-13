@@ -11,8 +11,11 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 10000
 
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
-process.source.fileNames.append("/store/cmst3/user/cmgtools/CMG/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM/V5_B/PAT_CMG_V5_10_0/patTuple_0.root")
-#process.source.fileNames.append("file:///tmp/jhgoh/patTuple_0.root")
+process.source.fileNames = [
+    '/store/relval/CMSSW_5_3_11/RelValTTbar/GEN-SIM-RECO/START53_LV3_Alca7TeV_14Jun2013-v1/00000/905DC97D-F3D4-E211-9B9E-003048F1C9CA.root',
+    '/store/relval/CMSSW_5_3_11/RelValTTbar/GEN-SIM-RECO/START53_LV3_Alca7TeV_14Jun2013-v1/00000/A4086D2F-F3D4-E211-A474-003048F1C5FA.root',
+    '/store/relval/CMSSW_5_3_11/RelValTTbar/GEN-SIM-RECO/START53_LV3_Alca7TeV_14Jun2013-v1/00000/CA8F250D-F1D4-E211-895D-001E67398B2E.root',
+]
 
 process.load("KrAFT.GeneratorTools.genJetAssociation_cff")
 process.load("KrAFT.GeneratorTools.lumiWeight_cff")

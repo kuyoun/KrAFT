@@ -68,7 +68,6 @@ PseudoTopObjectProducer::PseudoTopObjectProducer(const edm::ParameterSet& pset)
 
 void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  //edm::Handle<reco::GenParticleCollection> srcHandle;
   edm::Handle<edm::View<reco::GenParticle> > srcHandle;
   event.getByLabel(srcLabel_, srcHandle);
 

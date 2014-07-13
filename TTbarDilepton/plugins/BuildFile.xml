@@ -1,0 +1,27 @@
+<use name="FWCore/Framework" />
+<use name="FWCore/PluginManager" />
+<use name="FWCore/ParameterSet" />
+
+<use name="DataFormats/TrackReco" />
+<use name="DataFormats/Candidate" />
+<use name="DataFormats/PatCandidates" />
+<use name="PhysicsTools/CandUtils" />
+<use name="PhysicsTools/PatUtils" />
+<use name="PhysicsTools/UtilAlgos" />
+<use name="PhysicsTools/RecoUtils" />
+<use name="PhysicsTools/Utilities" />
+<use name="SimDataFormats/PileupSummaryInfo" />
+<use name="RecoVertex/VertexTools" />
+<use name="RecoJets/JetProducers" />
+<use name="CommonTools/UtilAlgos" />
+
+<use name="KrAFT/GeneratorTools" />
+
+<use name="root" />
+<use name="lhapdf" />
+<use name="boost" />
+
+<library file="*.cc" name="KrAFTTTbarDileptonPlugins">
+  <flags EDM_PLUGIN="1" />
+</library>
+

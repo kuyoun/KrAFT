@@ -207,12 +207,13 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
     edm::Handle<std::vector<double> > pdfWeightsHandle;
     event.getByLabel(pdfWeightsLabel_, pdfWeightsHandle);
-    std::copy(pdfWeightsHandle->begin(), pdfWeightsHandle->end(), std::back_inserter(*fevent_->pdfWeights_));
+    std::copy(pdfWeightsHandle->begin(), pdfWeightsHandle->end(), std::back_inserter(*fevent_->fVars_["pdfWeights"]));
   }
 
+  size_t nElectron = 0;
   edm::Handle<Electrons> electronHandle;
   event.getByLabel(electronLabel_, electronHandle);
-  for ( int i=0, n=electronHandle->size(); i<n; ++i )
+  for ( size_t i=0, n=electronHandle->size(); i<n; ++i )
   {
     const pat::Electron& e = electronHandle->at(i);
     if ( e.pt() < 10 or std::abs(e.eta()) > 2.5 ) continue;
@@ -236,28 +237,31 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
       if ( dxy < 0.04 ) eType += 100;
     }
 
-    fevent_->electrons_pt_    ->push_back(e.pt()    );
-    fevent_->electrons_eta_   ->push_back(e.eta()   );
-    fevent_->electrons_phi_   ->push_back(e.phi()   );
-    fevent_->electrons_m_     ->push_back(e.mass()  );
-    fevent_->electrons_Q_     ->push_back(e.charge());
-    fevent_->electrons_type_  ->push_back(eType     );
-    fevent_->electrons_relIso_->push_back(e.userIso(2)); // rho corrected isolation
+    fevent_->append("electrons_pt"    , e.pt()    );
+    fevent_->append("electrons_eta"   , e.eta()   );
+    fevent_->append("electrons_phi"   , e.phi()   );
+    fevent_->append("electrons_m"     , e.mass()  );
+    fevent_->append("electrons_Q"     , e.charge());
+    fevent_->append("electrons_type"  , eType     );
+    fevent_->append("electrons_relIso", e.userIso(2)); // rho corrected isolation
 
-    fevent_->electrons_mva_->push_back(mva);
-    fevent_->electrons_scEta_->push_back(scEta);
+    fevent_->append("electrons_mva"  , mva  );
+    fevent_->append("electrons_scEta", scEta);
 
     int qConsistent = 0;
     if ( e.isGsfCtfScPixChargeConsistent() ) qConsistent = 3;
     else if ( e.isGsfScPixChargeConsistent() ) qConsistent = 2;
     else if ( e.isGsfCtfChargeConsistent() ) qConsistent = 1;
-    fevent_->electrons_qConsistent_->push_back(qConsistent);
-  }
-  if ( fevent_->electrons_pt_->size() < electronMinNumber_ ) return;
+    fevent_->append("electrons_qConsistent", qConsistent);
 
+    ++nElectron;
+  }
+  if ( nElectron < electronMinNumber_ ) return;
+
+  size_t nMuon = 0;
   edm::Handle<Muons> muonHandle;
   event.getByLabel(muonLabel_, muonHandle);
-  for ( int i=0, n=muonHandle->size(); i<n; ++i )
+  for ( size_t i=0, n=muonHandle->size(); i<n; ++i )
   {
     const pat::Muon& mu = muonHandle->at(i);
     if ( mu.pt() < 10 or std::abs(mu.eta()) > 2.5 ) continue;
@@ -270,15 +274,17 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     if ( muon::isTightMuon(mu, pv) ) muType += 1000;
     if ( muon::isHighPtMuon(mu, pv, reco::improvedTuneP) ) muType += 10000;
 
-    fevent_->muons_pt_->push_back(mu.pt()   );
-    fevent_->muons_eta_->push_back(mu.eta() );
-    fevent_->muons_phi_->push_back(mu.phi() );
-    fevent_->muons_m_->push_back(mu.mass()  );
-    fevent_->muons_Q_->push_back(mu.charge());
-    fevent_->muons_type_->push_back(muType  );
-    fevent_->muons_relIso_->push_back(mu.userIso(1)); // dBeta corrected isolation
+    fevent_->append("muons_pt"    , mu.pt()    );
+    fevent_->append("muons_eta"   , mu.eta()   );
+    fevent_->append("muons_phi"   , mu.phi()   );
+    fevent_->append("muons_m"     , mu.mass()  );
+    fevent_->append("muons_Q"     , mu.charge());
+    fevent_->append("muons_type"  , muType     );
+    fevent_->append("muons_relIso", mu.userIso(1)); // dBeta corrected isolation
+
+    ++nMuon;
   }
-  if ( fevent_->muons_pt_->size() < muonMinNumber_ ) return;
+  if ( nMuon < muonMinNumber_ ) return;
 
   edm::Handle<METs> metHandle, metJESUpHandle, metJESDnHandle;
   edm::Handle<METs> metJERHandle, metJERUpHandle, metJERDnHandle;
@@ -342,22 +348,22 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
       //const int charge = p.charge();
       const int mother = findMother(p, genParticlesToStore);
 
-      fevent_->genParticles_pt_ ->push_back(p->pt()  );
-      fevent_->genParticles_eta_->push_back(p->eta() );
-      fevent_->genParticles_phi_->push_back(p->phi() );
-      fevent_->genParticles_m_  ->push_back(p->mass());
-      fevent_->genParticles_pdgId_->push_back(p->pdgId());
-      fevent_->genParticles_mother_->push_back(mother);
+      fevent_->append("genParticles_pt"    , p->pt()   );
+      fevent_->append("genParticles_eta"   , p->eta()  );
+      fevent_->append("genParticles_phi"   , p->phi()  );
+      fevent_->append("genParticles_m"     , p->mass() );
+      fevent_->append("genParticles_pdgId" , p->pdgId());
+      fevent_->append("genParticles_mother", mother    );
     }
 
     for ( int i=0, n=genJetHandle->size(); i<n; ++i )
     {
       const reco::GenJet& p = genJetHandle->at(i);
       if ( p.pt() < 20 or std::abs(p.eta()) > 2.5 ) continue;
-      fevent_->genJets_pt_ ->push_back(p.pt()  );
-      fevent_->genJets_eta_->push_back(p.eta() );
-      fevent_->genJets_phi_->push_back(p.phi() );
-      fevent_->genJets_m_  ->push_back(p.mass());
+      fevent_->append("genJets_pt" , p.pt()  );
+      fevent_->append("genJets_eta", p.eta() );
+      fevent_->append("genJets_phi", p.phi() );
+      fevent_->append("genJets_m"  , p.mass());
     }
   }
 
@@ -375,8 +381,9 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     event.getByLabel(edm::InputTag(uncLabel_.label(), "resUp"), fJERUpHandle);
     event.getByLabel(edm::InputTag(uncLabel_.label(), "resDn"), fJERDnHandle);
   }
+  size_t nJet = 0;
   double fJER = 1, fJERUp = 1, fJERDn = 1;
-  for ( int i=0, n=jetHandle->size(); i<n; ++i )
+  for ( size_t i=0, n=jetHandle->size(); i<n; ++i )
   {
     edm::Ref<Jets> jetRef = jetHandle->at(i);
     const pat::Jet& jet = *jetRef;
@@ -385,34 +392,34 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
 
     const double fJESUp = (*fJESUpHandle)[jetRef];
     const double fJESDn = (*fJESDnHandle)[jetRef];
-    double maxPtScale = max(max(1., fJESUp), fJESDn);
+    double minPtScale = min(min(1., fJESUp), fJESDn);
     if ( isMC_ )
     {
       fJER   = (*fJERHandle)[jetRef];
       fJERUp = (*fJERUpHandle)[jetRef];
       fJERDn = (*fJERDnHandle)[jetRef];
-      maxPtScale = max(max(max(fJER, fJERUp), fJERDn), maxPtScale);
+      minPtScale = min(min(min(fJER, fJERUp), fJERDn), minPtScale);
     }
     const double jetPt = jet.pt();
-    if ( jetPt*maxPtScale < 30 ) continue;
+    if ( jetPt*minPtScale < 30 ) continue;
 
-    fevent_->jets_pt_ ->push_back(jetPt);
-    fevent_->jets_eta_->push_back(jetEta);
-    fevent_->jets_phi_->push_back(jet.phi());
-    fevent_->jets_m_  ->push_back(jet.mass());
-    fevent_->jets_bTag_->push_back(jet.bDiscriminator(bTagType_.c_str()));
-    fevent_->jets_partonflavor_->push_back(jet.partonFlavour());
+    fevent_->append("jets_pt"  , jetPt     );
+    fevent_->append("jets_eta" , jetEta    );
+    fevent_->append("jets_phi" , jet.phi() );
+    fevent_->append("jets_m"   , jet.mass());
+    fevent_->append("jets_bTag", jet.bDiscriminator(bTagType_.c_str()));
 
-    fevent_->jets_JESUp_->push_back(fJESUp);
-    fevent_->jets_JESDn_->push_back(fJESDn);
+    fevent_->append("jets_JESUp", fJESUp);
+    fevent_->append("jets_JESDn", fJESDn);
     if ( isMC_ )
     {
-      fevent_->jets_JER_->push_back(fJER);
-      fevent_->jets_JERUp_->push_back(fJERUp);
-      fevent_->jets_JERDn_->push_back(fJERDn);
+      fevent_->append("jets_partonflavor", jet.partonFlavour());
+      fevent_->append("jets_JER"  , fJER  );
+      fevent_->append("jets_JERUp", fJERUp);
+      fevent_->append("jets_JERDn", fJERDn);
     }
   }
-  if ( fevent_->jets_pt_->size() < jetMinNumber_ ) return;
+  if ( nJet < jetMinNumber_ ) return;
 
   // Do Jpsi
   edm::Handle<std::vector<reco::VertexCompositeCandidate> > jpsiHandle;
@@ -424,23 +431,23 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     const reco::VertexCompositeCandidate& jpsiCand = jpsiHandle->at(i);
     const pat::Muon* muon1 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(0));
     const pat::Muon* muon2 = dynamic_cast<const pat::Muon*>(jpsiCand.daughter(1));
-    fevent_->jpsis_pt_ ->push_back(jpsiCand.pt()  );
-    fevent_->jpsis_eta_->push_back(jpsiCand.eta() );
-    fevent_->jpsis_phi_->push_back(jpsiCand.phi() );
-    fevent_->jpsis_m_  ->push_back(jpsiCand.mass());
-    fevent_->jpsis_lxy_->push_back(jpsiLxyHandle->at(i));
+    fevent_->append("jpsis_pt" , jpsiCand.pt()  );
+    fevent_->append("jpsis_eta", jpsiCand.eta() );
+    fevent_->append("jpsis_phi", jpsiCand.phi() );
+    fevent_->append("jpsis_m"  , jpsiCand.mass());
+    fevent_->append("jpsis_lxy", jpsiLxyHandle->at(i));
 
-    fevent_->jpsis_pt1_ ->push_back(muon1->pt() );
-    fevent_->jpsis_eta1_->push_back(muon1->eta());
-    fevent_->jpsis_phi1_->push_back(muon1->phi());
-    fevent_->jpsis_pt2_ ->push_back(muon2->pt() );
-    fevent_->jpsis_eta2_->push_back(muon2->eta());
-    fevent_->jpsis_phi2_->push_back(muon2->phi());
+    fevent_->append("jpsis_pt1" , muon1->pt() );
+    fevent_->append("jpsis_eta1", muon1->eta());
+    fevent_->append("jpsis_phi1", muon1->phi());
+    fevent_->append("jpsis_pt2" , muon2->pt() );
+    fevent_->append("jpsis_eta2", muon2->eta());
+    fevent_->append("jpsis_phi2", muon2->phi());
 
     reco::TrackRef muonTrack1 = muon1->improvedMuonBestTrack();
     reco::TrackRef muonTrack2 = muon2->improvedMuonBestTrack();
-    fevent_->jpsis_nPixHits1_->push_back(muonTrack1->hitPattern().numberOfValidPixelHits());
-    fevent_->jpsis_nPixHits2_->push_back(muonTrack2->hitPattern().numberOfValidPixelHits());
+    fevent_->append("jpsis_nPixHits1", muonTrack1->hitPattern().numberOfValidPixelHits());
+    fevent_->append("jpsis_nPixHits2", muonTrack2->hitPattern().numberOfValidPixelHits());
   }
 
   // Now put jets in current event to the event cache

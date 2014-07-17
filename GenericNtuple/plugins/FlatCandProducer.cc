@@ -161,6 +161,7 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
     std::auto_ptr<CandValueMap> vmap(new CandValueMap);
     CandValueMap::Filler filler(*vmap);
     filler.insert(outHandle, loader_->v[i].begin(), loader_->v[i].end());
+    filler.fill();
     event.put(vmap, varName);
   }
 }

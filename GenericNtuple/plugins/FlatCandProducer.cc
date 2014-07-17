@@ -24,6 +24,10 @@
 using namespace std;
 using namespace boost::assign;
 
+#define MUONVARS "isTight", "isLoose", "relIsoDbeta03", "relIsoDbeta04"
+#define ELECTRONVARS "mva", "relIsoDbeta03", "relIsoDbeta04", "relIsoRho03", "relIsoRho04"
+#define JETVARS "bTagCSV"
+
 class FlatCandProducer : public edm::EDProducer
 {
 public:
@@ -112,19 +116,17 @@ FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
   boost::algorithm::to_lower(type);
   if ( type == "muon" )
   {
-    varNames_ += "isTight", "isLoose";
-    varNames_ += "relIsoDbeta03", "relIsoDbeta04";
+    varNames_ += MUONVARS;
     loader_ = new LoadMuon(varNames_.size());
   }
   else if ( type == "electron" )
   {
-    varNames_ += "mva";
-    varNames_ += "relIsoDbeta03", "relIsoDbeta04", "relIsoRho03", "relIsoRho04";
+    varNames_ += ELECTRONVARS;
     loader_ = new LoadElectron(varNames_.size());
   }
   else if ( type == "jet" )
   {
-    varNames_ += "bTagCSV";
+    varNames_ += JETVARS;
     loader_ = new LoadJet(varNames_.size());
   }
 

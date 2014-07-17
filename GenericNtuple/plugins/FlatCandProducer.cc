@@ -72,6 +72,9 @@ private:
     {
       const pat::Muon& muon = dynamic_cast<const pat::Muon&>(cand);
       v[0].push_back(muon.pt());
+      v[1].push_back(muon.pt());
+      v[2].push_back(muon.pt());
+      v[3].push_back(muon.pt());
     };
   };
 
@@ -82,6 +85,10 @@ private:
     {
       const pat::Electron& electron = dynamic_cast<const pat::Electron&>(cand);
       v[0].push_back(electron.pt());
+      v[1].push_back(electron.pt());
+      v[2].push_back(electron.pt());
+      v[3].push_back(electron.pt());
+      v[4].push_back(electron.pt());
     };
   };
 
@@ -135,7 +142,6 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
 
   loader_->init();
   std::auto_ptr<Cands> cands(new Cands);
-  CandRefProd refProd = event.getRefBeforePut<Cands>();
 
   // Fill four vector informations
   for ( size_t i=0, n=srcHandle->size(); i<n; ++i )
@@ -146,13 +152,13 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
     loader_->load(srcCand);
   }
 
-  event.put(cands);
+  edm::OrphanHandle<Cands> outHandle = event.put(cands);
   for ( size_t i=0; i<loader_->N; ++i )
   {
     const std::string& varName = varNames_[i];
     std::auto_ptr<CandValueMap> vmap(new CandValueMap);
     CandValueMap::Filler filler(*vmap);
-    filler.insert(refProd, loader_->v[i].begin(), loader_->v[i].end());
+    filler.insert(outHandle, loader_->v[i].begin(), loader_->v[i].end());
     event.put(vmap, varName);
   }
 }

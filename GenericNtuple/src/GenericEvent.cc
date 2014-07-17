@@ -14,7 +14,7 @@ GenericEvent::GenericEvent(bool isMC)
   fVarNames_ += "electrons_pt", "electrons_eta", "electrons_phi", "electrons_m";
   fVarNames_ += "electrons_relIso";
   fVarNames_ += "electrons_mva", "electrons_scEta";
-  fVarNames_ += "electrons_Q", "electrons_type", "electrons_qConsistent";
+  iVarNames_ += "electrons_Q", "electrons_type", "electrons_qConsistent";
 
   fVarNames_ += "jets_pt", "jets_eta", "jets_phi", "jets_m";
   fVarNames_ += "jets_bTag", "jets_JESUp", "jets_JESDn";
@@ -33,7 +33,7 @@ GenericEvent::GenericEvent(bool isMC)
     iVarNames_ += "genJets_pdgId";
 
     // Generator information
-    fVarNames_ += "genParticles_pt", "genParticles_eta", "genParticles_phi", "genParitcles_m";
+    fVarNames_ += "genParticles_pt", "genParticles_eta", "genParticles_phi", "genParticles_m";
     iVarNames_ += "genParticles_pdgId", "genParticles_mother";
   }
 
@@ -50,16 +50,16 @@ void GenericEvent::book(TTree* tree)
 
   for ( strings::const_iterator itr = iVarNames_.begin(); itr != iVarNames_.end(); ++itr )
   {
-    const char* varName = itr->c_str();
+    std::string varName = *itr;
     ints* v = iVars_[varName] = new ints;
-    tree_->Branch(varName, v);
+    tree_->Branch(varName.c_str(), v);
   }
 
-  for ( strings::const_iterator itr = fVarNames_.begin(); itr != iVarNames_.end(); ++itr )
+  for ( strings::const_iterator itr = fVarNames_.begin(); itr != fVarNames_.end(); ++itr )
   {
-    const char* varName = itr->c_str();
+    std::string varName = *itr;
     doubles* v = fVars_[varName] = new doubles;
-    tree_->Branch(varName, v);
+    tree_->Branch(varName.c_str(), v);
   }
 
   tree_->Branch("run", &run_, "run/I");

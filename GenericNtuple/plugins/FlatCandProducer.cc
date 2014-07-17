@@ -121,6 +121,7 @@ FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
     loader_ = new LoadJet(varNames_.size());
   }
 
+  produces<Cands>();
   for ( strings::const_iterator itr = varNames_.begin(); itr != varNames_.end(); ++itr )
   {
     produces<CandValueMap>(*itr);

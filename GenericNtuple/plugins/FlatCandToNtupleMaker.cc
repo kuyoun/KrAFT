@@ -92,14 +92,17 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
 void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  for ( size_t iCand=0, nCand=candLabels_.size(); iCand < nCand; ++iCand )
+  typedef edm::View<reco::LeafCandidate> Cands;
+
+  const size_t nCand = candLabels_.size();
+  for ( size_t iCand=0; iCand < nCand; ++iCand )
   {
-    edm::Handle<edm::View<reco::Candidate> > srcHandle;
+    edm::Handle<Cands> srcHandle;
     event.getByLabel(candLabels_[iCand], srcHandle);
 
-    std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles;
     VInputTag vmapLabels = vmapLabels_[iCand];
     const size_t nVar = vmapLabels.size();
+    std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVar);
     for ( size_t iVar=0; iVar<nVar; ++iVar )
     {
       event.getByLabel(vmapLabels[iVar], vmapHandles[iVar]);
@@ -107,20 +110,34 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
 
     for ( size_t i=0, n=srcHandle->size(); i<n; ++i )
     {
-      const edm::Ref<edm::View<reco::Candidate> > candRef(srcHandle, i);
-      candPt_[i]->push_back(candRef->pt());
-      candEta_[i]->push_back(candRef->eta());
-      candPhi_[i]->push_back(candRef->phi());
-      candM_[i]->push_back(candRef->mass());
+      edm::Ref<Cands> candRef(srcHandle, i);
+      candPt_[iCand]->push_back(candRef->pt());
+      candEta_[iCand]->push_back(candRef->eta());
+      candPhi_[iCand]->push_back(candRef->phi());
+      candM_[iCand]->push_back(candRef->mass());
 
       for ( size_t iVar=0; iVar<nVar; ++iVar )
       {
         const double var = (*vmapHandles[iVar])[candRef];
-        candVars_[i][iVar]->push_back(var);
+        candVars_[iCand][iVar]->push_back(var);
       }
     }
   }
 
   tree_->Fill();
+  for ( size_t iCand=0; iCand<nCand; ++iCand )
+  {
+    candPt_ [iCand]->clear();
+    candEta_[iCand]->clear();
+    candPhi_[iCand]->clear();
+    candM_  [iCand]->clear();
+    const size_t nVar = candVars_[iCand].size();
+    for ( size_t iVar=0; iVar<nVar; ++iVar )
+    {
+      candVars_[iCand][iVar]->clear();
+    }
+  }
 }
+
+DEFINE_FWK_MODULE(FlatCandToNtupleMaker);
 

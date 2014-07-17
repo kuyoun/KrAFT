@@ -213,6 +213,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   size_t nElectron = 0;
   edm::Handle<Electrons> electronHandle;
   event.getByLabel(electronLabel_, electronHandle);
+	if ( !electronHandle.isValid() )  LogDebug("KGenericNtupleMaker")<<"electron handler error!";
   for ( size_t i=0, n=electronHandle->size(); i<n; ++i )
   {
     const pat::Electron& e = electronHandle->at(i);
@@ -236,7 +237,6 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
       // Top Dilepton electron ID
       if ( dxy < 0.04 ) eType += 100;
     }
-
     fevent_->append("electrons_pt"    , e.pt()    );
     fevent_->append("electrons_eta"   , e.eta()   );
     fevent_->append("electrons_phi"   , e.phi()   );
@@ -257,6 +257,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     ++nElectron;
   }
   if ( nElectron < electronMinNumber_ ) return;
+	LogDebug("KGenericNtupleMaker")<<"Electron pass!\n";
 
   size_t nMuon = 0;
   edm::Handle<Muons> muonHandle;
@@ -309,7 +310,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     fevent_->metJERUp_phi_ = metJERUpHandle->at(0).phi();
     fevent_->metJERDn_phi_ = metJERDnHandle->at(0).phi();
   }
-
+  LogDebug("KGenericNtupeMaker")<<"MET pass!\n";
   if ( isMC_ )
   {
     // Event weight and PDF stuffs
@@ -326,7 +327,6 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
     //const double pdf_xPDF1 = pdf->xPDF.first, pdf_xPDF2 = pdf->xPDF.second;
 
     fevent_->genWeight_ = genEventInfoHandle->weights().at(0);
-
     // Generator level objects
     edm::Handle<reco::GenParticleCollection> genHandle;
     event.getByLabel(genParticleLabel_, genHandle);
@@ -355,6 +355,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
       fevent_->append("genParticles_pdgId" , p->pdgId());
       fevent_->append("genParticles_mother", mother    );
     }
+    LogDebug("KGenericNtupleMaker")<<"GenParticle pass!"<<std::endl;
 
     for ( int i=0, n=genJetHandle->size(); i<n; ++i )
     {
@@ -365,6 +366,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
       fevent_->append("genJets_phi", p.phi() );
       fevent_->append("genJets_m"  , p.mass());
     }
+    LogDebug("KGenericNtupleMaker")<<"GenJet pass!"<<std::endl;
   }
 
   // Do jets

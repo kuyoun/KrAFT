@@ -2,17 +2,26 @@ import FWCore.ParameterSet.Config as cms
 
 flatMuonCands = cms.EDProducer("FlatCandProducer",
     type = cms.string("muon"),
-    src = cms.InputTag("selectedMuonsPFlow"),
+    src = cms.InputTag("goodMuons"),
+    vmaps = cms.VInputTag(),
 )
 
 flatElectronCands = cms.EDProducer("FlatCandProducer",
     type = cms.string("electron"),
-    src = cms.InputTag("selectedElectronsPFlow"),
+    src = cms.InputTag("goodElectrons"),
+    vmaps = cms.VInputTag(),
 )
 
 flatJetCands = cms.EDProducer("FlatCandProducer",
     type = cms.string("jet"),
-    src = cms.InputTag("selectedJetsPFlow"),
+    src = cms.InputTag("patJetsPFlow"),
+    vmaps = cms.VInputTag(
+        cms.InputTag("jetUnc", "up"),
+        cms.InputTag("jetUnc", "dn"),
+        cms.InputTag("jetUnc", "res"),
+        cms.InputTag("jetUnc", "resUp"),
+        cms.InputTag("jetUnc", "resDn"),
+    ),
 )
 
 flatCandNtuple = cms.EDAnalyzer("FlatCandToNtupleMaker",

@@ -24,9 +24,9 @@
 using namespace std;
 using namespace boost::assign;
 
-#define MUONVARS "isTight", "isLoose", "relIsoDbeta03", "relIsoDbeta04"
-#define ELECTRONVARS "mva", "relIsoDbeta03", "relIsoDbeta04", "relIsoRho03", "relIsoRho04"
-#define JETVARS "bTagCSV"
+#define MUONVARS "isTight", "isLoose", "relIso", "dxy"
+#define ELECTRONVARS "mva", "relIso", "scEta", "dxy", "chargeID"
+#define JETVARS "bTagCSV", "JESup", "JESdn", "JER", "JERup", "JERdn"
 
 class FlatCandProducer : public edm::EDProducer
 {
@@ -49,6 +49,7 @@ private:
   typedef edm::Ref<Cands> CandRef;
 
   edm::InputTag srcLabel_;
+  std::vector<edm::InputTag> vmapLabels_;
   strings varNames_;
 
   struct LoaderBase
@@ -64,7 +65,7 @@ private:
             itr != v.end(); ++itr ) itr->clear();
       // foreach ( auto& x; v ) x.clear();
     };
-    virtual void load(const reco::Candidate&) = 0;
+    virtual void load(const reco::Candidate&, const std::vector<double>&) = 0;
     std::vector<std::vector<double> > v;
     const size_t N;
   } * loader_;
@@ -72,37 +73,46 @@ private:
   struct LoadMuon : LoaderBase
   {
     LoadMuon(const int n):LoaderBase(n) {};
-    void load(const reco::Candidate& cand)
+    void load(const reco::Candidate& cand, const std::vector<double>& vv)
     {
       const pat::Muon& muon = dynamic_cast<const pat::Muon&>(cand);
-      v[0].push_back(muon.pt());
-      v[1].push_back(muon.pt());
-      v[2].push_back(muon.pt());
-      v[3].push_back(muon.pt());
+      v[0].push_back(0.);
+      v[1].push_back(1.*muon.isLooseMuon());
+      v[2].push_back(muon.userIso(1));
+      v[3].push_back(muon.dB());
     };
   };
 
   struct LoadElectron : LoaderBase
   {
     LoadElectron(const int n):LoaderBase(n) {};
-    void load(const reco::Candidate& cand)
+    void load(const reco::Candidate& cand, const std::vector<double>& vv)
     {
-      const pat::Electron& electron = dynamic_cast<const pat::Electron&>(cand);
-      v[0].push_back(electron.pt());
-      v[1].push_back(electron.pt());
-      v[2].push_back(electron.pt());
-      v[3].push_back(electron.pt());
-      v[4].push_back(electron.pt());
+      const pat::Electron& e = dynamic_cast<const pat::Electron&>(cand);
+      v[0].push_back(e.electronID("mvaTrigV0"));
+      v[1].push_back(e.userIso(2));
+      v[2].push_back(e.superCluster()->eta());
+      v[3].push_back(e.dB());
+      int chargeID = 0;
+      if ( e.isGsfCtfScPixChargeConsistent() ) chargeID = 3;
+      else if ( e.isGsfScPixChargeConsistent() ) chargeID = 2;
+      else if ( e.isGsfCtfChargeConsistent() ) chargeID = 1;
+      v[4].push_back(chargeID);
     };
   };
 
   struct LoadJet : LoaderBase
   {
     LoadJet(const int n):LoaderBase(n) {};
-    void load(const reco::Candidate& cand)
+    void load(const reco::Candidate& cand, const std::vector<double>& vv)
     {
       const pat::Jet& jet = dynamic_cast<const pat::Jet&>(cand);
-      v[0].push_back(jet.bDiscriminator("CSV"));
+      v[0].push_back(jet.bDiscriminator("combinedSecondaryVertexBJetTags"));
+      v[1].push_back(vv[0]);
+      v[2].push_back(vv[1]);
+      v[3].push_back(vv[2]);
+      v[4].push_back(vv[3]);
+      v[5].push_back(vv[4]);
     };
   };
 
@@ -111,6 +121,7 @@ private:
 FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
 {
   srcLabel_ = pset.getParameter<edm::InputTag>("src");
+  vmapLabels_ = pset.getParameter<std::vector<edm::InputTag> >("vmaps");
 
   std::string type = pset.getParameter<std::string>("type");
   boost::algorithm::to_lower(type);
@@ -142,16 +153,28 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
   edm::Handle<edm::View<reco::Candidate> > srcHandle;
   event.getByLabel(srcLabel_, srcHandle);
 
+  const size_t nVal = vmapLabels_.size();
+  std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVal);
+  std::vector<double> values(nVal);
+  for ( size_t i=0, n=vmapLabels_.size(); i<n; ++i )
+  {
+    event.getByLabel(vmapLabels_[i], vmapHandles[i]);
+  }
+
   loader_->init();
   std::auto_ptr<Cands> cands(new Cands);
 
   // Fill four vector informations
   for ( size_t i=0, n=srcHandle->size(); i<n; ++i )
   {
-    const reco::Candidate& srcCand = srcHandle->at(i);
-    reco::LeafCandidate cand(srcCand.charge(), srcCand.p4());
+    edm::Ref<edm::View<reco::Candidate> > candRef(srcHandle, i);
+    reco::LeafCandidate cand(candRef->charge(), candRef->p4());
     cands->push_back(cand);
-    loader_->load(srcCand);
+    for ( size_t j=0; j<nVal; ++j )
+    {
+      values[j] = (*vmapHandles[j])[candRef];
+    }
+    loader_->load(*candRef, values);
   }
 
   edm::OrphanHandle<Cands> outHandle = event.put(cands);

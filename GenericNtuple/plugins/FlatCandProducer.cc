@@ -156,7 +156,7 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
   const size_t nVal = vmapLabels_.size();
   std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVal);
   std::vector<double> values(nVal);
-  for ( size_t i=0, n=vmapLabels_.size(); i<n; ++i )
+  for ( size_t i=0; i<nVal; ++i )
   {
     event.getByLabel(vmapLabels_[i], vmapHandles[i]);
   }

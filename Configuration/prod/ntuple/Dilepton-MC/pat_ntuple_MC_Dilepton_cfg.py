@@ -17,20 +17,5 @@ elif 'uos.ac.kr' in hostName:
         '/store/mc/Summer12_DR53X/TTJets_FullLeptMGDecays_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7C-v2/10000/FECC62BD-3898-E211-82F9-003048FFD7BE.root'
     ]
 
-process.maxEvents.input = 10000
+process.maxEvents.input = 100
 
-process.load("KrAFT.GenericNtuple.flatCands_cfi")
-process.pElEl += process.flatMuons
-process.pElEl += process.flatElectrons
-process.pElEl += process.flatJets
-process.pElEl += process.fEvent
-
-process.out = cms.OutputModule("PoolOutputModule",
-    fileName = cms.untracked.string("out.root"),
-    outputCommands = cms.untracked.vstring("drop *",
-        "keep *_flat*_*_*",
-    ),
-)
-process.outPath = cms.EndPath(process.out)
-
-process.options.wantSummary = False

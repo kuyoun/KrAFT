@@ -23,40 +23,40 @@ KDileptonTreeAnalyzer::KDileptonTreeAnalyzer(const std::string modeName,
   if ( modeName_ == "MuMu" )
   {
     mode_ = 1;
-    leptons1_pt_  = leptons2_pt_  = event_->muons_pt_ ;
-    leptons1_eta_ = leptons2_eta_ = event_->muons_eta_;
-    leptons1_phi_ = leptons2_phi_ = event_->muons_phi_;
-    leptons1_m_   = leptons2_m_   = event_->muons_m_  ;
-    leptons1_Q_   = leptons2_Q_   = event_->muons_Q_  ;
-    leptons1_iso_ = leptons2_iso_ = event_->muons_relIso_;
+    leptons1_pt_  = leptons2_pt_  = event_->fVars_["muons_pt" ];
+    leptons1_eta_ = leptons2_eta_ = event_->fVars_["muons_eta"];
+    leptons1_phi_ = leptons2_phi_ = event_->fVars_["muons_phi"];
+    leptons1_m_   = leptons2_m_   = event_->fVars_["muons_m"  ];
+    leptons1_Q_   = leptons2_Q_   = event_->iVars_["muons_Q"  ];
+    leptons1_iso_ = leptons2_iso_ = event_->fVars_["muons_relIso"];
   }
   else if ( modeName_ == "ElEl")
   {
     mode_ = 2;
-    leptons1_pt_  = leptons2_pt_  = event_->electrons_pt_ ;
-    leptons1_eta_ = leptons2_eta_ = event_->electrons_eta_;
-    leptons1_phi_ = leptons2_phi_ = event_->electrons_phi_;
-    leptons1_m_   = leptons2_m_   = event_->electrons_m_  ;
-    leptons1_Q_   = leptons2_Q_   = event_->electrons_Q_  ;
-    leptons1_iso_ = leptons2_iso_ = event_->electrons_relIso_;
+    leptons1_pt_  = leptons2_pt_  = event_->fVars_["electrons_pt" ];
+    leptons1_eta_ = leptons2_eta_ = event_->fVars_["electrons_eta"];
+    leptons1_phi_ = leptons2_phi_ = event_->fVars_["electrons_phi"];
+    leptons1_m_   = leptons2_m_   = event_->fVars_["electrons_m"  ];
+    leptons1_Q_   = leptons2_Q_   = event_->iVars_["electrons_Q"  ];
+    leptons1_iso_ = leptons2_iso_ = event_->fVars_["electrons_relIso"];
   }
   else
   {
     mode_ = 3;
 
-    leptons1_pt_  = event_->muons_pt_ ;
-    leptons1_eta_ = event_->muons_eta_;
-    leptons1_phi_ = event_->muons_phi_;
-    leptons1_m_   = event_->muons_m_  ;
-    leptons1_Q_   = event_->muons_Q_  ;
-    leptons1_iso_ = event_->muons_relIso_;
+    leptons1_pt_  = event_->fVars_["muons_pt" ];
+    leptons1_eta_ = event_->fVars_["muons_eta"];
+    leptons1_phi_ = event_->fVars_["muons_phi"];
+    leptons1_m_   = event_->fVars_["muons_m"  ];
+    leptons1_Q_   = event_->iVars_["muons_Q"  ];
+    leptons1_iso_ = event_->fVars_["muons_relIso"];
 
-    leptons2_pt_  = event_->electrons_pt_ ;
-    leptons2_eta_ = event_->electrons_eta_;
-    leptons2_phi_ = event_->electrons_phi_;
-    leptons2_m_   = event_->electrons_m_  ;
-    leptons2_Q_   = event_->electrons_Q_  ;
-    leptons2_iso_ = event_->electrons_relIso_;
+    leptons2_pt_  = event_->fVars_["electrons_pt" ];
+    leptons2_eta_ = event_->fVars_["electrons_eta"];
+    leptons2_phi_ = event_->fVars_["electrons_phi"];
+    leptons2_m_   = event_->fVars_["electrons_m"  ];
+    leptons2_Q_   = event_->iVars_["electrons_Q"  ];
+    leptons2_iso_ = event_->fVars_["electrons_relIso"];
   }
 
   outTree_->Branch("lepton1_pt" , &lepton1_pt_ , "lepton1_pt/D" );
@@ -163,9 +163,9 @@ bool KDileptonTreeAnalyzer::analyze()
   {
     if ( mode_ != 2 )
     {
-      if ( event_->muons_type_->at(i) == 0 ) continue; // MuMu or MuEl
+      if ( event_->fVars_["muons_type"]->at(i) == 0 ) continue; // MuMu or MuEl
     }
-    else if ( event_->electrons_type_->at(i) < 100 ) continue; // ElEl mode
+    else if ( event_->iVars_["electrons_type"]->at(i) < 100 ) continue; // ElEl mode
 
     lepton1_pt_  = leptons1_pt_ ->at(i);
     lepton1_eta_ = leptons1_eta_->at(i);
@@ -182,9 +182,9 @@ bool KDileptonTreeAnalyzer::analyze()
     {
       if ( mode_ == 1 )
       {
-        if ( event_->muons_type_->at(j) == 0 ) continue; // MuMu mode
+        if ( event_->fVars_["muons_type"]->at(j) == 0 ) continue; // MuMu mode
       }
-      else if ( event_->electrons_type_->at(j) < 100 ) continue; // ElEl and MuEl
+      else if ( event_->iVars_["electrons_type"]->at(j) < 100 ) continue; // ElEl and MuEl
 
       lepton2_pt_  = leptons2_pt_->at(j);
       lepton2_eta_ = leptons2_eta_->at(j);
@@ -210,19 +210,19 @@ bool KDileptonTreeAnalyzer::analyze()
   z_dphi_ = lepton1P4.DeltaPhi(lepton2P4);
 
   // Run lepton loop again for st calculation
-  for ( int i=0, n=event_->muons_pt_->size(); i<n; ++i )
+  for ( int i=0, n=event_->fVars_["muons_pt"]->size(); i<n; ++i )
   {
-    const double muonPt = event_->muons_pt_->at(i);
-    const double muonEta = abs(event_->muons_eta_->at(i));
+    const double muonPt = event_->fVars_["muons_pt"]->at(i);
+    const double muonEta = abs(event_->fVars_["muons_eta"]->at(i));
     if ( muonPt < 20 or muonEta > 2.5 ) continue;
     st_ += muonPt;
   }
-  for ( int i=0, n=event_->electrons_pt_->size(); i<n; ++i )
+  for ( int i=0, n=event_->fVars_["electrons_pt"]->size(); i<n; ++i )
   {
-    const double electronPt = event_->electrons_pt_->at(i);
-    const double electronEta = abs(event_->electrons_eta_->at(i));
+    const double electronPt = event_->fVars_["electrons_pt"]->at(i);
+    const double electronEta = abs(event_->fVars_["electrons_eta"]->at(i));
     if ( electronPt < 20 or electronEta > 2.5 ) continue;
-    st_ += event_->electrons_pt_->at(i);
+    st_ += event_->fVars_["electrons_pt"]->at(i);
   }
 
   met_pt_  = event_->met_pt_ ;
@@ -248,9 +248,9 @@ bool KDileptonTreeAnalyzer::analyze()
   {
     // Decay mode
     unsigned int nTop = 0, nMuon = 0, nElectron = 0, nTau = 0;
-    for ( int i=0, n=event_->genParticles_pdgId_->size(); i<n; ++i )
+    for ( int i=0, n=event_->iVars_["genParticles_pdgId"]->size(); i<n; ++i )
     {
-      const int pdgId = abs(event_->genParticles_pdgId_->at(i));
+      const int pdgId = abs(event_->iVars_["genParticles_pdgId"]->at(i));
       if ( pdgId == 6 ) ++nTop;
       else if ( pdgId == 11 ) ++nElectron;
       else if ( pdgId == 13 ) ++nMuon;
@@ -271,11 +271,11 @@ bool KDileptonTreeAnalyzer::analyze()
   }
 
   // Get jet indices by bTag
-  const int nJets = event_->jets_pt_->size();
+  const int nJets = event_->fVars_["jets_pt"]->size();
   std::vector<int> jetIndices(nJets);
   std::copy(boost::counting_iterator<int>(0),
             boost::counting_iterator<int>(nJets), jetIndices.begin());
-  GreaterByBtag greaterByBtag(event_->jets_bTag_);
+  GreaterByBtag greaterByBtag(event_->fVars_["jets_bTag"]);
   boost::sort(jetIndices, greaterByBtag);
 
   // Make jets four vector, insert in bTag-order
@@ -284,11 +284,11 @@ bool KDileptonTreeAnalyzer::analyze()
   {
     const int j = jetIndices[i];
 
-    const double pt   = event_->jets_pt_->at(j);
-    const double eta  = event_->jets_eta_->at(j);
-    const double phi  = event_->jets_phi_->at(j);
-    const double m    = event_->jets_m_->at(j);
-    const double bTag = event_->jets_bTag_->at(j);
+    const double pt   = event_->fVars_["jets_pt"]->at(j);
+    const double eta  = event_->fVars_["jets_eta"]->at(j);
+    const double phi  = event_->fVars_["jets_phi"]->at(j);
+    const double m    = event_->fVars_["jets_m"]->at(j);
+    const double bTag = event_->fVars_["jets_bTag"]->at(j);
 
     jets_pt_->push_back(pt);
     jets_bTag_->push_back(bTag);

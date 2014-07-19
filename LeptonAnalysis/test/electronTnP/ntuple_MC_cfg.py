@@ -239,7 +239,7 @@ process.p = cms.Path(
   + process.patSequenceComplete
   + process.hltHighLevel
   + process.leptonSelectionSequence
-  + process.jetUnc * process.goodJets
+  + process.goodJets
   * process.tpPairs * process.tp
 )
 

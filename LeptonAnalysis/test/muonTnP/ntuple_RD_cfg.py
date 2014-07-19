@@ -264,7 +264,7 @@ process.pMu = cms.Path(
   + process.patSequenceComplete
   + process.hltHighLevel
   + process.muonSelectionSequence
-#  * process.goodElectrons + process.jetUnc * process.goodJets
+#  * process.goodElectrons + process.goodJets
 #  * process.tpPairs * process.muonEffs
 )
 

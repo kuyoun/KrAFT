@@ -256,21 +256,23 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
     }
   }
 
-  pat::MET metUp, metDn;
-  metUp.setP4(reco::Candidate::LorentzVector(metUpX, metUpY, 0, hypot(metUpX, metUpY)));
-  metDn.setP4(reco::Candidate::LorentzVector(metDnX, metDnY, 0, hypot(metDnX, metDnY)));
+  const unsigned int nCleanJet = cleanJets->size();
+  edm::OrphanHandle<pat::JetCollection> outColl = event.put(cleanJets);
 
   std::auto_ptr<pat::JetToValue> fJECMapUp(new pat::JetToValue);
   std::auto_ptr<pat::JetToValue> fJECMapDn(new pat::JetToValue);
   pat::JetToValue::Filler fillJECUp(*fJECMapUp);
   pat::JetToValue::Filler fillJECDn(*fJECMapDn);
-  fillJECUp.insert(jetHandle, fJECsUp.begin(), fJECsUp.end());
-  fillJECDn.insert(jetHandle, fJECsDn.begin(), fJECsDn.end());
+  fillJECUp.insert(outColl, fJECsUp.begin(), fJECsUp.end());
+  fillJECDn.insert(outColl, fJECsDn.begin(), fJECsDn.end());
   fillJECUp.fill();
   fillJECDn.fill();
   event.put(fJECMapUp, "up");
   event.put(fJECMapDn, "dn");
 
+  pat::MET metUp, metDn;
+  metUp.setP4(reco::Candidate::LorentzVector(metUpX, metUpY, 0, hypot(metUpX, metUpY)));
+  metDn.setP4(reco::Candidate::LorentzVector(metDnX, metDnY, 0, hypot(metDnX, metDnY)));
   std::auto_ptr<METs> metsUp(new METs);
   std::auto_ptr<METs> metsDn(new METs);
   metsUp->push_back(metUp);
@@ -286,9 +288,9 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
     pat::JetToValue::Filler fillJER(*fJERMap);
     pat::JetToValue::Filler fillJERUp(*fJERMapUp);
     pat::JetToValue::Filler fillJERDn(*fJERMapDn);
-    fillJER.insert(jetHandle, fJERs.begin(), fJERs.end());
-    fillJERUp.insert(jetHandle, fJERsUp.begin(), fJERsUp.end());
-    fillJERDn.insert(jetHandle, fJERsDn.begin(), fJERsDn.end());
+    fillJER.insert(outColl, fJERs.begin(), fJERs.end());
+    fillJERUp.insert(outColl, fJERsUp.begin(), fJERsUp.end());
+    fillJERDn.insert(outColl, fJERsDn.begin(), fJERsDn.end());
     fillJER.fill();
     fillJERUp.fill();
     fillJERDn.fill();
@@ -311,9 +313,6 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
     event.put(metsResUp, "resUp");
     event.put(metsResDn, "resDn");
   }
-
-  const unsigned int nCleanJet = cleanJets->size();
-  event.put(cleanJets);
 
   if ( nCleanJet < minNumber_ or nCleanJet > maxNumber_ ) return false;
 

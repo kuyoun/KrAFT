@@ -370,7 +370,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   }
 
   // Do jets
-  edm::Handle<JetRefs> jetHandle;
+  edm::Handle<Jets> jetHandle;
   edm::Handle<pat::JetToValue> fJESUpHandle, fJESDnHandle;
   edm::Handle<pat::JetToValue> fJERHandle;
   edm::Handle<pat::JetToValue> fJERUpHandle, fJERDnHandle;
@@ -387,7 +387,7 @@ void KGenericNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup
   double fJER = 1, fJERUp = 1, fJERDn = 1;
   for ( size_t i=0, n=jetHandle->size(); i<n; ++i )
   {
-    edm::Ref<Jets> jetRef = jetHandle->at(i);
+    edm::Ref<Jets> jetRef(jetHandle, i);
     const pat::Jet& jet = *jetRef;
     const double jetEta = jet.eta();
     if ( std::abs(jetEta) > 2.5 ) continue;

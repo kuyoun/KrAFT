@@ -1,54 +1,59 @@
 import FWCore.ParameterSet.Config as cms
 
-flatMuonCands = cms.EDProducer("FlatCandProducer",
+flatMuons = cms.EDProducer("FlatCandProducer",
     type = cms.string("muon"),
     src = cms.InputTag("goodMuons"),
     vmaps = cms.VInputTag(),
 )
 
-flatElectronCands = cms.EDProducer("FlatCandProducer",
+flatElectrons = cms.EDProducer("FlatCandProducer",
     type = cms.string("electron"),
     src = cms.InputTag("goodElectrons"),
     vmaps = cms.VInputTag(),
 )
 
-flatJetCands = cms.EDProducer("FlatCandProducer",
+flatJets = cms.EDProducer("FlatCandProducer",
     type = cms.string("jet"),
-    src = cms.InputTag("patJetsPFlow"),
+    src = cms.InputTag("goodJets"),
     vmaps = cms.VInputTag(
-        cms.InputTag("jetUnc", "up"),
-        cms.InputTag("jetUnc", "dn"),
-        cms.InputTag("jetUnc", "res"),
-        cms.InputTag("jetUnc", "resUp"),
-        cms.InputTag("jetUnc", "resDn"),
+        cms.InputTag("goodJets", "up"),
+        cms.InputTag("goodJets", "dn"),
+        cms.InputTag("goodJets", "res"),
+        cms.InputTag("goodJets", "resUp"),
+        cms.InputTag("goodJets", "resDn"),
     ),
 )
 
-flatCandNtuple = cms.EDAnalyzer("FlatCandToNtupleMaker",
+fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
     srcs = cms.VPSet(
         cms.PSet(
-            src = cms.InputTag("flatMuonCands"),
+            src = cms.InputTag("flatMuons"),
             vmaps = cms.VInputTag(
-                cms.InputTag("flatMuonCands", "isTight"),
-                cms.InputTag("flatMuonCands", "isLoose"),
-                cms.InputTag("flatMuonCands", "relIsoDbeta03"),
-                cms.InputTag("flatMuonCands", "relIsoDbeta04"),
+                cms.InputTag("flatMuons", "isTight"),
+                cms.InputTag("flatMuons", "isLoose"),
+                cms.InputTag("flatMuons", "relIso"),
+                cms.InputTag("flatMuons", "dxy"),
             ),
         ),
         cms.PSet(
-            src = cms.InputTag("flatElectronCands"),
+            src = cms.InputTag("flatElectrons"),
             vmaps = cms.VInputTag(
-                cms.InputTag("flatElectronCands", "mva"),
-                cms.InputTag("flatElectronCands", "relIsoDbeta03"),
-                cms.InputTag("flatElectronCands", "relIsoDbeta04"),
-                cms.InputTag("flatElectronCands", "relIsoRho03"),
-                cms.InputTag("flatElectronCands", "relIsoRho04"),
+                cms.InputTag("flatElectrons", "mva"),
+                cms.InputTag("flatElectrons", "relIso"),
+                cms.InputTag("flatElectrons", "scEta"),
+                cms.InputTag("flatElectrons", "dxy"),
+                cms.InputTag("flatElectrons", "chargeID"),
             ),
         ),
         cms.PSet(
-            src = cms.InputTag("flatJetCands"),
+            src = cms.InputTag("flatJets"),
             vmaps = cms.VInputTag(
-                cms.InputTag("flatJetCands", "bTagCSV"),
+                cms.InputTag("flatJets", "bTagCSV"),
+                cms.InputTag("flatJets", "up"),
+                cms.InputTag("flatJets", "dn"),
+                cms.InputTag("flatJets", "res"),
+                cms.InputTag("flatJets", "resUp"),
+                cms.InputTag("flatJets", "resDn"),
             ),
         ),
     ),

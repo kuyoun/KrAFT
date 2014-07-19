@@ -26,7 +26,7 @@ using namespace boost::assign;
 
 #define MUONVARS "isTight", "isLoose", "relIso", "dxy"
 #define ELECTRONVARS "mva", "relIso", "scEta", "dxy", "chargeID"
-#define JETVARS "bTagCSV", "JESup", "JESdn", "JER", "JERup", "JERdn"
+#define JETVARS "bTagCSV", "up", "dn", "res", "resUp", "resDn"
 
 class FlatCandProducer : public edm::EDProducer
 {

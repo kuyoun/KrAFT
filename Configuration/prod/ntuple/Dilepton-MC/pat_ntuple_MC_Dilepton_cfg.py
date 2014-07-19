@@ -20,13 +20,10 @@ elif 'uos.ac.kr' in hostName:
 process.maxEvents.input = 10000
 
 process.load("KrAFT.GenericNtuple.flatCands_cfi")
-process.flatMuonCands.src = "goodMuons"
-process.flatElectronCands.src = "goodElectrons"
-process.flatJetCands.src = "goodJets"
-process.pElEl += process.flatMuonCands
-process.pElEl += process.flatElectronCands
-process.pElEl += process.flatJetCands
-process.pElEl += process.flatCandNtuple
+process.pElEl += process.flatMuons
+process.pElEl += process.flatElectrons
+process.pElEl += process.flatJets
+process.pElEl += process.fEvent
 
 process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string("out.root"),

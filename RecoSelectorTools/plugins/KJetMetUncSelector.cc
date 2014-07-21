@@ -242,7 +242,7 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
     }
 
     // Check acceptance
-    if ( std::abs(jetEta) >= maxEta_ ) continue;
+    if ( std::abs(jetEta) > maxEta_ ) continue;
     if ( jetPt*fJECDn*fJERDn < minPt_ ) continue;
 
     cleanJets->push_back(jet);

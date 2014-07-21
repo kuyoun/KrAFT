@@ -1,59 +1,61 @@
 import FWCore.ParameterSet.Config as cms
 
 flatMuons = cms.EDProducer("FlatCandProducer",
-    type = cms.string("muon"),
     src = cms.InputTag("goodMuons"),
-    vmaps = cms.VInputTag(),
+    variables = cms.PSet(
+        #isTight = cms.string("userInt('isTight')"),
+        #isLoose = cms.string("userInt('isLoose')"),
+        relIso = cms.string("userIso(1)"),
+        dxy = cms.string("dB"),
+        dz = cms.string("userFloat('dz')"),
+    ),
 )
 
 flatElectrons = cms.EDProducer("FlatCandProducer",
-    type = cms.string("electron"),
     src = cms.InputTag("goodElectrons"),
-    vmaps = cms.VInputTag(),
+    variables = cms.PSet(
+        mva = cms.string("electronID('mvaTrigV0')"),
+        relIso = cms.string("userIso(2)"),
+        scEta = cms.string("superCluster.eta"),
+        dxy = cms.string("dB"),
+        dz = cms.string("userFloat('dz')"),
+        #chargeID = cms.string("isGsfCtfScPixChargeConsistent ? 3 : isGsfScPixChargeConsistent ? 2 : isGsfCtfChargeConsistent ? 1 : 0"),
+    ),
 )
 
 flatJets = cms.EDProducer("FlatCandProducer",
-    type = cms.string("jet"),
     src = cms.InputTag("goodJets"),
-    vmaps = cms.VInputTag(
-        cms.InputTag("goodJets", "up"),
-        cms.InputTag("goodJets", "dn"),
-        cms.InputTag("goodJets", "res"),
-        cms.InputTag("goodJets", "resUp"),
-        cms.InputTag("goodJets", "resDn"),
+    variables = cms.PSet(
+        bTagCSV = cms.string("bDiscriminator('combinedSecondaryVertexBJetTags')"),
+        up = cms.InputTag("goodJets", "up"),
+        dn = cms.InputTag("goodJets", "dn"),
+        res = cms.InputTag("goodJets", "res"),
+        resUp = cms.InputTag("goodJets", "resUp"),
+        resDn = cms.InputTag("goodJets", "resDn"),
     ),
 )
 
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
-    srcs = cms.VPSet(
-        cms.PSet(
+    cands = cms.PSet(
+        muons = cms.PSet(
             src = cms.InputTag("flatMuons"),
-            vmaps = cms.VInputTag(
-                cms.InputTag("flatMuons", "isTight"),
-                cms.InputTag("flatMuons", "isLoose"),
-                cms.InputTag("flatMuons", "relIso"),
-                cms.InputTag("flatMuons", "dxy"),
+            vmaps = cms.vstring(
+                #"isTight", "isLoose",
+                "relIso", "dxy", "dz",
             ),
         ),
-        cms.PSet(
+        electrons = cms.PSet(
             src = cms.InputTag("flatElectrons"),
-            vmaps = cms.VInputTag(
-                cms.InputTag("flatElectrons", "mva"),
-                cms.InputTag("flatElectrons", "relIso"),
-                cms.InputTag("flatElectrons", "scEta"),
-                cms.InputTag("flatElectrons", "dxy"),
-                cms.InputTag("flatElectrons", "chargeID"),
+            vmaps = cms.vstring(
+                "mva", "scEta",
+                "relIso", "dxy", "dz",
+                #"chargeID",
             ),
         ),
-        cms.PSet(
+        jets = cms.PSet(
             src = cms.InputTag("flatJets"),
-            vmaps = cms.VInputTag(
-                cms.InputTag("flatJets", "bTagCSV"),
-                cms.InputTag("flatJets", "up"),
-                cms.InputTag("flatJets", "dn"),
-                cms.InputTag("flatJets", "res"),
-                cms.InputTag("flatJets", "resUp"),
-                cms.InputTag("flatJets", "resDn"),
+            vmaps = cms.vstring(
+                "bTagCSV", "up", "dn", "res", "resUp", "resDn",
             ),
         ),
     ),

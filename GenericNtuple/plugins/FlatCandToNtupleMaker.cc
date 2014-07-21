@@ -39,6 +39,7 @@ public:
 
 private:
   typedef std::vector<double> doubles;
+  typedef std::vector<std::string> strings;
   typedef std::vector<edm::InputTag> VInputTag;
 
   std::vector<edm::InputTag> candLabels_;
@@ -54,16 +55,15 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 {
   // Output histograms and tree
   edm::Service<TFileService> fs;
-  tree_ = fs->make<TTree>("event", "Mixed event tree");
+  tree_ = fs->make<TTree>("event", "event");
 
-  typedef std::vector<edm::ParameterSet> VPSet;
-  VPSet srcPSets = pset.getParameter<VPSet>("srcs");
-  for ( size_t i=0, n=srcPSets.size(); i<n; ++i )
+  edm::ParameterSet candPSets = pset.getParameter<edm::ParameterSet>("cands");
+  const strings candNames = candPSets.getParameterNamesForType<edm::ParameterSet>();
+  for ( size_t i=0, n=candNames.size(); i<n; ++i )
   {
-    edm::ParameterSet srcPSet = srcPSets[i];
-
-    candLabels_.push_back(srcPSet.getParameter<edm::InputTag>("src"));
-    const string candName = candLabels_.back().label();
+    const string& candName = candNames[i];
+    edm::ParameterSet candPSet = candPSets.getParameter<edm::ParameterSet>(candName);
+    candLabels_.push_back(candPSet.getParameter<edm::InputTag>("src"));
 
     candPt_ .push_back(new doubles);
     candEta_.push_back(new doubles);
@@ -77,12 +77,13 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
     vmapLabels_.push_back(VInputTag());
     candVars_.push_back(std::vector<doubles*>());
-    VInputTag vmapSrcs = srcPSet.getParameter<VInputTag>("vmaps");
-    vmapLabels_.back().insert(vmapLabels_.back().end(), vmapSrcs.begin(), vmapSrcs.end());
-    for ( size_t j=0, m=vmapSrcs.size(); j<m; ++j )
+    const string candLabelName = candLabels_.back().label();
+    const strings vmapNames = candPSet.getParameter<strings>("vmaps");
+    for ( size_t j=0, m=vmapNames.size(); j<m; ++j )
     {
-      const std::string vmapName = vmapSrcs[j].instance();
+      const string& vmapName = vmapNames[j];
       candVars_.back().push_back(new doubles);
+      vmapLabels_.back().push_back(edm::InputTag(candLabelName, vmapName));
 
       tree_->Branch((candName+"_"+vmapName).c_str(), candVars_.back().back());
     }

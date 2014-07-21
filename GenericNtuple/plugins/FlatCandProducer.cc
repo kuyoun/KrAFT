@@ -15,6 +15,8 @@
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 
+#include "CommonTools/Utils/interface/StringObjectFunction.h"
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -24,19 +26,10 @@
 using namespace std;
 using namespace boost::assign;
 
-#define MUONVARS "isTight", "isLoose", "relIso", "dxy"
-#define ELECTRONVARS "mva", "relIso", "scEta", "dxy", "chargeID"
-#define JETVARS "bTagCSV", "up", "dn", "res", "resUp", "resDn"
-
 class FlatCandProducer : public edm::EDProducer
 {
 public:
   FlatCandProducer(const edm::ParameterSet& pset);
-  virtual ~FlatCandProducer()
-  {
-    delete loader_;
-  };
-
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
  
 private:
@@ -49,102 +42,42 @@ private:
   typedef edm::Ref<Cands> CandRef;
 
   edm::InputTag srcLabel_;
+  std::vector<StringObjectFunction<reco::Candidate,true> > exprs_;
   std::vector<edm::InputTag> vmapLabels_;
+
   strings varNames_;
-
-  struct LoaderBase
-  {
-    LoaderBase(const int n):N(n)
-    {
-      v.resize(n);
-    };
-    virtual ~LoaderBase() {};
-    void init()
-    {
-      for ( std::vector<std::vector<double> >::iterator itr = v.begin();
-            itr != v.end(); ++itr ) itr->clear();
-      // foreach ( auto& x; v ) x.clear();
-    };
-    virtual void load(const reco::Candidate&, const std::vector<double>&) = 0;
-    std::vector<std::vector<double> > v;
-    const size_t N;
-  } * loader_;
-
-  struct LoadMuon : LoaderBase
-  {
-    LoadMuon(const int n):LoaderBase(n) {};
-    void load(const reco::Candidate& cand, const std::vector<double>& vv)
-    {
-      const pat::Muon& muon = dynamic_cast<const pat::Muon&>(cand);
-      v[0].push_back(0.);
-      v[1].push_back(1.*muon.isLooseMuon());
-      v[2].push_back(muon.userIso(1));
-      v[3].push_back(muon.dB());
-    };
-  };
-
-  struct LoadElectron : LoaderBase
-  {
-    LoadElectron(const int n):LoaderBase(n) {};
-    void load(const reco::Candidate& cand, const std::vector<double>& vv)
-    {
-      const pat::Electron& e = dynamic_cast<const pat::Electron&>(cand);
-      v[0].push_back(e.electronID("mvaTrigV0"));
-      v[1].push_back(e.userIso(2));
-      v[2].push_back(e.superCluster()->eta());
-      v[3].push_back(e.dB());
-      int chargeID = 0;
-      if ( e.isGsfCtfScPixChargeConsistent() ) chargeID = 3;
-      else if ( e.isGsfScPixChargeConsistent() ) chargeID = 2;
-      else if ( e.isGsfCtfChargeConsistent() ) chargeID = 1;
-      v[4].push_back(chargeID);
-    };
-  };
-
-  struct LoadJet : LoaderBase
-  {
-    LoadJet(const int n):LoaderBase(n) {};
-    void load(const reco::Candidate& cand, const std::vector<double>& vv)
-    {
-      const pat::Jet& jet = dynamic_cast<const pat::Jet&>(cand);
-      v[0].push_back(jet.bDiscriminator("combinedSecondaryVertexBJetTags"));
-      v[1].push_back(vv[0]);
-      v[2].push_back(vv[1]);
-      v[3].push_back(vv[2]);
-      v[4].push_back(vv[3]);
-      v[5].push_back(vv[4]);
-    };
-  };
+  std::vector<doubles> values_;
 
 };
 
 FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
 {
   srcLabel_ = pset.getParameter<edm::InputTag>("src");
-  vmapLabels_ = pset.getParameter<std::vector<edm::InputTag> >("vmaps");
+  edm::ParameterSet vars = pset.getParameter<edm::ParameterSet>("variables");
 
-  std::string type = pset.getParameter<std::string>("type");
-  boost::algorithm::to_lower(type);
-  if ( type == "muon" )
+  const strings strVars = vars.getParameterNamesForType<std::string>();
+  for ( int i=0, n=strVars.size(); i<n; ++i )
   {
-    varNames_ += MUONVARS;
-    loader_ = new LoadMuon(varNames_.size());
+    const string& varName = strVars[i];
+    const string& varExpr = vars.getParameter<string>(varName);
+    exprs_.push_back(StringObjectFunction<reco::Candidate,true>(varExpr));
+    varNames_.push_back(varName);
   }
-  else if ( type == "electron" )
+  const strings vmapNames = vars.getParameterNamesForType<edm::InputTag>();
+  for ( int i=0, n=vmapNames.size(); i<n; ++i )
   {
-    varNames_ += ELECTRONVARS;
-    loader_ = new LoadElectron(varNames_.size());
+    const string& vmapName = vmapNames[i];
+    edm::InputTag vmapLabel = vars.getParameter<edm::InputTag>(vmapName);
+    vmapLabels_.push_back(vmapLabel);
+    varNames_.push_back(vmapName);
   }
-  else if ( type == "jet" )
-  {
-    varNames_ += JETVARS;
-    loader_ = new LoadJet(varNames_.size());
-  }
+
+  values_.resize(varNames_.size());
 
   produces<Cands>();
-  for ( strings::const_iterator itr = varNames_.begin(); itr != varNames_.end(); ++itr )
+  for ( int i=0, n=varNames_.size(); i<n; ++i )
   {
-    produces<CandValueMap>(*itr);
+    produces<CandValueMap>(varNames_[i]);
   }
 }
 
@@ -153,38 +86,42 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
   edm::Handle<edm::View<reco::Candidate> > srcHandle;
   event.getByLabel(srcLabel_, srcHandle);
 
-  const size_t nVal = vmapLabels_.size();
-  std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVal);
-  std::vector<double> values(nVal);
-  for ( size_t i=0; i<nVal; ++i )
+  const size_t nExpr = exprs_.size();
+  const size_t nVmap = vmapLabels_.size();
+  std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVmap);
+  for ( size_t i=0; i<nVmap; ++i )
   {
     event.getByLabel(vmapLabels_[i], vmapHandles[i]);
   }
 
-  loader_->init();
   std::auto_ptr<Cands> cands(new Cands);
 
-  // Fill four vector informations
+  // Fill informations
   for ( size_t i=0, n=srcHandle->size(); i<n; ++i )
   {
     edm::Ref<edm::View<reco::Candidate> > candRef(srcHandle, i);
     reco::LeafCandidate cand(candRef->charge(), candRef->p4());
     cands->push_back(cand);
-    for ( size_t j=0; j<nVal; ++j )
+    for ( size_t j=0; j<nExpr; ++j )
     {
-      values[j] = (*vmapHandles[j])[candRef];
+      values_[j].push_back(exprs_[j](*candRef));
     }
-    loader_->load(*candRef, values);
+    for ( size_t j=0; j<nVmap; ++j )
+    {
+      values_[j+nExpr].push_back((*vmapHandles[j])[candRef]);
+    }
   }
 
   edm::OrphanHandle<Cands> outHandle = event.put(cands);
-  for ( size_t i=0; i<loader_->N; ++i )
+  for ( size_t i=0, n=nExpr+nVmap; i<n; ++i )
   {
-    const std::string& varName = varNames_[i];
     std::auto_ptr<CandValueMap> vmap(new CandValueMap);
     CandValueMap::Filler filler(*vmap);
-    filler.insert(outHandle, loader_->v[i].begin(), loader_->v[i].end());
+    filler.insert(outHandle, values_[i].begin(), values_[i].end());
     filler.fill();
+    values_[i].clear();
+
+    const std::string& varName = varNames_[i];
     event.put(vmap, varName);
   }
 }

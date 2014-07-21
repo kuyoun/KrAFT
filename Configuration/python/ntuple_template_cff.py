@@ -38,7 +38,6 @@ nEventsNtupleElJets = cms.EDProducer("EventCountProducer")
 ntupleSequenceElEl = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleElEl
-  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * ElEl
@@ -47,7 +46,6 @@ ntupleSequenceElEl = cms.Sequence(
 ntupleSequenceMuMu = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleMuMu
-  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * MuMu
@@ -56,7 +54,6 @@ ntupleSequenceMuMu = cms.Sequence(
 ntupleSequenceMuEl = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleMuEl
-  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * MuEl
@@ -65,7 +62,6 @@ ntupleSequenceMuEl = cms.Sequence(
 ntupleSequenceMuJets = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleMuJets
-  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * MuJets
@@ -74,7 +70,6 @@ ntupleSequenceMuJets = cms.Sequence(
 ntupleSequenceElJets = cms.Sequence(
     pileupWeight + pdfWeight
   + nEventsNtupleElJets
-  + jetUnc
   + goodMuons + goodElectrons * goodJets
   + jpsiToMuMu
   * ElJets

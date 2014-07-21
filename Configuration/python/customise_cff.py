@@ -226,6 +226,5 @@ def addNtupleStep(process, runOnMC):
 
         getattr(process, mode).eventCounters.extend([
             "nEventsHLT%s" % mode, "nEventsNtuple%s" % mode,
-            "nEventsNtuple%s" % mode,
         ])
 

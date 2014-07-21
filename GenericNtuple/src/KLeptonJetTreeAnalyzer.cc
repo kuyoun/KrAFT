@@ -30,17 +30,17 @@ KLeptonJetTreeAnalyzer::KLeptonJetTreeAnalyzer(const std::string modeName,
 
 bool KLeptonJetTreeAnalyzer::analyze()
 {
-  if ( event_->muons_type_->size() == 0 ) return false;
-  if ( event_->muons_type_->at(0) == 0 ) return false;
+  if ( event_->iVars_["muons_type"]->size() == 0 ) return false;
+  if ( event_->iVars_["muons_type"]->at(0) == 0 ) return false;
   // Select leptons
   LorentzVector leptonP4;
-  const double muon_pt   = event_->muons_pt_->at(0);
-  const double muon_eta  = event_->muons_eta_->at(0);
-  const double muon_phi  = event_->muons_phi_->at(0);
-  const double muon_mass = event_->muons_m_->at(0);
+  const double muon_pt   = event_->fVars_["muons_pt" ]->at(0);
+  const double muon_eta  = event_->fVars_["muons_eta"]->at(0);
+  const double muon_phi  = event_->fVars_["muons_phi"]->at(0);
+  const double muon_mass = event_->fVars_["muons_m"  ]->at(0);
   
   if ( muon_pt < 26 or abs(muon_eta) > 2.1 ) return false;
-  if ( event_->muons_relIso_->at(0) >= 0.12 ) return false;
+  if ( event_->fVars_["muons_relIso"]->at(0) >= 0.12 ) return false;
 
   leptonP4.SetPtEtaPhiM(muon_pt, muon_eta, muon_phi, muon_mass);
 

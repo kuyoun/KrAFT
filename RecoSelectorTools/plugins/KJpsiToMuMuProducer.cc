@@ -39,7 +39,7 @@ public:
 
 private:
   bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
-  bool getTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Muon& muon, reco::TransientTrack& transTrack);
+  bool buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Muon& muon, reco::TransientTrack& transTrack);
 
 private:
   constexpr static double muonMass_ = 0.1056583715;
@@ -133,7 +133,7 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   {
     const pat::Muon& muon1 = muonHandle->at(i);
     if ( muon1.charge() >= 0 ) continue;
-    if ( !buildTransitentTrack(trackBuilder, muon1, transTrack1) ) continue;
+    if ( !buildTransientTrack(trackBuilder, muon1, transTrack1) ) continue;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
 
@@ -141,7 +141,7 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
     {
       const pat::Muon& muon2 = muonHandle->at(j);
       if ( muon2.charge() <= 0 ) continue;
-      if ( !buildTransitentTrack(trackBuilder, muon2, transTrack2) ) continue;
+      if ( !buildTransientTrack(trackBuilder, muon2, transTrack2) ) continue;
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
 
@@ -274,7 +274,7 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
 }
 
 bool KJpsiToMuMuProducer::buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder,
-                                              const pat::Muon& muon, reco::TransitentTrack& transTrack)
+                                              const pat::Muon& muon, reco::TransientTrack& transTrack)
 {
   reco::TrackRef trackRef;
   if ( muon.isGlobalMuon() ) trackRef = muon.globalTrack();

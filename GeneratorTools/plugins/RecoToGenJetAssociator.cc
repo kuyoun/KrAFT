@@ -30,16 +30,16 @@ public:
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
 
 private:
-  edm::InputTag recoJetLabel_;
-  edm::InputTag genJetLabel_;
+  edm::EDGetTokenT<std::vector<pat::Jet> > recoJetToken_;
+  edm::EDGetTokenT<std::vector<reco::GenJet> > genJetToken_;
   double cut_maxDR_, cut_maxDPt_;
 
 };
 
 RecoToGenJetAssociator::RecoToGenJetAssociator(const edm::ParameterSet& pset)
 {
-  recoJetLabel_ = pset.getParameter<edm::InputTag>("recoJets");
-  genJetLabel_ = pset.getParameter<edm::InputTag>("genJets");
+  recoJetToken_ = consumes<std::vector<pat::Jet> >(pset.getParameter<edm::InputTag>("recoJets"));
+  genJetToken_ = consumes<std::vector<reco::GenJet> >(pset.getParameter<edm::InputTag>("genJets"));
 
   cut_maxDR_ = cut_maxDPt_ = 1e9;
   edm::ParameterSet cuts = pset.getParameter<edm::ParameterSet>("cuts");
@@ -54,10 +54,10 @@ void RecoToGenJetAssociator::produce(edm::Event& event, const edm::EventSetup& e
   std::auto_ptr<pat::RecoToGenJetMap> recoToGenJetMap(new pat::RecoToGenJetMap);
 
   edm::Handle<std::vector<pat::Jet> > recoJetHandle;
-  event.getByLabel(recoJetLabel_, recoJetHandle);
+  event.getByToken(recoJetToken_, recoJetHandle);
 
   edm::Handle<std::vector<reco::GenJet> > genJetHandle;
-  event.getByLabel(genJetLabel_, genJetHandle);
+  event.getByToken(genJetToken_, genJetHandle);
 
   for ( int i=0, n=recoJetHandle->size(); i<n; ++i )
   {

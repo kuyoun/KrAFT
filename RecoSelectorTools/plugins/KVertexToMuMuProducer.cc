@@ -67,7 +67,8 @@ private:
 
 private:
   constexpr static double muonMass_ = 0.1056583715;
-  edm::InputTag muonLabel_;
+  edm::EDGetTokenT<std::vector<pat::Muon> > muonToken_;
+  edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
 
   unsigned int pdgId_;
   double rawMassMin_, rawMassMax_, massMin_, massMax_;
@@ -91,7 +92,8 @@ private:
 
 KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
 {
-  muonLabel_ = pset.getParameter<edm::InputTag>("src");
+  muonToken_ = consumes<std::vector<pat::Muon> >(pset.getParameter<edm::InputTag>("src"));
+  beamSpotToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
 
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
   cut_minPt_ = trackPSet.getParameter<double>("minPt");
@@ -141,7 +143,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
 
   edm::Handle<reco::BeamSpot> beamSpotHandle;
-  event.getByLabel("offlineBeamSpot", beamSpotHandle);
+  event.getByToken(beamSpotToken_, beamSpotHandle);
   const double pvx = beamSpotHandle->position().x();
   const double pvy = beamSpotHandle->position().y();
   const double pvz = beamSpotHandle->position().z();
@@ -159,7 +161,7 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   //glbTkGeom_ = glbTkGeomHandle.product();
 
   edm::Handle<std::vector<pat::Muon> > muonHandle;
-  event.getByLabel(muonLabel_, muonHandle);
+  event.getByToken(muonToken_, muonHandle);
 
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {

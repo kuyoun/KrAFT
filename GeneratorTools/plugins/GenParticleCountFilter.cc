@@ -17,7 +17,7 @@ public:
   bool filter(edm::Event& event, const edm::EventSetup& eventSetup);
   
 private:
-  edm::InputTag srcLabel_;
+  edm::EDGetTokenT<reco::GenParticleCollection> srcToken_;
   unsigned int minNumber_, maxNumber_;
 
   StringCutObjectSelector<reco::GenParticle>* select_;
@@ -25,7 +25,7 @@ private:
 
 GenParticleCountFilter::GenParticleCountFilter(const edm::ParameterSet& pset)
 {
-  srcLabel_ = pset.getParameter<edm::InputTag>("src");
+  srcToken_ = consumes<reco::GenParticleCollection>(pset.getParameter<edm::InputTag>("src"));
   minNumber_ = pset.getParameter<unsigned int>("minNumber");
   maxNumber_ = pset.getParameter<unsigned int>("maxNumber");
   std::string cut = pset.getParameter<std::string>("cut");
@@ -35,7 +35,7 @@ GenParticleCountFilter::GenParticleCountFilter(const edm::ParameterSet& pset)
 bool GenParticleCountFilter::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   edm::Handle<reco::GenParticleCollection> genParticleHandle;
-  event.getByLabel(srcLabel_, genParticleHandle);
+  event.getByToken(srcToken_, genParticleHandle);
 
   unsigned int nMatch = 0;
   for ( int i=0, n=genParticleHandle->size(); i<n; ++i )

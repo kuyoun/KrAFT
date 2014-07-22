@@ -44,9 +44,9 @@ private:
   unsigned int minNumber_;
   unsigned int maxNumber_;
 
-  edm::InputTag jetLabel_;
-  edm::InputTag metLabel_;
-  std::vector<edm::InputTag> overlapCandLabels_;
+  edm::EDGetTokenT<Jets> jetToken_;
+  edm::EDGetTokenT<METs> metToken_;
+  std::vector<edm::EDGetTokenT<edm::View<reco::Candidate> > > overlapCandTokens_;
 
   PFJetIDSelectionFunctor* isGoodJet_;
   JetCorrectionUncertainty* jecUncCalculator_;
@@ -81,8 +81,8 @@ KJetMetUncSelector::KJetMetUncSelector(const edm::ParameterSet& pset)
 {
   isMC_ = pset.getParameter<bool>("isMC");
 
-  jetLabel_ = pset.getParameter<edm::InputTag>("jet");
-  metLabel_ = pset.getParameter<edm::InputTag>("met");
+  jetToken_ = consumes<Jets>(pset.getParameter<edm::InputTag>("jet"));
+  metToken_ = consumes<METs>(pset.getParameter<edm::InputTag>("met"));
 
   // JEC correction
   edm::FileInPath jecFilePath(pset.getParameter<string>("jecFile"));
@@ -101,8 +101,13 @@ KJetMetUncSelector::KJetMetUncSelector(const edm::ParameterSet& pset)
   if ( doClean_ )
   {
     overlapDeltaR_ = cleanPSet.getParameter<double>("overlapDeltaR");
-    overlapCandLabels_ = cleanPSet.getParameter<std::vector<edm::InputTag> >("overlapCands");
-    if ( overlapCandLabels_.empty() ) doClean_ = false;
+    std::vector<edm::InputTag> overlapCandLabels = cleanPSet.getParameter<std::vector<edm::InputTag> >("overlapCands");
+    if ( overlapCandTokens_.empty() ) doClean_ = false;
+    for ( int i=0, n=overlapCandLabels.size(); i<n; ++i )
+    {
+      edm::InputTag& candLabel = overlapCandLabels[i];
+      overlapCandTokens_.push_back(consumes<edm::View<reco::Candidate> >(candLabel));
+    }
   }
 
   minNumber_ = pset.getParameter<unsigned int>("minNumber");
@@ -128,10 +133,10 @@ KJetMetUncSelector::KJetMetUncSelector(const edm::ParameterSet& pset)
 bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   edm::Handle<Jets> jetHandle;
-  event.getByLabel(jetLabel_, jetHandle);
+  event.getByToken(jetToken_, jetHandle);
 
   edm::Handle<METs> metHandle;
-  event.getByLabel(metLabel_, metHandle);
+  event.getByToken(metToken_, metHandle);
 
   // Prepare JEC and JER factors
   std::vector<double> fJECsUp;
@@ -153,10 +158,10 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
   std::vector<const reco::Candidate*> overlapCands;
   if ( doClean_ )
   {
-    for ( int iLabel=0, nLabel=overlapCandLabels_.size(); iLabel<nLabel; ++iLabel )
+    for ( int iLabel=0, nLabel=overlapCandTokens_.size(); iLabel<nLabel; ++iLabel )
     {
       edm::Handle<edm::View<reco::Candidate> > overlapCandHandle;
-      event.getByLabel(overlapCandLabels_.at(iLabel), overlapCandHandle);
+      event.getByToken(overlapCandTokens_.at(iLabel), overlapCandHandle);
 
       //if ( !overlapCandHandle.isValid() ) continue;
 

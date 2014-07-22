@@ -69,7 +69,9 @@ private:
   double GetMass( pat::Muon muon);
 
 private:
-  edm::InputTag leptonLabel_;
+  constexpr static double muonMass_ = 0.1056583715;
+  edm::EDGetTokenT<std::vector<pat::Muon> > muonToken_;
+  edm::EDGetTokenT<reco::TrackCollection> goodPrimaryVertexToken_;
 
   unsigned int pdgId_;
   double rawMassMin_, rawMassMax_, massMin_, massMax_;
@@ -91,7 +93,8 @@ private:
 };
 KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
 {
-  leptonLabel_ = pset.getParameter<edm::InputTag>("src");
+  muonToken_ = consumes<std::vector<pat::Muon> >(pset.getParameter<edm::InputTag>("src"));
+  goodPrimaryVertexToken_ = consumes<reco::TrackCollection>(edm::InputTag("PrimaryVertex"));
 
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
   cut_minPt_ = trackPSet.getParameter<double>("minPt");
@@ -139,39 +142,28 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   std::auto_ptr<VCCandColl> decayCands(new VCCandColl);
   std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
   std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
-
- 
-  edm::Handle< std::vector<reco::Vertex> > primaryVertex;
-  event.getByLabel("offlinePrimaryVertices",primaryVertex);
-  std::auto_ptr< std::vector<reco::Vertex> > goodOfflinePrimaryVertices( new std::vector<reco::Vertex>() );
-  int nvertex = 0 ;
-  for(unsigned int i=0; i < primaryVertex->size(); ++i){
-    reco::Vertex v = primaryVertex->at(i);
-    if (!(v.isFake()) && (v.ndof()>4) && (fabs(v.z())<=24.0) && (v.position().Rho()<=2.0) ) {
-      goodOfflinePrimaryVertices->push_back((*primaryVertex)[i]);
-      nvertex++;
-    }
-  }
-  reco::Vertex goodPV;
   
-  if ( nvertex != 0 ) {
-      goodPV = goodOfflinePrimaryVertices->at(0);
-  }
-  else return false; 
+  edm::Handle< VertexCollection >  goodPVHandle;
+  event.getByToken(goodPrimaryVertexToken_ , goodPVHandle);
+
+  reco::Vertex goodPV;
+  if ( goodPVHandle->size() >0 ) goodPV = goodPVHandle->at(0);
+  else return false;
+
   const double pvx = goodPV.position().x();
   const double pvy = goodPV.position().y();
   const double pvz = goodPV.position().z();
-  
-  edm::Handle< std::vector<pat::Muon>  > leptonHandle;
-  event.getByLabel(leptonLabel_, leptonHandle);
+
 
   edm::ESHandle<TransientTrackBuilder> theB;
   eventSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
 
+  edm::Handle<std::vector<pat::Muon> > muonHandle;
+  event.getByToken(muonToken_, muonHandle);
 
-  for ( int i=0, n=leptonHandle->size(); i<n; ++i )
+  for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
-    const pat::Muon& lep1 = leptonHandle->at(i);
+    const pat::Muon& lep1 = muonHandle->at(i);
     if ( lep1.charge() >= 0 ) continue;
     bool trigger = false;
     bool& trig = trigger;
@@ -179,11 +171,10 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
     if ( trig ) continue;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
-    double leptonMass = GetMass( lep1);
 
     for ( int j=0; j<n; ++j )
     {
-      const pat::Muon& lep2 = leptonHandle->at(j);
+      const pat::Muon& lep2 = muonHandle->at(j);
       if ( lep2.charge() <= 0 ) continue;
       auto transTrack2= GetTransientTrack(theB, lep2, trig);
       if ( trig ) continue;
@@ -200,12 +191,10 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
       if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue;
       TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
       TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
-      //TrajectoryStateClosestToPoint caState1 = GetTSCP(lep1, cxPt);
-      //TrajectoryStateClosestToPoint caState2 = GetTSCP(lep2, cxPt); 
       if ( !caState1.isValid() or !caState2.isValid() ) continue;
 
-      const double rawEnergy = std::hypot(caState1.momentum().mag(), leptonMass)
-                             + std::hypot(caState2.momentum().mag(), leptonMass);
+      const double rawEnergy = std::hypot(caState1.momentum().mag(), muonMass_)
+                             + std::hypot(caState2.momentum().mag(), muonMass_);
       const double rawMass = sqrt(rawEnergy*rawEnergy - (caState1.momentum()+caState2.momentum()).mag2());
 
 #ifdef DEBUGPLOT
@@ -286,8 +275,8 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
       double vtxChi2(vertex.chi2());
       double vtxNdof(vertex.ndof());
 
-      const double candE1 = hypot(mom1.mag(), leptonMass);
-      const double candE2 = hypot(mom2.mag(), leptonMass);
+      const double candE1 = hypot(mom1.mag(), muonMass_);
+      const double candE2 = hypot(mom2.mag(), muonMass_);
 
       Particle::LorentzVector candLVec(mom.x(), mom.y(), mom.z(), candE1+candE2);
 #ifdef DEBUGPLOT
@@ -322,10 +311,6 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   event.put(decayLengths3D, "l3D");
 
   return (nCands >= minNumber_ and nCands <= maxNumber_);
-}
-
-double KJpsiToMuMuProducer::GetMass( pat::Muon muon) {
-  return 0.1056583715; 
 }
 
 reco::TransientTrack KJpsiToMuMuProducer::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon, bool& trig) {

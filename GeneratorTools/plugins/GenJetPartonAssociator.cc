@@ -31,8 +31,8 @@ public:
   bool hasMother(const reco::Candidate* p, const reco::Candidate* mother);
 
 private:
-  edm::InputTag genParticleLabel_;
-  edm::InputTag genJetLabel_;
+  edm::EDGetTokenT<reco::GenParticleCollection> genParticleToken_;
+  edm::EDGetTokenT<std::vector<pat::Jet> > genJetToken_;
 
   std::set<unsigned int> pdgIdsToMatch_;
   unsigned int matchAlgo_;
@@ -44,8 +44,8 @@ private:
 
 GenJetPartonAssociator::GenJetPartonAssociator(const edm::ParameterSet& pset)
 {
-  genParticleLabel_ = pset.getParameter<edm::InputTag>("genParticles");
-  genJetLabel_ = pset.getParameter<edm::InputTag>("genJets");
+  genParticleToken_ = consumes<reco::GenParticleCollection>(pset.getParameter<edm::InputTag>("genParticles"));
+  genJetToken_ = consumes<std::vector<pat::Jet> >(pset.getParameter<edm::InputTag>("genJets"));
 
   // Default values for matching condition - accept everything as a default
   matchAlgo_ = 0;
@@ -81,10 +81,10 @@ void GenJetPartonAssociator::produce(edm::Event& event, const edm::EventSetup& e
   std::auto_ptr<reco::GenJetToGenParticlesMap> genJetToGenParticlesMap(new reco::GenJetToGenParticlesMap);
 
   edm::Handle<std::vector<reco::GenJet> > genJetHandle;
-  event.getByLabel(genJetLabel_, genJetHandle);
+  event.getByToken(genJetToken_, genJetHandle);
 
   edm::Handle<std::vector<reco::GenParticle> > genParticleHandle;
-  event.getByLabel(genParticleLabel_, genParticleHandle);
+  event.getByToken(genParticleToken_, genParticleHandle);
 
   // Collect list of gen particles in hard process
   std::vector<unsigned int> genPartonIndicies;

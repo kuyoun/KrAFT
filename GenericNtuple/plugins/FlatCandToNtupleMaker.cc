@@ -40,10 +40,13 @@ public:
 private:
   typedef std::vector<double> doubles;
   typedef std::vector<std::string> strings;
-  typedef std::vector<edm::InputTag> VInputTag;
+  typedef edm::View<reco::LeafCandidate> CandView;
+  typedef edm::ValueMap<double> Vmap;
+  typedef edm::EDGetTokenT<CandView> CandToken;
+  typedef edm::EDGetTokenT<Vmap> VmapToken;
 
-  std::vector<edm::InputTag> candLabels_;
-  std::vector<VInputTag> vmapLabels_;
+  std::vector<CandToken> candTokens_;
+  std::vector<std::vector<VmapToken> > vmapTokens_;
 
   TTree* tree_;
   std::vector<doubles*> candPt_, candEta_, candPhi_, candM_;
@@ -63,7 +66,8 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
   {
     const string& candName = candNames[i];
     edm::ParameterSet candPSet = candPSets.getParameter<edm::ParameterSet>(candName);
-    candLabels_.push_back(candPSet.getParameter<edm::InputTag>("src"));
+    edm::InputTag candLabel = candPSet.getParameter<edm::InputTag>("src");
+    candTokens_.push_back(consumes<CandView>(candLabel));
 
     candPt_ .push_back(new doubles);
     candEta_.push_back(new doubles);
@@ -75,15 +79,17 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
     tree_->Branch((candName+"_phi").c_str(), candPhi_.back());
     tree_->Branch((candName+"_m"  ).c_str(), candM_  .back());
 
-    vmapLabels_.push_back(VInputTag());
+    vmapTokens_.push_back(std::vector<VmapToken>());
     candVars_.push_back(std::vector<doubles*>());
-    const string candLabelName = candLabels_.back().label();
+    const string candLabelName = candLabel.label();
     const strings vmapNames = candPSet.getParameter<strings>("vmaps");
     for ( size_t j=0, m=vmapNames.size(); j<m; ++j )
     {
       const string& vmapName = vmapNames[j];
       candVars_.back().push_back(new doubles);
-      vmapLabels_.back().push_back(edm::InputTag(candLabelName, vmapName));
+
+      edm::InputTag vmapLabel(candLabelName, vmapName);
+      vmapTokens_.back().push_back(consumes<Vmap>(vmapLabel));
 
       tree_->Branch((candName+"_"+vmapName).c_str(), candVars_.back().back());
     }
@@ -93,25 +99,24 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
 void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  typedef edm::View<reco::LeafCandidate> Cands;
-
-  const size_t nCand = candLabels_.size();
+  const size_t nCand = candTokens_.size();
   for ( size_t iCand=0; iCand < nCand; ++iCand )
   {
-    edm::Handle<Cands> srcHandle;
-    event.getByLabel(candLabels_[iCand], srcHandle);
+    edm::Handle<CandView> srcHandle;
+    event.getByToken(candTokens_[iCand], srcHandle);
 
-    VInputTag vmapLabels = vmapLabels_[iCand];
-    const size_t nVar = vmapLabels.size();
+    std::vector<VmapToken>& vmapTokens = vmapTokens_[iCand];
+    const size_t nVar = vmapTokens.size();
     std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVar);
     for ( size_t iVar=0; iVar<nVar; ++iVar )
     {
-      event.getByLabel(vmapLabels[iVar], vmapHandles[iVar]);
+      VmapToken& vmapToken = vmapTokens[iVar];
+      event.getByToken(vmapToken, vmapHandles[iVar]);
     }
 
     for ( size_t i=0, n=srcHandle->size(); i<n; ++i )
     {
-      edm::Ref<Cands> candRef(srcHandle, i);
+      edm::Ref<CandView> candRef(srcHandle, i);
       candPt_[iCand]->push_back(candRef->pt());
       candEta_[iCand]->push_back(candRef->eta());
       candPhi_[iCand]->push_back(candRef->phi());

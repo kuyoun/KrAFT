@@ -48,13 +48,13 @@ public:
   bool isMatched(const pat::Electron& ele, std::vector<const reco::GenParticle*> genLeptons);
 
 private:
-  edm::InputTag lepton1Label_;
-  edm::InputTag lepton2Label_;
-  edm::InputTag metLabel_;
+  edm::EDGetTokenT<edm::View<Lepton1> > lepton1Token_;
+  edm::EDGetTokenT<edm::View<Lepton2> > lepton2Token_;
+  edm::EDGetTokenT<edm::View<pat::MET> > metToken_;
   //edm::InputTag beamSpotLabel_;
-  edm::InputTag weightLabel_;
-  edm::InputTag eventCounterLabel_;
-  edm::InputTag genParticlesLabel_;
+  edm::EDGetTokenT<double> weightToken_;
+  edm::EDGetTokenT<edm::MergeableCounter> eventCounterToken_;
+  edm::EDGetTokenT<reco::GenParticleCollection> genParticlesToken_;
 
 private:
   bool isMC_;
@@ -77,18 +77,23 @@ private:
 
   std::vector<std::string> idNames1_, idNames2_;
   std::vector<double> ids1_, ids2_;
+
+  bool isSameLepton_;
 };
 
 template<typename Lepton1, typename Lepton2>
 DoubleLeptonAnalyzer<Lepton1, Lepton2>::DoubleLeptonAnalyzer(const edm::ParameterSet& pset)
 {
-  lepton1Label_ = pset.getParameter<edm::InputTag>("lepton1");
-  lepton2Label_ = pset.getParameter<edm::InputTag>("lepton2");
-  metLabel_ = pset.getParameter<edm::InputTag>("met");
+  edm::InputTag lepton1Label = pset.getParameter<edm::InputTag>("lepton1");
+  edm::InputTag lepton2Label = pset.getParameter<edm::InputTag>("lepton2");
+  isSameLepton_ = (lepton1Label == lepton2Label);
+  lepton1Token_ = consumes<edm::View<Lepton1> >(lepton1Label);
+  lepton2Token_ = consumes<edm::View<Lepton2> >(lepton2Label);
+  metToken_ = consumes<edm::View<pat::MET> >(pset.getParameter<edm::InputTag>("met"));
   //beamSpotLabel_ = pset.getParameter<edm::InputTag>("beamSpot");
-  weightLabel_ = pset.getParameter<edm::InputTag>("weight");
-  eventCounterLabel_ = pset.getParameter<edm::InputTag>("eventCounter");
-  genParticlesLabel_ = pset.getParameter<edm::InputTag>("genPariclesLabel");
+  weightToken_ = consumes<double>(pset.getParameter<edm::InputTag>("weight"));
+  eventCounterToken_ = consumes<edm::MergeableCounter>(pset.getParameter<edm::InputTag>("eventCounter"));
+  genParticlesToken_ = consumes<reco::GenParticleCollection>(pset.getParameter<edm::InputTag>("genPariclesLabel"));
 
   idNames1_ = pset.getParameter<std::vector<std::string> >("idNames1");
   idNames2_ = pset.getParameter<std::vector<std::string> >("idNames2");
@@ -105,7 +110,7 @@ template<typename Lepton1, typename Lepton2>
 void DoubleLeptonAnalyzer<Lepton1, Lepton2>::endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup)
 {
   edm::Handle<edm::MergeableCounter> eventCounterHandle;
-  if ( lumi.getByLabel(eventCounterLabel_, eventCounterHandle) )
+  if ( lumi.getByToken(eventCounterToken_, eventCounterHandle) )
   {
     hEvents_->Fill(0., double(eventCounterHandle->value));
   }
@@ -182,23 +187,22 @@ void DoubleLeptonAnalyzer<Lepton1, Lepton2>::analyze(const edm::Event& event, co
 
   // Event weight
   edm::Handle<double> weightHandle;
-  event.getByLabel(weightLabel_, weightHandle);
+  event.getByToken(weightToken_, weightHandle);
   weight_ = 1;
   if ( weightHandle.isValid() ) weight_ = *weightHandle;
 
   edm::Handle<edm::View<Lepton1> > lepton1Handle;
-  event.getByLabel(lepton1Label_, lepton1Handle);
+  event.getByToken(lepton1Token_, lepton1Handle);
 
   edm::Handle<edm::View<Lepton2> > lepton2Handle;
-  event.getByLabel(lepton2Label_, lepton2Handle);
-  const bool isSameLepton = ( lepton1Label_ == lepton2Label_ );
+  event.getByToken(lepton2Token_, lepton2Handle);
 
   edm::Handle<edm::View<pat::MET> > metHandle;
-  event.getByLabel(metLabel_, metHandle);
+  event.getByToken(metToken_, metHandle);
   met_ = metHandle->at(0).pt();
 
   edm::Handle<reco::GenParticleCollection> genParticles;
-  event.getByLabel(genParticlesLabel_,genParticles);
+  event.getByToken(genParticlesToken_, genParticles);
 
   std::vector<const reco::GenParticle*> genLeptons;
   if ( genParticles.isValid() ) {
@@ -211,7 +215,7 @@ void DoubleLeptonAnalyzer<Lepton1, Lepton2>::analyze(const edm::Event& event, co
   }
 
   //edm::Handle<reco::BeamSpot> beamSpotHandle_;
-  //event.getByLabel(beamSpotLabel_, beamSpotHandle_); 
+  //event.getByToken(beamSpotLabel_, beamSpotHandle_); 
 
   const int nLep1 = lepton1Handle->size();
   const int nLep2 = lepton2Handle->size();
@@ -222,7 +226,7 @@ void DoubleLeptonAnalyzer<Lepton1, Lepton2>::analyze(const edm::Event& event, co
     const double dxy1 = fabs(lep1.dB());
     if ( dxy1 > 0.04 ) continue;
 
-    for ( int iLep2 = isSameLepton ? iLep1+1 : 0; iLep2 < nLep2; ++iLep2 )
+    for ( int iLep2 = (isSameLepton_ ? iLep1+1 : 0); iLep2 < nLep2; ++iLep2 )
     {
       const Lepton2& lep2 = lepton2Handle->at(iLep2);
       if ( lep2.pt() < 20 ) continue;

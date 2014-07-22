@@ -36,14 +36,15 @@ private:
   typedef std::vector<double> doubles;
   typedef std::vector<std::string> strings;
 
+  typedef edm::View<reco::Candidate> CandView;
   typedef std::vector<reco::LeafCandidate> Cands;
   typedef edm::ValueMap<double> CandValueMap;
   typedef edm::RefProd<Cands> CandRefProd;
   typedef edm::Ref<Cands> CandRef;
 
-  edm::InputTag srcLabel_;
+  edm::EDGetTokenT<CandView> srcToken_;
   std::vector<StringObjectFunction<reco::Candidate,true> > exprs_;
-  std::vector<edm::InputTag> vmapLabels_;
+  std::vector<edm::EDGetTokenT<edm::ValueMap<double> > > vmapTokens_;
 
   strings varNames_;
   std::vector<doubles> values_;
@@ -52,7 +53,7 @@ private:
 
 FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
 {
-  srcLabel_ = pset.getParameter<edm::InputTag>("src");
+  srcToken_ = consumes<CandView>(pset.getParameter<edm::InputTag>("src"));
   edm::ParameterSet vars = pset.getParameter<edm::ParameterSet>("variables");
 
   const strings strVars = vars.getParameterNamesForType<std::string>();
@@ -68,7 +69,7 @@ FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
   {
     const string& vmapName = vmapNames[i];
     edm::InputTag vmapLabel = vars.getParameter<edm::InputTag>(vmapName);
-    vmapLabels_.push_back(vmapLabel);
+    vmapTokens_.push_back(consumes<edm::ValueMap<double> >(vmapLabel));
     varNames_.push_back(vmapName);
   }
 
@@ -83,15 +84,15 @@ FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
 
 void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
-  edm::Handle<edm::View<reco::Candidate> > srcHandle;
-  event.getByLabel(srcLabel_, srcHandle);
+  edm::Handle<CandView> srcHandle;
+  event.getByToken(srcToken_, srcHandle);
 
   const size_t nExpr = exprs_.size();
-  const size_t nVmap = vmapLabels_.size();
+  const size_t nVmap = vmapTokens_.size();
   std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVmap);
   for ( size_t i=0; i<nVmap; ++i )
   {
-    event.getByLabel(vmapLabels_[i], vmapHandles[i]);
+    event.getByToken(vmapTokens_[i], vmapHandles[i]);
   }
 
   std::auto_ptr<Cands> cands(new Cands);

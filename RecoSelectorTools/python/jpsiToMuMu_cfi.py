@@ -2,6 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 jpsiToMuMu = cms.EDFilter("KJpsiToMuMuProducer",
     src = cms.InputTag("patMuonsPFlow"),
+    PrimaryVertex = cms.InputTag("goodOfflinePrimaryVertices")
     track = cms.PSet(
         minPt = cms.double(1.0),
         maxEta = cms.double(2.5),

@@ -39,7 +39,7 @@ public:
 
 private:
   bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
-  bool buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Muon& muon, reco::TransitentTrack& transTrack) const;
+  bool buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Muon& muon, reco::TransientTrack& transTrack) const;
 
 private:
   constexpr static double muonMass_ = 0.1056583715;
@@ -280,7 +280,7 @@ bool KJpsiToMuMuProducer::buildTransientTrack(edm::ESHandle<TransientTrackBuilde
   else if ( muon.isTrackerMuon() ) trackRef = muon.innerTrack();
   else return false;
 
-  trackBuilder->build(transTrack);
+  transTrack = trackBuilder->build(trackRef);
   return true;
 }
 

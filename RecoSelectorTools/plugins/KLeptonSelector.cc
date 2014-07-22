@@ -48,9 +48,9 @@ private:
   ElectronEffectiveArea::ElectronEffectiveAreaTarget electronEATarget_;
 
 private:
-  edm::InputTag rhoLabel_;
-  edm::InputTag leptonLabel_;
-  edm::InputTag vertexLabel_;
+  edm::EDGetTokenT<double> rhoToken_;
+  edm::EDGetTokenT<edm::View<Lepton> > leptonToken_;
+  edm::EDGetTokenT<reco::VertexCollection> vertexToken_;
   StringCutObjectSelector<Lepton, true>* preselect_;
   StringCutObjectSelector<Lepton, true>* select_;
   double maxDz_, maxDxy_;
@@ -68,9 +68,9 @@ KLeptonSelector<Lepton>::KLeptonSelector(const edm::ParameterSet& pset)
   // modification can be needed in #ISMC_DEPENDENT_PART#
   isMC_ = true; 
 
-  rhoLabel_ = pset.getParameter<edm::InputTag>("rho");
-  leptonLabel_ = pset.getParameter<edm::InputTag>("src");
-  vertexLabel_ = pset.getParameter<edm::InputTag>("vertex");
+  rhoToken_ = consumes<double>(pset.getParameter<edm::InputTag>("rho"));
+  leptonToken_ = consumes<edm::View<Lepton> >(pset.getParameter<edm::InputTag>("src"));
+  vertexToken_ = consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("vertex"));
   std::string precut = pset.getParameter<std::string>("precut");
   std::string cut = pset.getParameter<std::string>("cut");
   maxDz_ = pset.getParameter<double>("maxDz");
@@ -114,14 +114,14 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
   }
 
   edm::Handle<edm::View<Lepton> > leptonHandle;
-  event.getByLabel(leptonLabel_, leptonHandle);
+  event.getByToken(leptonToken_, leptonHandle);
 
   edm::Handle<double> rhoHandle;
-  event.getByLabel(rhoLabel_, rhoHandle);
+  event.getByToken(rhoToken_, rhoHandle);
   const double rho = *(rhoHandle.product());
 
   edm::Handle<reco::VertexCollection> vertexHandle;
-  event.getByLabel(vertexLabel_, vertexHandle);
+  event.getByToken(vertexToken_, vertexHandle);
   const reco::Vertex& pv = vertexHandle->at(0);
 
   std::auto_ptr<std::vector<Lepton> > selectedLeptons(new std::vector<Lepton>());

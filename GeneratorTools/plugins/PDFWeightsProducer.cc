@@ -29,13 +29,13 @@ public:
 private:
   std::string pdfName_;
   std::vector<std::string> altPdfNames_;
-  edm::InputTag genInfoLabel_;
+  edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
 };
 
 PDFWeightsProducer::PDFWeightsProducer(const edm::ParameterSet& pset)
 {
-  //genInfoLabel_ = pset.getParameter<edm::InputTag>("genEventInfo");
-  genInfoLabel_ = edm::InputTag("generator");
+  //genInfoToken_ = pset.getParameter<edm::InputTag>("genEventInfo");
+  genInfoToken_ = consumes<GenEventInfoProduct>(edm::InputTag("generator"));
   pdfName_ = pset.getParameter<std::string>("pdfName");
   altPdfNames_ = pset.getParameter<std::vector<std::string> >("altPdfNames");
 
@@ -61,7 +61,7 @@ void PDFWeightsProducer::produce(edm::Event& event, const edm::EventSetup& event
   }
 
   edm::Handle<GenEventInfoProduct> genInfoHandle;
-  event.getByLabel(genInfoLabel_, genInfoHandle);
+  event.getByToken(genInfoToken_, genInfoHandle);
 
   const float q = genInfoHandle->pdf()->scalePDF;
   const int id1 = genInfoHandle->pdf()->id.first;

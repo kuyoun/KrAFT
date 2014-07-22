@@ -35,7 +35,7 @@ private:
   bool isPartonLevel(const reco::Candidate* p) const; // True if particle is parton level and hadronized
 
 private:
-  edm::InputTag srcLabel_;
+  edm::EDGetTokenT<reco::GenParticleCollection> srcToken_;
   int userPdgId_;
   bool doPartonLevel_;
   std::set<unsigned int> partonIdsToVeto_;
@@ -44,7 +44,7 @@ private:
 
 GhostGenParticleProducer::GhostGenParticleProducer(const edm::ParameterSet& pset)
 {
-  srcLabel_ = pset.getParameter<edm::InputTag>("src");
+  srcToken_ = consumes<reco::GenParticleCollection>(pset.getParameter<edm::InputTag>("src"));
   userPdgId_ = pset.getUntrackedParameter<int>("userPdgId", 0);
   doPartonLevel_ = pset.getParameter<bool>("doPartonLevel");
   if ( doPartonLevel_ )
@@ -64,7 +64,7 @@ GhostGenParticleProducer::GhostGenParticleProducer(const edm::ParameterSet& pset
 void GhostGenParticleProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   edm::Handle<reco::GenParticleCollection> genParticlesHandle;
-  event.getByLabel(srcLabel_, genParticlesHandle);
+  event.getByToken(srcToken_, genParticlesHandle);
 
   // Prepare output collections
   std::auto_ptr<reco::GenParticleCollection> outGenParticles(new reco::GenParticleCollection());

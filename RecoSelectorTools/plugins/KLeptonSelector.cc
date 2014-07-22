@@ -141,8 +141,8 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
     const double phIso = srcLepton.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(coneSize_, vetos_ph).first;
 
     const float relIso = (chIso+nhIso+phIso)/srcLepton.pt();
-    const float relIsoDbeta = (chIso+max(0., nhIso+phIso-0.5*pcIso))/srcLepton.pt();
-    const float relIsoRho = (chIso+max(0., nhIso+phIso-effArea*rho))/srcLepton.pt();
+    const float relIsoDbeta = (chIso+std::max(0., nhIso+phIso-0.5*pcIso))/srcLepton.pt();
+    const float relIsoRho = (chIso+std::max(0., nhIso+phIso-effArea*rho))/srcLepton.pt();
 
     // Build lepton
     Lepton lepton(srcLepton);

@@ -1,48 +1,23 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDFilter.h"
-
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
-#include "DataFormats/Common/interface/Handle.h"
 
+#include "DataFormats/Common/interface/Handle.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
-#include "DataFormats/PatCandidates/interface/Electron.h"
-#include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+
 #include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
 #include "DataFormats/Candidate/interface/VertexCompositeCandidate.h"
-#include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
-#include "DataFormats/Math/interface/deltaR.h"
 #include "CommonTools/CandUtils/interface/AddFourMomenta.h"
 
-#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
-#include "MagneticField/VolumeBasedEngine/interface/VolumeBasedMagneticField.h"
-#include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
-#include "TrackingTools/PatternTools/interface/TSCBLBuilderNoMaterial.h"
-#include "TrackingTools/TrajectoryState/interface/TrajectoryStateTransform.h"
-#include "TrackingTools/TrajectoryState/interface/PerigeeConversions.h"
-
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-
-#include "Geometry/CommonDetUnit/interface/TrackingGeometry.h"
-#include "Geometry/CommonDetUnit/interface/GeomDetUnit.h"
-#include "Geometry/CommonDetUnit/interface/GlobalTrackingGeometry.h"
-#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
-#include "Geometry/TrackerGeometryBuilder/interface/GluedGeomDet.h"
-#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
-#include "Geometry/Records/interface/GlobalTrackingGeometryRecord.h"
-#include "Geometry/CommonDetUnit/interface/GeomDet.h"
-
-#include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
-#include <string>
-#include <fstream>
-#include<TVector3.h>
+#include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 
 //#define DEBUGPLOT
 
@@ -65,13 +40,11 @@ public:
 private:
   bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
   reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon, bool& trig);
-  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron, bool& trig);
-  double GetMass( pat::Muon muon);
 
 private:
   constexpr static double muonMass_ = 0.1056583715;
   edm::EDGetTokenT<std::vector<pat::Muon> > muonToken_;
-  edm::EDGetTokenT<reco::TrackCollection> goodPrimaryVertexToken_;
+  edm::EDGetTokenT<reco::VertexCollection> goodPrimaryVertexToken_;
 
   unsigned int pdgId_;
   double rawMassMin_, rawMassMax_, massMin_, massMax_;
@@ -94,7 +67,7 @@ private:
 KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
 {
   muonToken_ = consumes<std::vector<pat::Muon> >(pset.getParameter<edm::InputTag>("src"));
-  goodPrimaryVertexToken_ = consumes<reco::TrackCollection>(edm::InputTag("PrimaryVertex"));
+  goodPrimaryVertexToken_ = consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("primaryVertex"));
 
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
   cut_minPt_ = trackPSet.getParameter<double>("minPt");
@@ -143,7 +116,7 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
   std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
   
-  edm::Handle< VertexCollection >  goodPVHandle;
+  edm::Handle< reco::VertexCollection >  goodPVHandle;
   event.getByToken(goodPrimaryVertexToken_ , goodPVHandle);
 
   reco::Vertex goodPV;
@@ -163,20 +136,20 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
 
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
-    const pat::Muon& lep1 = muonHandle->at(i);
-    if ( lep1.charge() >= 0 ) continue;
+    const pat::Muon& muon1 = muonHandle->at(i);
+    if ( muon1.charge() >= 0 ) continue;
     bool trigger = false;
     bool& trig = trigger;
-    auto transTrack1 = GetTransientTrack(theB, lep1, trig);
+    auto transTrack1 = GetTransientTrack(theB, muon1, trig);
     if ( trig ) continue;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
 
     for ( int j=0; j<n; ++j )
     {
-      const pat::Muon& lep2 = muonHandle->at(j);
-      if ( lep2.charge() <= 0 ) continue;
-      auto transTrack2= GetTransientTrack(theB, lep2, trig);
+      const pat::Muon& muon2 = muonHandle->at(j);
+      if ( muon2.charge() <= 0 ) continue;
+      auto transTrack2= GetTransientTrack(theB, muon2, trig);
       if ( trig ) continue;
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
@@ -262,10 +235,6 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
       GlobalVector mom2(traj2->momentum());
       GlobalVector mom(mom1+mom2);
 
-      //TVector3 vec1( mom1.x()-vertex.x(), mom1.y()-vertex.y(),mom1.z()-vertex.z());     
-      //TVector3 vec2( mom2.x()-vertex.x(), mom2.y()-vertex.y(),mom2.z()-vertex.z());     
-
-
       //cleanup stuff we don't need anymore
       traj1.reset();
       traj2.reset();
@@ -286,8 +255,8 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
 
       // Match to muons
-      pat::Muon newLep1(lep1);
-      pat::Muon newLep2(lep2);
+      pat::Muon newLep1(muon1);
+      pat::Muon newLep2(muon2);
       newLep1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
       newLep2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);

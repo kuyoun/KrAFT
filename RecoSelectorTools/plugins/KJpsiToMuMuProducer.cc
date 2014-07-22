@@ -67,7 +67,7 @@ private:
 KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
 {
   muonToken_ = consumes<std::vector<pat::Muon> >(pset.getParameter<edm::InputTag>("src"));
-  goodPrimaryVertexToken_ = consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("PrimaryVertex"));
+  goodPrimaryVertexToken_ = consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("primaryVertex"));
 
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
   cut_minPt_ = trackPSet.getParameter<double>("minPt");

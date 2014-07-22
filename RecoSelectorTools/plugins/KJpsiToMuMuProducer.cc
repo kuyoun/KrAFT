@@ -10,11 +10,11 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
-//#include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 #include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
-//#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
 #include "DataFormats/Candidate/interface/VertexCompositeCandidate.h"
 #include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
 #include "DataFormats/Math/interface/deltaR.h"
@@ -25,6 +25,7 @@
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 #include "TrackingTools/PatternTools/interface/TSCBLBuilderNoMaterial.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateTransform.h"
+#include "TrackingTools/TrajectoryState/interface/PerigeeConversions.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
@@ -38,9 +39,10 @@
 #include "Geometry/CommonDetUnit/interface/GeomDet.h"
 
 #include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
-
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include <string>
 #include <fstream>
+#include<TVector3.h>
 
 //#define DEBUGPLOT
 
@@ -51,24 +53,25 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #endif
 
-class KVertexToMuMuProducer : public edm::EDFilter
+
+class KJpsiToMuMuProducer : public edm::EDFilter
 {
 public:
-  KVertexToMuMuProducer(const edm::ParameterSet& pset);
-  ~KVertexToMuMuProducer() {};
+  KJpsiToMuMuProducer(const edm::ParameterSet& pset);
+  ~KJpsiToMuMuProducer() {};
 
   bool filter(edm::Event& event, const edm::EventSetup& eventSetup);
 
 private:
-  bool isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const;
-  const pat::Muon* matchMuon(const reco::TrackRef trackRef,
-                             pat::MuonCollection::const_iterator muonsBegin,
-                             pat::MuonCollection::const_iterator muonsEnd);
+  bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
+  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon, bool& trig);
+  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Electron electron, bool& trig);
+  double GetMass( pat::Muon muon);
 
 private:
   constexpr static double muonMass_ = 0.1056583715;
   edm::EDGetTokenT<std::vector<pat::Muon> > muonToken_;
-  edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
+  edm::EDGetTokenT<reco::TrackCollection> goodPrimaryVertexToken_;
 
   unsigned int pdgId_;
   double rawMassMin_, rawMassMax_, massMin_, massMax_;
@@ -78,22 +81,20 @@ private:
   int cut_trackNHit_;
   double cut_vertexChi2_, cut_minLxy_, cut_maxLxy_, cut_vtxSignif_;
 
-  double muonDPt_, muonDR_;
+  //double muonDPt_, muonDR_;
 
   unsigned int minNumber_, maxNumber_;
 
   //const TrackerGeometry* trackerGeom_;
-  const MagneticField* bField_;
 #ifdef DEBUGPLOT
   TH1F* hRawMass_, * hFitMass_;
   TH2F* hRawMassVsFitMass_;
 #endif
 };
-
-KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
+KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
 {
   muonToken_ = consumes<std::vector<pat::Muon> >(pset.getParameter<edm::InputTag>("src"));
-  beamSpotToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
+  goodPrimaryVertexToken_ = consumes<reco::TrackCollection>(edm::InputTag("PrimaryVertex"));
 
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
   cut_minPt_ = trackPSet.getParameter<double>("minPt");
@@ -130,7 +131,7 @@ KVertexToMuMuProducer::KVertexToMuMuProducer(const edm::ParameterSet& pset)
 #endif
 }
 
-bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
+bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   using namespace reco;
   using namespace edm;
@@ -141,53 +142,42 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   std::auto_ptr<VCCandColl> decayCands(new VCCandColl);
   std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
   std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
+  
+  edm::Handle< VertexCollection >  goodPVHandle;
+  event.getByToken(goodPrimaryVertexToken_ , goodPVHandle);
 
-  edm::Handle<reco::BeamSpot> beamSpotHandle;
-  event.getByToken(beamSpotToken_, beamSpotHandle);
-  const double pvx = beamSpotHandle->position().x();
-  const double pvy = beamSpotHandle->position().y();
-  const double pvz = beamSpotHandle->position().z();
+  reco::Vertex goodPV;
+  if ( goodPVHandle->size() >0 ) goodPV = goodPVHandle->at(0);
+  else return false;
 
-  edm::ESHandle<MagneticField> bFieldHandle;
-  eventSetup.get<IdealMagneticFieldRecord>().get(bFieldHandle);
-  bField_ = bFieldHandle.product();
+  const double pvx = goodPV.position().x();
+  const double pvy = goodPV.position().y();
+  const double pvz = goodPV.position().z();
 
-  //edm::ESHandle<TrackerGeometry> trackerGeomHandle;
-  //eventSetup.get<TrackerDigiGeometryRecord>().get(trackerGeomHandle);
-  //trackerGeom_ = trackerGeomHandle.product();
 
-  edm::ESHandle<GlobalTrackingGeometry> glbTkGeomHandle;
-  eventSetup.get<GlobalTrackingGeometryRecord>().get(glbTkGeomHandle);
-  //glbTkGeom_ = glbTkGeomHandle.product();
+  edm::ESHandle<TransientTrackBuilder> theB;
+  eventSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
 
   edm::Handle<std::vector<pat::Muon> > muonHandle;
   event.getByToken(muonToken_, muonHandle);
 
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
-    const pat::Muon& muon1 = muonHandle->at(i);
-    if ( muon1.charge() >= 0 ) continue;
-    TrackRef trackRef1;
-    if ( muon1.isGlobalMuon() ) trackRef1 = muon1.globalTrack();
-    else if ( muon1.isTrackerMuon() ) trackRef1 = muon1.innerTrack();
-    else continue;
-    if ( !isGoodTrack(trackRef1, beamSpotHandle.product()) ) continue;
-
-    TransientTrack transTrack1(*trackRef1, bField_, glbTkGeomHandle);
+    const pat::Muon& lep1 = muonHandle->at(i);
+    if ( lep1.charge() >= 0 ) continue;
+    bool trigger = false;
+    bool& trig = trigger;
+    auto transTrack1 = GetTransientTrack(theB, lep1, trig);
+    if ( trig ) continue;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
 
     for ( int j=0; j<n; ++j )
     {
-      const pat::Muon& muon2 = muonHandle->at(j);
-      if ( muon2.charge() <= 0 ) continue;
-      TrackRef trackRef2;
-      if ( muon2.isGlobalMuon() ) trackRef2 = muon2.globalTrack();
-      else if ( muon2.isTrackerMuon() ) trackRef2 = muon2.innerTrack();
-      else continue;
-      if ( !isGoodTrack(trackRef2, beamSpotHandle.product()) ) continue;
-
-      TransientTrack transTrack2(*trackRef2, bField_, glbTkGeomHandle);
+      const pat::Muon& lep2 = muonHandle->at(j);
+      if ( lep2.charge() <= 0 ) continue;
+      auto transTrack2= GetTransientTrack(theB, lep2, trig);
+      if ( trig ) continue;
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
 
@@ -199,7 +189,6 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       if ( dca < 0. || dca > cut_DCA_ ) continue;
       GlobalPoint cxPt = cApp.crossingPoint();
       if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue;
-
       TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
       TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
       if ( !caState1.isValid() or !caState2.isValid() ) continue;
@@ -233,7 +222,8 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
 
       GlobalPoint vtxPos(vertex.x(), vertex.y(), vertex.z());
 
-      SMatrixSym3D totalCov = beamSpotHandle->rotatedCovariance3D() + vertex.covariance();
+      //SMatrixSym3D totalCov = beamSpotHandle->rotatedCovariance3D() + vertex.covariance();
+      SMatrixSym3D totalCov = goodPV.covariance() + vertex.covariance();
       SVector3 distanceVectorXY(vertex.x() - pvx, vertex.y() - pvy, 0.);
 
       double rVtxMag = ROOT::Math::Mag(distanceVectorXY);
@@ -272,6 +262,10 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       GlobalVector mom2(traj2->momentum());
       GlobalVector mom(mom1+mom2);
 
+      //TVector3 vec1( mom1.x()-vertex.x(), mom1.y()-vertex.y(),mom1.z()-vertex.z());     
+      //TVector3 vec2( mom2.x()-vertex.x(), mom2.y()-vertex.y(),mom2.z()-vertex.z());     
+
+
       //cleanup stuff we don't need anymore
       traj1.reset();
       traj2.reset();
@@ -292,13 +286,13 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
 
       // Match to muons
-      pat::Muon newMuon1(muon1);
-      pat::Muon newMuon2(muon2);
-      newMuon1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
-      newMuon2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
+      pat::Muon newLep1(lep1);
+      pat::Muon newLep2(lep2);
+      newLep1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
+      newLep2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);
-      cand->addDaughter(newMuon1);
-      cand->addDaughter(newMuon2);
+      cand->addDaughter(newLep1);
+      cand->addDaughter(newLep2);
 
       cand->setPdgId(pdgId_);
       AddFourMomenta addP4;
@@ -319,46 +313,19 @@ bool KVertexToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eve
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
 
-bool KVertexToMuMuProducer::isGoodTrack(const reco::TrackRef& track, const reco::BeamSpot* beamSpot) const
-{
-  //Turn off quality cuts - we discovered muon tracks does not pass this selection
-  //const static reco::TrackBase::TrackQuality trackQual = reco::TrackBase::qualityByName("loose");
-  //if ( !track->quality(trackQual) ) return false;
-  //if ( track->normalizedChi2() >= cut_trackChi2_ ) return false;
-  //if ( track->numberOfValidHits() < cut_trackNHit_ ) return false;
-  if ( track->pt() < cut_minPt_ or abs(track->eta()) > cut_maxEta_ ) return false;
-
-  FreeTrajectoryState initialFTS = trajectoryStateTransform::initialFreeState(*track, bField_);
-  TSCBLBuilderNoMaterial blsBuilder;
-  TrajectoryStateClosestToBeamLine tscb( blsBuilder(initialFTS, *beamSpot) );
-  if ( !tscb.isValid() ) return false;
-  //if ( tscb.transverseImpactParameter().significance() <= cut_trackSignif_ ) return false;
-
-  return true;
-}
-
-const pat::Muon* KVertexToMuMuProducer::matchMuon(const reco::TrackRef trackRef,
-                                                  pat::MuonCollection::const_iterator muonsBegin,
-                                                  pat::MuonCollection::const_iterator muonsEnd)
-{
-  const double trackPt = trackRef->pt();
-  const double trackEta = trackRef->eta();
-  const double trackPhi = trackRef->phi();
-  for ( auto mu = muonsBegin; mu != muonsEnd; ++mu )
-  {
-    if ( !mu->isTrackerMuon() and !mu->isPFMuon() ) continue;
-    const reco::TrackRef muonTrackRef = mu->innerTrack();
-    if ( trackRef == muonTrackRef ) return &(*mu);
-
-    const double muonPt = mu->pt();
-    const double muonEta = mu->eta();
-    const double muonPhi = mu->phi();
-    if ( std::abs(muonPt-trackPt)/trackPt < muonDPt_ and
-         reco::deltaR(trackEta, muonEta, trackPhi, muonPhi) > muonDR_ ) return &(*mu);
+reco::TransientTrack KJpsiToMuMuProducer::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon, bool& trig) {
+  reco::TrackRef track;
+  if ( muon.isGlobalMuon() ) track = muon.globalTrack(); 
+  else if ( muon.isTrackerMuon() ) track = muon.innerTrack();
+  else { 
+      trig = true;
+      return reco::TransientTrack(); 
   }
-  return 0;
+  return theB->build( track) ; 
+
 }
-
-
+ 
+typedef KJpsiToMuMuProducer KJpsiMuMuProducer;
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(KVertexToMuMuProducer);
+DEFINE_FWK_MODULE(KJpsiMuMuProducer);
+

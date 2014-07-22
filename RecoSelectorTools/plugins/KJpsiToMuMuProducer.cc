@@ -39,7 +39,7 @@ public:
 
 private:
   bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
-  reco::TransientTrack GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon, bool& trig);
+  bool getTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Muon& muon, reco::TransientTrack& transTrack);
 
 private:
   constexpr static double muonMass_ = 0.1056583715;
@@ -54,16 +54,14 @@ private:
   int cut_trackNHit_;
   double cut_vertexChi2_, cut_minLxy_, cut_maxLxy_, cut_vtxSignif_;
 
-  //double muonDPt_, muonDR_;
-
   unsigned int minNumber_, maxNumber_;
 
-  //const TrackerGeometry* trackerGeom_;
 #ifdef DEBUGPLOT
   TH1F* hRawMass_, * hFitMass_;
   TH2F* hRawMassVsFitMass_;
 #endif
 };
+
 KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
 {
   muonTag_ = pset.getParameter<edm::InputTag>("src");
@@ -115,33 +113,27 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   std::auto_ptr<VCCandColl> decayCands(new VCCandColl);
   std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
   std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
-  
+
   edm::Handle< reco::VertexCollection >  goodPVHandle;
   event.getByLabel(goodPrimaryVertexTag_ , goodPVHandle);
-
-  reco::Vertex goodPV;
-  if ( goodPVHandle->size() >0 ) goodPV = goodPVHandle->at(0);
-  else return false;
+  const reco::Vertex goodPV = goodPVHandle->at(0);
 
   const double pvx = goodPV.position().x();
   const double pvy = goodPV.position().y();
   const double pvz = goodPV.position().z();
 
-
-  edm::ESHandle<TransientTrackBuilder> theB;
-  eventSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
+  edm::ESHandle<TransientTrackBuilder> trackBuilder;
+  eventSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder);
 
   edm::Handle<std::vector<pat::Muon> > muonHandle;
   event.getByLabel(muonTag_, muonHandle);
 
+  reco::TransientTrack transTrack1, transTrack2;
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
     const pat::Muon& muon1 = muonHandle->at(i);
     if ( muon1.charge() >= 0 ) continue;
-    bool trigger = false;
-    bool& trig = trigger;
-    auto transTrack1 = GetTransientTrack(theB, muon1, trig);
-    if ( trig ) continue;
+    if ( !buildTransitentTrack(trackBuilder, muon1, transTrack1) ) continue;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
 
@@ -149,8 +141,7 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
     {
       const pat::Muon& muon2 = muonHandle->at(j);
       if ( muon2.charge() <= 0 ) continue;
-      auto transTrack2= GetTransientTrack(theB, muon2, trig);
-      if ( trig ) continue;
+      if ( !buildTransitentTrack(trackBuilder, muon2, transTrack2) ) continue;
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
 
@@ -282,19 +273,18 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
 
-reco::TransientTrack KJpsiToMuMuProducer::GetTransientTrack( edm::ESHandle<TransientTrackBuilder> theB, pat::Muon muon, bool& trig) {
-  reco::TrackRef track;
-  if ( muon.isGlobalMuon() ) track = muon.globalTrack(); 
-  else if ( muon.isTrackerMuon() ) track = muon.innerTrack();
-  else { 
-      trig = true;
-      return reco::TransientTrack(); 
-  }
-  return theB->build( track) ; 
+bool KJpsiToMuMuProducer::buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder,
+                                              const pat::Muon& muon, reco::TransitentTrack& transTrack)
+{
+  reco::TrackRef trackRef;
+  if ( muon.isGlobalMuon() ) trackRef = muon.globalTrack();
+  else if ( muon.isTrackerMuon() ) trackRef = muon.innerTrack();
+  else return false;
 
+  transTrack = trackBuilder->build(trackRef);
+  return true;
 }
- 
-typedef KJpsiToMuMuProducer KJpsiMuMuProducer;
+
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(KJpsiMuMuProducer);
+DEFINE_FWK_MODULE(KJpsiToMuMuProducer);
 

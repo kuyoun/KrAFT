@@ -35,6 +35,19 @@ flatJets = cms.EDProducer("FlatCandProducer",
     ),
 )
 
+flatJpsiMuMu = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("jpsiToMuMu"),
+    variables = cms.PSet(
+      pt = cms.string("pt"),
+    ),
+)
+flatJpsiElEl = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("jpsiToElEl"),
+    variables = cms.PSet(
+      pt = cms.string("pt"),
+    ),
+)
+
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
     cands = cms.PSet(
         muons = cms.PSet(

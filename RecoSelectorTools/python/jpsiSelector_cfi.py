@@ -2,6 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 jpsiToMuMu = cms.EDFilter("KJpsiToMuMuProducer",
     src = cms.InputTag("patMuonsPFlow"),
+    jet = cms.InputTag("goodJets"),
     primaryVertex = cms.InputTag("goodOfflinePrimaryVertices"),
     track = cms.PSet(
         minPt = cms.double(1.0),
@@ -30,6 +31,7 @@ jpsiToMuMu = cms.EDFilter("KJpsiToMuMuProducer",
 
 jpsiToElEl = cms.EDFilter("KJpsiToElElProducer",
     src = cms.InputTag("patElectronsPFlow"),
+    jet = cms.InputTag("goodJets"),
     primaryVertex = cms.InputTag("goodOfflinePrimaryVertices"),
     track = cms.PSet(
         minPt = cms.double(1.0),

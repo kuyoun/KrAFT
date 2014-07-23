@@ -38,13 +38,20 @@ flatJets = cms.EDProducer("FlatCandProducer",
 flatJpsiMuMu = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("jpsiToMuMu"),
     variables = cms.PSet(
-      pt = cms.string("pt"),
+      lxy = cms.InputTag("jpsiToMuMu", "lxy"),
+      l3D = cms.InputTag("jpsiToMuMu", "l3D"),
+      jetDR = cms.InputTag("jpsiToMuMu", "jetDR"),
+      vProb = cms.InputTag("jpsiToMuMu", "vProb"),
+      
     ),
 )
 flatJpsiElEl = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("jpsiToElEl"),
     variables = cms.PSet(
-      pt = cms.string("pt"),
+      lxy = cms.InputTag("jpsiToElEl", "lxy"),
+      l3D = cms.InputTag("jpsiToElEl", "l3D"),
+      jetDR = cms.InputTag("jpsiToElEl", "jetDR"),
+      vProb = cms.InputTag("jpsiToElEl", "vProb"),
     ),
 )
 

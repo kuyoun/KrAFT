@@ -10,6 +10,7 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
 
 #include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
 #include "DataFormats/Candidate/interface/VertexCompositeCandidate.h"
@@ -18,7 +19,7 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-
+#include <TVector2.h>
 //#define DEBUGPLOT
 
 #ifdef DEBUGPLOT
@@ -43,7 +44,7 @@ private:
 
 private:
   constexpr static double muonMass_ = 0.1056583715;
-  edm::InputTag muonTag_;
+  edm::InputTag muonTag_, jetTag_;
   edm::InputTag goodPrimaryVertexTag_;
 
   unsigned int pdgId_;
@@ -65,6 +66,7 @@ private:
 KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
 {
   muonTag_ = pset.getParameter<edm::InputTag>("src");
+  jetTag_ = pset.getParameter<edm::InputTag>("jet");
   goodPrimaryVertexTag_ = pset.getParameter<edm::InputTag>("primaryVertex");
 
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
@@ -93,6 +95,8 @@ KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
   produces<reco::VertexCompositeCandidateCollection>();
   produces<std::vector<double> >("lxy");
   produces<std::vector<double> >("l3D");
+  produces<std::vector<double> >("jetDR");
+  produces<std::vector<double> >("vProb");
 
 #ifdef DEBUGPLOT
   edm::Service<TFileService> fs;
@@ -113,6 +117,8 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   std::auto_ptr<VCCandColl> decayCands(new VCCandColl);
   std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
   std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
+  std::auto_ptr<std::vector<double> > minJetDR(new std::vector<double>);
+  std::auto_ptr<std::vector<double> > vProb(new std::vector<double>);
 
   edm::Handle< reco::VertexCollection >  goodPVHandle;
   event.getByLabel(goodPrimaryVertexTag_ , goodPVHandle);
@@ -258,15 +264,29 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
       AddFourMomenta addP4;
       addP4.set(*cand);
 
+      edm::Handle<std::vector<pat::Jet> > jetHandle;
+      event.getByLabel(jetTag_, jetHandle);
+     
+      double minDR = 9999.; 
+      for ( int i=0, n=jetHandle->size(); i<n; ++i ) {
+        Double_t deta = cand->eta() - jetHandle->at(i).eta();
+        Double_t dphi = TVector2::Phi_mpi_pi( cand->phi()-jetHandle->at(i).phi());
+        Double_t dr = TMath::Sqrt( deta*deta+dphi*dphi );
+        if ( minDR > dr ) minDR = dr ;
+      }
+
+      minJetDR->push_back(minDR);
+      vProb->push_back( TMath::Prob( vtxChi2, (int) vtxNdof));
       decayCands->push_back(*cand);
       decayLengths->push_back(rVtxMag);
       decayLengths3D->push_back(rVtxMag3D);
-
     }
   }
 
   const unsigned int nCands = decayCands->size();
   event.put(decayCands);
+  event.put(vProb,"vProb");
+  event.put(minJetDR,"jetDR");
   event.put(decayLengths, "lxy");
   event.put(decayLengths3D, "l3D");
 

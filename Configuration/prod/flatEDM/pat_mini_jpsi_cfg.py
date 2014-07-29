@@ -59,6 +59,7 @@ process.jpsiToMuMu.muonSrc = "slimmedMuons"
 process.jpsiToMuMu.electronSrc = "slimmedElectrons"
 
 process.goodOfflinePrimaryVertices.src= cms.InputTag("offlineSlimmedPrimaryVertices")
+process.goodOfflinePrimaryVertices.filter= cms.bool(True)
 
 process.options.wantSummary = False
 process.source.fileNames = [

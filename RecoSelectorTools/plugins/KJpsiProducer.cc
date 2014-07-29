@@ -123,6 +123,14 @@ bool KJpsiProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 
   edm::Handle< reco::VertexCollection >  goodPVHandle;
   event.getByToken(goodPrimaryVertexToken_ , goodPVHandle);
+  if ( goodPVHandle->size() ==0 ) {
+    edm::OrphanHandle< VCCandColl > outHandle = event.put(decayCands); 
+    event.put( getPtrValueMap( outHandle, decayLengths), "lxy");
+    event.put( getPtrValueMap( outHandle, decayLengths3D), "l3D");
+    event.put( getPtrValueMap( outHandle, vProb), "vProb");
+    event.put( getPtrValueMap( outHandle, minJetDR), "jetDR");
+    return false;
+  }
   const reco::Vertex goodPV = goodPVHandle->at(0);
 
   const double pvx = goodPV.position().x();

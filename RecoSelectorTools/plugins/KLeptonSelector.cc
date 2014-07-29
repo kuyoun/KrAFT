@@ -120,11 +120,15 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
   event.getByToken(rhoToken_, rhoHandle);
   const double rho = *(rhoHandle.product());
 
+  std::auto_ptr<std::vector<Lepton> > selectedLeptons(new std::vector<Lepton>());
   edm::Handle<reco::VertexCollection> vertexHandle;
   event.getByToken(vertexToken_, vertexHandle);
+  if ( vertexHandle->size() == 0 ) {
+    event.put(selectedLeptons);
+    return false; 
+  }
   const reco::Vertex& pv = vertexHandle->at(0);
 
-  std::auto_ptr<std::vector<Lepton> > selectedLeptons(new std::vector<Lepton>());
 
   for ( int i=0, n=leptonHandle->size(); i<n; ++i )
   {

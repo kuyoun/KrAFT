@@ -9,7 +9,7 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/TrackReco/interface/Track.h"
-#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 
 #include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
@@ -20,6 +20,7 @@
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include <TVector2.h>
+#include <TMath.h>
 //#define DEBUGPLOT
 
 #ifdef DEBUGPLOT
@@ -30,21 +31,21 @@
 #endif
 
 
-class KJpsiToMuMuProducer : public edm::EDFilter
+class KJpsiToElElProducer : public edm::EDFilter
 {
 public:
-  KJpsiToMuMuProducer(const edm::ParameterSet& pset);
-  ~KJpsiToMuMuProducer() {};
+  KJpsiToElElProducer(const edm::ParameterSet& pset);
+  ~KJpsiToElElProducer() {};
 
   bool filter(edm::Event& event, const edm::EventSetup& eventSetup);
 
 private:
   bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
-  bool buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Muon& muon, reco::TransientTrack& transTrack);
+  bool buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Electron& electron, reco::TransientTrack& transTrack);
 
 private:
-  constexpr static double muonMass_ = 0.1056583715;
-  edm::InputTag muonTag_, jetTag_;
+  constexpr static double electronMass_ = 0.0005;
+  edm::InputTag electronTag_, jetTag_;
   edm::InputTag goodPrimaryVertexTag_;
 
   unsigned int pdgId_;
@@ -63,9 +64,9 @@ private:
 #endif
 };
 
-KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
+KJpsiToElElProducer::KJpsiToElElProducer(const edm::ParameterSet& pset)
 {
-  muonTag_ = pset.getParameter<edm::InputTag>("src");
+  electronTag_ = pset.getParameter<edm::InputTag>("src");
   jetTag_ = pset.getParameter<edm::InputTag>("jet");
   goodPrimaryVertexTag_ = pset.getParameter<edm::InputTag>("primaryVertex");
 
@@ -106,7 +107,7 @@ KJpsiToMuMuProducer::KJpsiToMuMuProducer(const edm::ParameterSet& pset)
 #endif
 }
 
-bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
+bool KJpsiToElElProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
 {
   using namespace reco;
   using namespace edm;
@@ -131,23 +132,23 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   edm::ESHandle<TransientTrackBuilder> trackBuilder;
   eventSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder);
 
-  edm::Handle<std::vector<pat::Muon> > muonHandle;
-  event.getByLabel(muonTag_, muonHandle);
+  edm::Handle<std::vector<pat::Electron> > electronHandle;
+  event.getByLabel(electronTag_, electronHandle);
 
   reco::TransientTrack transTrack1, transTrack2;
-  for ( int i=0, n=muonHandle->size(); i<n; ++i )
+  for ( int i=0, n=electronHandle->size(); i<n; ++i )
   {
-    const pat::Muon& muon1 = muonHandle->at(i);
-    if ( muon1.charge() >= 0 ) continue;
-    if ( !buildTransientTrack(trackBuilder, muon1, transTrack1) ) continue;
+    const pat::Electron& electron1 = electronHandle->at(i);
+    if ( electron1.charge() >= 0 ) continue;
+    if ( !buildTransientTrack(trackBuilder, electron1, transTrack1) ) continue;
     if ( !transTrack1.impactPointTSCP().isValid() ) continue;
     FreeTrajectoryState ipState1 = transTrack1.impactPointTSCP().theState();
 
     for ( int j=0; j<n; ++j )
     {
-      const pat::Muon& muon2 = muonHandle->at(j);
-      if ( muon2.charge() <= 0 ) continue;
-      if ( !buildTransientTrack(trackBuilder, muon2, transTrack2) ) continue;
+      const pat::Electron& electron2 = electronHandle->at(j);
+      if ( electron2.charge() <= 0 ) continue;
+      if ( !buildTransientTrack(trackBuilder, electron2, transTrack2) ) continue;
       if ( !transTrack2.impactPointTSCP().isValid() ) continue;
       FreeTrajectoryState ipState2 = transTrack2.impactPointTSCP().theState();
 
@@ -159,14 +160,10 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
       if ( dca < 0. || dca > cut_DCA_ ) continue;
       GlobalPoint cxPt = cApp.crossingPoint();
       if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue;
-      TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
-      TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
-      if ( !caState1.isValid() or !caState2.isValid() ) continue;
 
-      const double rawEnergy = std::hypot(caState1.momentum().mag(), muonMass_)
-                             + std::hypot(caState2.momentum().mag(), muonMass_);
-      const double rawMass = sqrt(rawEnergy*rawEnergy - (caState1.momentum()+caState2.momentum()).mag2());
-
+      using namespace ROOT::Math;
+      ROOT::Math::LorentzVector<PxPyPzE4D<double> > sum_vec = electron1.p4() + electron2.p4();
+      const double rawMass = sum_vec.M();
 #ifdef DEBUGPLOT
       hRawMass_->Fill(rawMass);
 #endif
@@ -241,8 +238,8 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
       double vtxChi2(vertex.chi2());
       double vtxNdof(vertex.ndof());
 
-      const double candE1 = hypot(mom1.mag(), muonMass_);
-      const double candE2 = hypot(mom2.mag(), muonMass_);
+      const double candE1 = hypot(mom1.mag(), electronMass_);
+      const double candE2 = hypot(mom2.mag(), electronMass_);
 
       Particle::LorentzVector candLVec(mom.x(), mom.y(), mom.z(), candE1+candE2);
 #ifdef DEBUGPLOT
@@ -251,9 +248,9 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
 #endif
       if ( massMin_ > candLVec.mass() or massMax_ < candLVec.mass() ) continue;
 
-      // Match to muons
-      pat::Muon newLep1(muon1);
-      pat::Muon newLep2(muon2);
+      // Match to electrons
+      pat::Electron newLep1(electron1);
+      pat::Electron newLep2(electron2);
       newLep1.setP4(reco::Candidate::LorentzVector(mom1.x(), mom1.y(), mom1.z(), candE1));
       newLep2.setP4(reco::Candidate::LorentzVector(mom2.x(), mom2.y(), mom2.z(), candE2));
       VertexCompositeCandidate* cand = new VertexCompositeCandidate(0, candLVec, vtx, vtxCov, vtxChi2, vtxNdof);
@@ -280,6 +277,7 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
       decayCands->push_back(*cand);
       decayLengths->push_back(rVtxMag);
       decayLengths3D->push_back(rVtxMag3D);
+
     }
   }
 
@@ -293,18 +291,15 @@ bool KJpsiToMuMuProducer::filter(edm::Event& event, const edm::EventSetup& event
   return (nCands >= minNumber_ and nCands <= maxNumber_);
 }
 
-bool KJpsiToMuMuProducer::buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder,
-                                              const pat::Muon& muon, reco::TransientTrack& transTrack)
+bool KJpsiToElElProducer::buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder,
+                                              const pat::Electron& electron, reco::TransientTrack& transTrack)
 {
-  reco::TrackRef trackRef;
-  if ( muon.isGlobalMuon() ) trackRef = muon.globalTrack();
-  else if ( muon.isTrackerMuon() ) trackRef = muon.innerTrack();
-  else return false;
+  if ( electron.gsfTrack().isNull() ) return false;
 
-  transTrack = trackBuilder->build(trackRef);
+  transTrack = trackBuilder->build(electron.gsfTrack());
   return true;
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
-DEFINE_FWK_MODULE(KJpsiToMuMuProducer);
+DEFINE_FWK_MODULE(KJpsiToElElProducer);
 

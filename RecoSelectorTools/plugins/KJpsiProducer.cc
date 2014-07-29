@@ -11,6 +11,7 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
 
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
@@ -23,6 +24,7 @@
 #include "TrackingTools/PatternTools/interface/ClosestApproachInRPhi.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 
+#include <TVector2.h>
 //#define DEBUGPLOT
 
 #ifdef DEBUGPLOT
@@ -32,6 +34,8 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #endif
 
+
+typedef reco::VertexCompositeCandidateCollection VCCandColl;
 
 class KJpsiProducer : public edm::EDFilter
 {
@@ -45,12 +49,14 @@ private:
   bool isGoodTrack(const reco::TrackRef& track, const GlobalPoint& pvPoint) const;
   bool buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Muon& muon, reco::TransientTrack& transTrack) const;
   bool buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder, const pat::Electron& electron, reco::TransientTrack& transTrack) const;
+  std::auto_ptr<edm::ValueMap<double> > getPtrValueMap( edm::OrphanHandle< VCCandColl > outHandle, std::vector<double> vmValue); 
 
 private:
   constexpr static double muonMass_ = 0.1056583715;
   constexpr static double electronMass_ = 0.0005;
   edm::EDGetTokenT<std::vector<pat::Muon> > muonToken_;
   edm::EDGetTokenT<std::vector<pat::Electron> > electronToken_;
+  edm::EDGetTokenT<std::vector<pat::Jet> > jetToken_;
   edm::EDGetTokenT<reco::VertexCollection> goodPrimaryVertexToken_;
 
   unsigned int pdgId_;
@@ -68,6 +74,7 @@ KJpsiProducer::KJpsiProducer(const edm::ParameterSet& pset)
 {
   muonToken_ = consumes<std::vector<pat::Muon> >(pset.getParameter<edm::InputTag>("muonSrc"));
   electronToken_ = consumes<std::vector<pat::Electron> >(pset.getParameter<edm::InputTag>("electronSrc"));
+  jetToken_ = consumes<std::vector<pat::Jet> >(pset.getParameter<edm::InputTag>("jetSrc"));
   goodPrimaryVertexToken_ = consumes<reco::VertexCollection>(pset.getParameter<edm::InputTag>("primaryVertex"));
 
   edm::ParameterSet trackPSet = pset.getParameter<edm::ParameterSet>("track");
@@ -94,8 +101,10 @@ KJpsiProducer::KJpsiProducer(const edm::ParameterSet& pset)
   maxNumber_ = pset.getParameter<unsigned int>("maxNumber");
 
   produces<reco::VertexCompositeCandidateCollection>();
-  produces<std::vector<double> >("lxy");
-  produces<std::vector<double> >("l3D");
+  produces<edm::ValueMap<double> >("lxy");
+  produces<edm::ValueMap<double> >("l3D");
+  produces<edm::ValueMap<double> >("jetDR");
+  produces<edm::ValueMap<double> >("vProb");
 
 }
 
@@ -105,11 +114,12 @@ bool KJpsiProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   using namespace edm;
   using namespace std;
 
-  typedef reco::VertexCompositeCandidateCollection VCCandColl;
 
   std::auto_ptr<VCCandColl> decayCands(new VCCandColl);
-  std::auto_ptr<std::vector<double> > decayLengths(new std::vector<double>);
-  std::auto_ptr<std::vector<double> > decayLengths3D(new std::vector<double>);
+  std::vector<double> decayLengths;
+  std::vector<double> decayLengths3D;
+  std::vector<double> minJetDR;
+  std::vector<double> vProb;
 
   edm::Handle< reco::VertexCollection >  goodPVHandle;
   event.getByToken(goodPrimaryVertexToken_ , goodPVHandle);
@@ -128,13 +138,11 @@ bool KJpsiProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   edm::Handle<std::vector<pat::Electron> > electronHandle;
   event.getByToken(electronToken_, electronHandle);
 
-  std::cout<<pvx<<pvy<<pvz<<std::endl;
   vector<TransientTrack> transTrack1;
   vector<TransientTrack> transTrack2;
   std::vector<reco::LeafCandidate> lep1;
   std::vector<reco::LeafCandidate> lep2;
   vector<int> lep_id;
-
   for ( int i=0, n=muonHandle->size(); i<n; ++i )
   {
     reco::TransientTrack t1, t2;
@@ -157,7 +165,7 @@ bool KJpsiProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
       lep_id.push_back(13);
     }
   }
-  for( unsigned int i=0 ; i< muonHandle->size();++i) {
+  for( unsigned int i=0 ; i< transTrack1.size();++i) {
     FreeTrajectoryState ipState1 = transTrack1[i].impactPointTSCP().theState();
     FreeTrajectoryState ipState2 = transTrack2[i].impactPointTSCP().theState();
 
@@ -264,19 +272,44 @@ bool KJpsiProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
     AddFourMomenta addP4;
     addP4.set(*cand);
 
+    edm::Handle<std::vector<pat::Jet> > jetHandle;
+    event.getByToken(jetToken_, jetHandle);
+     
+    double minDR = 9999.;
+    for ( int i=0, n=jetHandle->size(); i<n; ++i ) {
+      Double_t deta = cand->eta() - jetHandle->at(i).eta();
+      Double_t dphi = TVector2::Phi_mpi_pi( cand->phi()- jetHandle->at(i).phi());
+      Double_t dr = TMath::Sqrt( deta*deta+dphi*dphi );
+      if ( minDR > dr ) minDR = dr ;
+    }
     decayCands->push_back(*cand);
-    decayLengths->push_back(rVtxMag);
-    decayLengths3D->push_back(rVtxMag3D);
+    LogDebug("KJpsiProducer")<<"minJetDR : "<<minDR<<"at Jet size : "<<jetHandle->size()<<std::endl;
+    minJetDR.push_back(minDR);
+    vProb.push_back( TMath::Prob( vtxChi2, (int) vtxNdof)); 
+    decayLengths.push_back(rVtxMag);
+    decayLengths3D.push_back(rVtxMag3D);
 
   }
 
   const unsigned int nCands = decayCands->size();
-  
-  event.put(decayCands);
-  event.put(decayLengths, "lxy");
-  event.put(decayLengths3D, "l3D");
+  edm::OrphanHandle< VCCandColl > outHandle = event.put(decayCands); 
+
+  event.put( getPtrValueMap( outHandle, decayLengths), "lxy");
+  event.put( getPtrValueMap( outHandle, decayLengths3D), "l3D");
+  event.put( getPtrValueMap( outHandle, vProb), "vProb");
+  event.put( getPtrValueMap( outHandle, minJetDR), "jetDR");
 
   return (nCands >= minNumber_ and nCands <= maxNumber_);
+}
+
+
+std::auto_ptr<edm::ValueMap<double> > KJpsiProducer::getPtrValueMap( edm::OrphanHandle< VCCandColl > outHandle, std::vector<double> vmValue) 
+{
+  std::auto_ptr<edm::ValueMap<double> > temp_valuemap( new edm::ValueMap<double> );
+  edm::ValueMap<double>::Filler filler(*temp_valuemap);
+  filler.insert(outHandle, vmValue.begin(), vmValue.end() );
+  filler.fill();
+  return temp_valuemap;
 }
 
 bool KJpsiProducer::buildTransientTrack(edm::ESHandle<TransientTrackBuilder>& trackBuilder,

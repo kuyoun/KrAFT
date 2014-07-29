@@ -34,6 +34,16 @@ flatJets = cms.EDProducer("FlatCandProducer",
         resDn = cms.InputTag("goodJets", "resDn"),
     ),
 )
+flatJpsiMuMu = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("jpsiToMuMu"),
+    variables = cms.PSet(
+      lxy = cms.InputTag("jpsiToMuMu", "lxy"),
+      l3D = cms.InputTag("jpsiToMuMu", "l3D"),
+      jetDR = cms.InputTag("jpsiToMuMu", "jetDR"),
+      vProb = cms.InputTag("jpsiToMuMu", "vProb"),
+    ),
+)
+
 
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
     cands = cms.PSet(
@@ -56,6 +66,12 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
             src = cms.InputTag("flatJets"),
             vmaps = cms.vstring(
                 "bTagCSV", "up", "dn", "res", "resUp", "resDn",
+            ),
+        ),
+        jpsis = cms.PSet(
+            src = cms.InputTag("flatJpsiMuMu"),
+            vmaps = cms.vstring(
+                "lxy", "l3D", "jetDR", "vProb",
             ),
         ),
     ),

@@ -153,7 +153,7 @@ bool KJpsiProducer<T>::filter(edm::Event& event, const edm::EventSetup& eventSet
   {
     reco::TransientTrack transTrack;
     if ( !buildTransientTrack(trackBuilder, lepton, transTrack) ) continue;
-    if ( transTrack.impactPointTSCP().isValid() ) continue;
+    if ( !transTrack.impactPointTSCP().isValid() ) continue;
 
     if ( lepton.charge() < 0 ) transTracks1.push_back(transTrack);
     else if ( lepton.charge() > 0 ) transTracks2.push_back(transTrack);

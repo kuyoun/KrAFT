@@ -139,10 +139,20 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
     makeIsoVeto(srcLepton, vetos_ch, vetos_nh, vetos_ph);
     const double effArea = getEffectiveArea(srcLepton);
 
-    const double chIso = srcLepton.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(coneSize_, vetos_ch).first;
-    const double pcIso = srcLepton.isoDeposit(pat::PfPUChargedHadronIso)->depositAndCountWithin(coneSize_, vetos_ch).first;
-    const double nhIso = srcLepton.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(coneSize_, vetos_nh).first;
-    const double phIso = srcLepton.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(coneSize_, vetos_ph).first;
+    double chIso, pcIso, nhIso, phIso;
+    if ( srcLepton.isoDeposit(pat::PfChargedHadronIso) != nullptr) {
+      chIso = srcLepton.isoDeposit(pat::PfChargedHadronIso)->depositAndCountWithin(coneSize_, vetos_ch).first;
+      pcIso = srcLepton.isoDeposit(pat::PfPUChargedHadronIso)->depositAndCountWithin(coneSize_, vetos_ch).first;
+      nhIso = srcLepton.isoDeposit(pat::PfNeutralHadronIso)->depositAndCountWithin(coneSize_, vetos_nh).first;
+      phIso = srcLepton.isoDeposit(pat::PfGammaIso)->depositAndCountWithin(coneSize_, vetos_ph).first;
+    }
+    else {
+      std::cerr<<"skip iso"<<std::endl;
+      chIso=0.0;
+      pcIso=0.0;
+      nhIso=0.0;
+      phIso=0.0;
+    }
 
     const float relIso = (chIso+nhIso+phIso)/srcLepton.pt();
     const float relIsoDbeta = (chIso+max(0., nhIso+phIso-0.5*pcIso))/srcLepton.pt();

@@ -14,7 +14,7 @@ flatMuons = cms.EDProducer("FlatCandProducer",
 flatElectrons = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("goodElectrons"),
     variables = cms.PSet(
-        mva = cms.string("electronID('mvaTrigV0')"),
+        #mva = cms.string("electronID('mvaTrigV0')"),  # FIXME for miniAOD 
         relIso = cms.string("userIso(2)"),
         scEta = cms.string("superCluster.eta"),
         dxy = cms.string("dB"),
@@ -57,7 +57,8 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
         electrons = cms.PSet(
             src = cms.InputTag("flatElectrons"),
             vmaps = cms.vstring(
-                "mva", "scEta",
+                #"mva",   # FIXME for miniAOD
+                "scEta",
                 "relIso", "dxy", "dz",
                 #"chargeID",
             ),

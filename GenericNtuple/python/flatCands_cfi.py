@@ -14,7 +14,7 @@ flatMuons = cms.EDProducer("FlatCandProducer",
 flatElectrons = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("goodElectrons"),
     variables = cms.PSet(
-        mva = cms.string("electronID('mvaTrigV0')"),
+        #mva = cms.string("electronID('mvaTrigV0')"),  # FIXME for miniAOD 
         relIso = cms.string("userIso(2)"),
         scEta = cms.string("superCluster.eta"),
         dxy = cms.string("dB"),
@@ -34,6 +34,16 @@ flatJets = cms.EDProducer("FlatCandProducer",
         resDn = cms.InputTag("goodJets", "resDn"),
     ),
 )
+flatJpsiMuMu = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("jpsiToMuMu"),
+    variables = cms.PSet(
+      lxy = cms.InputTag("jpsiToMuMu", "lxy"),
+      l3D = cms.InputTag("jpsiToMuMu", "l3D"),
+      jetDR = cms.InputTag("jpsiToMuMu", "jetDR"),
+      vProb = cms.InputTag("jpsiToMuMu", "vProb"),
+    ),
+)
+
 
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
     cands = cms.PSet(
@@ -47,7 +57,8 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
         electrons = cms.PSet(
             src = cms.InputTag("flatElectrons"),
             vmaps = cms.vstring(
-                "mva", "scEta",
+                #"mva",   # FIXME for miniAOD
+                "scEta",
                 "relIso", "dxy", "dz",
                 #"chargeID",
             ),
@@ -56,6 +67,12 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
             src = cms.InputTag("flatJets"),
             vmaps = cms.vstring(
                 "bTagCSV", "up", "dn", "res", "resUp", "resDn",
+            ),
+        ),
+        jpsis = cms.PSet(
+            src = cms.InputTag("flatJpsiMuMu"),
+            vmaps = cms.vstring(
+                "lxy", "l3D", "jetDR", "vProb",
             ),
         ),
     ),

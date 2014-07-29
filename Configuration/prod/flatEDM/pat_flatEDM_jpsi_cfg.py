@@ -19,23 +19,23 @@ getattr(process,"pfNoJet"+postfix).enable = True
 #getattr(process,"pfNoTau"+postfix).enable = True
 getattr(process,"pfNoMuonJME"+postfix).verbose = False
 getattr(process,"pfIsolatedMuons"+postfix).doDeltaBetaCorrection = cms.bool(True)
+
 # load KrAFT
 process.load("KrAFT.Configuration.commonFilters_cff")
 process.load("KrAFT.RecoSelectorTools.leptonSelector_cfi")
 process.load("KrAFT.RecoSelectorTools.jetSelector_cfi")
-process.load("KrAFT.GenericNtuple.flatCands_cfi")
+process.load("KrAFT.RecoSelectorTools.jpsiToMuMu_cfi")
 
+process.load("KrAFT.GenericNtuple.flatCands_cfi")
 process.goodMuons.rho = "fixedGridRhoFastjetAll"
 process.goodElectrons.rho = "fixedGridRhoFastjetAll"
 process.goodJets.isMC = cms.bool(isMC)
 
 process.options.wantSummary = False
-process.maxEvents.input = 100
+process.maxEvents.input = -1
 process.source.fileNames = [
-    '/store/relval/CMSSW_7_0_6/RelValTTbarLepton_13/GEN-SIM-RECO/PLS170_V7AN1-v1/00000/4EA445A2-3BFA-E311-B066-0026189438BA.root',
-    '/store/relval/CMSSW_7_0_6/RelValTTbarLepton_13/GEN-SIM-RECO/PLS170_V7AN1-v1/00000/F0AADC82-39FA-E311-8050-002354EF3BD0.root',
-    '/store/relval/CMSSW_7_0_6/RelValTTbarLepton_13/GEN-SIM-RECO/PLS170_V7AN1-v1/00000/FC321902-35FA-E311-B1FE-002618943957.root',
-
+    '/store/relval/CMSSW_7_0_6_patch1/RelValJpsiMM_13/GEN-SIM-RECO/PLS170_V7AN1-v1/00000/DC160579-8802-E411-AEB6-002618943978.root',
+    '/store/relval/CMSSW_7_0_6_patch1/RelValJpsiMM_13/GEN-SIM-RECO/PLS170_V7AN1-v1/00000/FA2F148F-8B02-E411-B8CB-0025905A6090.root',
 ]
 process.out.outputCommands = ['drop *','keep *_flat*_*_*']
 process.out.fileName = "out.root"

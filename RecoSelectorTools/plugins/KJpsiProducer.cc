@@ -61,6 +61,7 @@ private:
   unsigned int minNumber_, maxNumber_;
 
 };
+
 KJpsiProducer::KJpsiProducer(const edm::ParameterSet& pset)
 {
   muonToken_ = consumes<std::vector<pat::Muon> >(pset.getParameter<edm::InputTag>("muonSrc"));
@@ -141,17 +142,15 @@ bool KJpsiProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
   std::vector<reco::LeafCandidate> lep1;
   std::vector<reco::LeafCandidate> lep2;
   vector<int> lep_id;
-  for ( int i=0, n=muonHandle->size(); i<n; ++i )
+  for ( auto& muon1 : *muonHandle )
   {
     reco::TransientTrack t1, t2;
-    const pat::Muon& muon1 = muonHandle->at(i);
     if ( muon1.charge() >= 0 ) continue;
     if ( !buildTransientTrack(trackBuilder, muon1, t1) ) continue;
     if ( !t1.impactPointTSCP().isValid() ) continue;
 
-    for ( int j=0; j<n; ++j )
+    for ( auto& muon2 : *muonHandle )
     {
-      const pat::Muon& muon2 = muonHandle->at(j);
       if ( muon2.charge() <= 0 ) continue;
       if ( !buildTransientTrack(trackBuilder, muon2, t2) ) continue;
       if ( !t2.impactPointTSCP().isValid() ) continue;
@@ -223,11 +222,10 @@ bool KJpsiProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
     else
     {
       TransientTrack* refTrack1 = 0, * refTrack2 = 0;
-      for ( std::vector<TransientTrack>::iterator refTrack = refittedTracks.begin();
-            refTrack != refittedTracks.end(); ++refTrack )
+      for ( auto& refTrack : refittedTracks )
       {
-        if ( refTrack->track().charge() < 0 ) refTrack1 = &*refTrack;
-        else refTrack2 = &*refTrack;
+        if ( refTrack.track().charge() < 0 ) refTrack1 = &refTrack;
+        else refTrack2 = &refTrack;
       }
       if ( refTrack1 == 0 or refTrack2 == 0 ) continue;
       traj1.reset(new TrajectoryStateClosestToPoint(refTrack1->trajectoryStateClosestToPoint(vtxPos)));
@@ -274,11 +272,10 @@ bool KJpsiProducer::filter(edm::Event& event, const edm::EventSetup& eventSetup)
     event.getByToken(jetToken_, jetHandle);
 
     double minDR = 9999.;
-    for ( int i=0, n=jetHandle->size(); i<n; ++i ) {
-      Double_t deta = cand->eta() - jetHandle->at(i).eta();
-      Double_t dphi = TVector2::Phi_mpi_pi( cand->phi()- jetHandle->at(i).phi());
-      Double_t dr = TMath::Sqrt( deta*deta+dphi*dphi );
-      if ( minDR > dr ) minDR = dr ;
+    for ( auto& jet : *jetHandle )
+    {
+      const double dR = deltaR(*cand, jet);
+      minDR = std::min(minDR, dR);
     }
     decayCands->push_back(*cand);
     LogDebug("KJpsiProducer")<<"minJetDR : "<<minDR<<"at Jet size : "<<jetHandle->size()<<std::endl;

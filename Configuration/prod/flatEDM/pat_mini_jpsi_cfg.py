@@ -10,23 +10,8 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring()
 )
 
-#from PhysicsTools.PatAlgos.tools.pfTools import *
-postfix = "PFlow"
-jetAlgo="AK5"
 isMC = True
-"""
-usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=isMC, postfix=postfix, outputModules=[])
 
-# top projections in PF2PAT:
-getattr(process,"pfNoPileUpJME"+postfix).enable = True
-getattr(process,"pfNoMuonJME"+postfix).enable = True
-getattr(process,"pfNoElectronJME"+postfix).enable = True
-getattr(process,"pfNoTau"+postfix).enable = False
-getattr(process,"pfNoJet"+postfix).enable = True
-#getattr(process,"pfNoTau"+postfix).enable = True
-getattr(process,"pfNoMuonJME"+postfix).verbose = False
-getattr(process,"pfIsolatedMuons"+postfix).doDeltaBetaCorrection = cms.bool(True)
-"""
 # load KrAFT
 process.load("KrAFT.Configuration.commonFilters_cff")
 process.load("KrAFT.RecoSelectorTools.leptonSelector_cfi")
@@ -43,39 +28,31 @@ process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 
 process.load("KrAFT.GenericNtuple.flatCands_cfi")
 
-
-
 process.goodMuons.src = "slimmedMuons"
-process.goodMuons.rho = "fixedGridRhoAll"
+process.goodMuons.rho = "fixedGridRhoFastjetAll"
 
 process.goodElectrons.src = "slimmedElectrons"
-process.goodElectrons.rho = "fixedGridRhoAll"
+process.goodElectrons.rho = "fixedGridRhoFastjetAll"
 
 process.goodJets.jet = "slimmedJets"
 process.goodJets.met = "slimmedMETs"
 process.goodJets.isMC= isMC
 
-process.jpsiToMuMu.muonSrc = "slimmedMuons"
-process.jpsiToMuMu.electronSrc = "slimmedElectrons"
+process.jpsiToMuMu.src = "slimmedMuons"
+process.jpsiToElEl.src = "slimmedElectrons"
 
-process.goodOfflinePrimaryVertices.src= cms.InputTag("offlineSlimmedPrimaryVertices")
-process.goodOfflinePrimaryVertices.filter= cms.bool(True)
+process.goodOfflinePrimaryVertices.src = cms.InputTag("offlineSlimmedPrimaryVertices")
+process.goodOfflinePrimaryVertices.filter = cms.bool(True)
 
 process.options.wantSummary = False
 process.source.fileNames = [
     '/store/relval/CMSSW_7_0_6_patch1/RelValJpsiMM_13/MINIAODSIM/PLS170_V6AN1-v1/00000/AE482444-9502-E411-B5E7-002618943810.root'
 ]
+
 process.out = cms.OutputModule("PoolOutputModule",
-                               fileName = cms.untracked.string('patTuple.root'),
-                               ## save only events passing the full path
-                               #SelectEvents = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
-                               ## save PAT output; you need a '*' to unpack the list of commands
-                               ## 'patEventContent'
-                               outputCommands = cms.untracked.vstring('drop *')
-                               )
-
-
-
+    fileName = cms.untracked.string('patTuple.root'),
+    outputCommands = cms.untracked.vstring('drop *')
+)
 process.out.outputCommands = ['drop *', 'keep *_flat*_*_*',]
 process.out.fileName = "out.root"
 process.outPath = cms.EndPath(process.out)

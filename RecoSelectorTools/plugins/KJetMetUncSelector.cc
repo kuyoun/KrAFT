@@ -153,16 +153,16 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
   std::vector<const reco::Candidate*> overlapCands;
   if ( doClean_ )
   {
-    for ( int iLabel=0, nLabel=overlapCandLabels_.size(); iLabel<nLabel; ++iLabel )
+    for ( auto& overlapCandLabel : overlapCandLabels_ )
     {
       edm::Handle<edm::View<reco::Candidate> > overlapCandHandle;
-      event.getByLabel(overlapCandLabels_.at(iLabel), overlapCandHandle);
+      event.getByLabel(overlapCandLabel, overlapCandHandle);
 
       //if ( !overlapCandHandle.isValid() ) continue;
 
-      for ( int i=0, n=overlapCandHandle->size(); i<n; ++i )
+      for ( auto& overlapCand : *overlapCandHandle )
       {
-        overlapCands.push_back(&(overlapCandHandle->at(i)));
+        overlapCands.push_back(&overlapCand);
       }
     }
   }
@@ -170,9 +170,8 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
   // Now start to build jet collection
   std::auto_ptr<std::vector<pat::Jet> > cleanJets(new std::vector<pat::Jet>());
 
-  for ( int i=0, n=jetHandle->size(); i<n; ++i )
+  for ( auto jet : *jetHandle )
   {
-    pat::Jet jet = jetHandle->at(i);
     if ( !(*isGoodJet_)(jet) ) continue;
     const reco::Candidate::LorentzVector jetP4 = jet.p4();
     const double jetPt = jetP4.pt();
@@ -231,9 +230,9 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
     if ( doClean_ )
     {
       bool isOverlap = false;
-      for ( int j=0, m=overlapCands.size(); j<m; ++j )
+      for ( auto overlapCand : overlapCands )
       {
-        if ( deltaR(jet.p4(), overlapCands.at(j)->p4()) < overlapDeltaR_ )
+        if ( deltaR(jet.p4(), overlapCand->p4()) < overlapDeltaR_ )
         {
           isOverlap = true;
         }

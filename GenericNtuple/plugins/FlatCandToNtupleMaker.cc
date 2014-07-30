@@ -45,6 +45,8 @@ private:
   typedef edm::EDGetTokenT<CandView> CandToken;
   typedef edm::EDGetTokenT<Vmap> VmapToken;
 
+  int runNumber_, lumiNumber_, eventNumber_;
+
   std::vector<CandToken> candTokens_;
   std::vector<std::vector<VmapToken> > vmapTokens_;
 
@@ -99,6 +101,10 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
 void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
+  runNumber_ = event.run();
+  lumiNumber_ = event.luminosityBlock();
+  eventNumber_ = event.id().event();
+
   const size_t nCand = candTokens_.size();
   for ( size_t iCand=0; iCand < nCand; ++iCand )
   {

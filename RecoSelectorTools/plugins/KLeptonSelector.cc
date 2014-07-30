@@ -126,9 +126,9 @@ bool KLeptonSelector<Lepton>::filter(edm::Event& event, const edm::EventSetup& e
 
   std::auto_ptr<std::vector<Lepton> > selectedLeptons(new std::vector<Lepton>());
 
-  for ( int i=0, n=leptonHandle->size(); i<n; ++i )
+  for ( auto& srcLepton : *leptonHandle )
   {
-    const Lepton& srcLepton = leptonHandle->at(i);
+    //const Lepton& srcLepton = leptonHandle->at(i);
     if ( !(*preselect_)(srcLepton) ) continue;
 
     reco::IsoDeposit::AbsVetos vetos_ch, vetos_nh, vetos_ph;

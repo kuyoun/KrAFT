@@ -71,7 +71,7 @@ GenJetPartonAssociator::GenJetPartonAssociator(const edm::ParameterSet& pset)
   // List of parton's PDG id's to perform matching
   // Give empty list to match all particles with status code = 3
   std::vector<unsigned int> pdgIdsToMatch = pset.getParameter<std::vector<unsigned int> >("pdgIdsToMatch");
-  for ( int i=0, n=pdgIdsToMatch.size(); i<n; ++i ) pdgIdsToMatch_.insert(pdgIdsToMatch[i]);
+  for ( auto& pdgIdToMatch : pdgIdsToMatch ) pdgIdsToMatch_.insert(pdgIdToMatch);
 
   produces<reco::GenJetToGenParticlesMap>();
 }
@@ -88,7 +88,7 @@ void GenJetPartonAssociator::produce(edm::Event& event, const edm::EventSetup& e
 
   // Collect list of gen particles in hard process
   std::vector<unsigned int> genPartonIndicies;
-  for ( int i=0, n=genParticleHandle->size(); i<n; ++i )
+  for ( unsigned int i=0, n=genParticleHandle->size(); i<n; ++i )
   {
     const reco::GenParticle& p = genParticleHandle->at(i);
     if ( p.status() != 3 ) continue; // Keep "hard processes" only
@@ -102,23 +102,23 @@ void GenJetPartonAssociator::produce(edm::Event& event, const edm::EventSetup& e
   const int nGenParton = genPartonIndicies.size();
 
   // Find matching between genJet to genParticle
-  for ( int i=0, n=genJetHandle->size(); i<n; ++i )
+  for ( unsigned int i=0, n=genJetHandle->size(); i<n; ++i )
   {
+    auto& genJet = genJetHandle->at(i);
     std::set<unsigned int> matchedPartons;
-    const reco::GenJet& genJet = genJetHandle->at(i);
 
     if ( matchAlgo_ == 1 ) // Algorithm 1 : deltaR (and deltaPt) matching
     {
       const reco::Candidate::LorentzVector& genJetP4 = genJet.p4();
       const double genJetPt = genJet.pt();
 
-      for ( int k=0; k<nGenParton; ++k )
+      for ( auto genPartonIndex : genPartonIndicies )
       {
-        const reco::GenParticle* genParton = &genParticleHandle->at(genPartonIndicies[k]);
+        const reco::GenParticle* genParton = &genParticleHandle->at(genPartonIndex);
         if ( reco::deltaR(genJetP4, genParton->p4()) > cut_maxDR_ ) continue;
         if ( abs(genJetPt-genParton->pt()) > cut_maxDPt_ ) continue;
 
-        matchedPartons.insert(genPartonIndicies[k]);
+        matchedPartons.insert(genPartonIndex);
       }
     }
     else if ( matchAlgo_ == 2 ) // Algorithm 2 : Jet constituent overlap check
@@ -133,10 +133,9 @@ void GenJetPartonAssociator::produce(edm::Event& event, const edm::EventSetup& e
 
         int nMatched = 0;
 
-        for ( int j=0; j<nConstituent; ++j )
+        for ( auto& pp : genConstituents )
         {
-          const reco::GenParticle* p = genConstituents[j];
-          if ( !hasMother(p, genParton) ) continue;
+          if ( !hasMother(pp, genParton) ) continue;
 
           ++nMatched;
         }
@@ -152,9 +151,9 @@ void GenJetPartonAssociator::produce(edm::Event& event, const edm::EventSetup& e
 
     // Add mothers into the matched partons list
     std::set<unsigned int> matchedMothers;  
-    for ( std::set<unsigned int>::const_iterator kIter = matchedPartons.begin(); kIter != matchedPartons.end(); ++kIter )
+    for ( auto k : matchedPartons )
     {
-      const reco::GenParticle* p = &genParticleHandle->at(*kIter);
+      const reco::GenParticle* p = &genParticleHandle->at(k);
       const reco::GenParticle* m = p;
       while ( (m = dynamic_cast<const reco::GenParticle*>(m->mother()) ) != 0 )
       {
@@ -169,9 +168,9 @@ void GenJetPartonAssociator::produce(edm::Event& event, const edm::EventSetup& e
     matchedPartons.insert(matchedMothers.begin(), matchedMothers.end());
 
     edm::Ref<std::vector<reco::GenJet> > genJetRef(genJetHandle, i);
-    for ( std::set<unsigned int>::const_iterator kIter = matchedPartons.begin(); kIter != matchedPartons.end(); ++kIter )
+    for ( auto k : matchedPartons )
     {
-      edm::Ref<std::vector<reco::GenParticle> > genParticleRef(genParticleHandle, *kIter);
+      edm::Ref<std::vector<reco::GenParticle> > genParticleRef(genParticleHandle, k);
       genJetToGenParticlesMap->insert(genJetRef, genParticleRef);
     }
   }

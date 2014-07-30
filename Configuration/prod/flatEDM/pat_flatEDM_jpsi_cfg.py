@@ -18,13 +18,21 @@ getattr(process,"pfNoTau"+postfix).enable = False
 getattr(process,"pfNoJet"+postfix).enable = True
 #getattr(process,"pfNoTau"+postfix).enable = True
 getattr(process,"pfNoMuonJME"+postfix).verbose = False
-getattr(process,"pfIsolatedMuons"+postfix).doDeltaBetaCorrection = cms.bool(True)
 
 # load KrAFT
 process.load("KrAFT.Configuration.commonFilters_cff")
 process.load("KrAFT.RecoSelectorTools.leptonSelector_cfi")
 process.load("KrAFT.RecoSelectorTools.jetSelector_cfi")
 process.load("KrAFT.RecoSelectorTools.jpsiToMuMu_cfi")
+process.pfNoIsoMuonsPFlow = process.pfIsolatedMuonsPFlow.clone(
+    cut = cms.string("muonRef.isAvailable() && pt > 4")
+)
+process.patMuonsPFlowNoIso = process.patMuonsPFlow.clone(
+    pfMuonSource = cms.InputTag("pfNoIsoMuonsPFlow"),
+    addGenMatch = cms.bool(False),
+)
+
+process.jpsiToMuMu.src = "patMuonsPFlowNoIso"
 
 process.load("KrAFT.GenericNtuple.flatCands_cfi")
 process.goodMuons.rho = "fixedGridRhoFastjetAll"

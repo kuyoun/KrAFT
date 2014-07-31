@@ -1,41 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-def initialise(runOnMC, decayMode, doOutModule=False, doPAT=True):
-    process = cms.Process("KrAFT")
-
-    process.load("Configuration.StandardSequences.Services_cff")
-    process.load("Configuration.Geometry.GeometryDB_cff")
-    process.load("Configuration.StandardSequences.MagneticField_cff")
-    process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
-    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-
-    process.load("FWCore.MessageLogger.MessageLogger_cfi")
-    process.MessageLogger.cerr.FwkReport.reportEvery = 10000
-
-    process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
-
-    process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
-    from Configuration.AlCa.autoCond import autoCond
-    if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
-    else: process.GlobalTag.globaltag = autoCond['com10']
-
-    outputModuleForTriggerMatch = ""
-    outputModules = []
-    if doOutModule:
-        from PhysicsTools.PatAlgos.patEventContent_cff import patEventContentNoCleaning
-        process.out = cms.OutputModule("PoolOutputModule",
-            fileName = cms.untracked.string("out.root"),
-            outputCommands = cms.untracked.vstring(
-                'drop *',
-                'keep recoPFCandidates_particleFlow_*_*',
-                *patEventContentNoCleaning
-            )
-        )
-        process.outPath = cms.EndPath(process.out)
-
-        outputModuleForTriggerMatch = "out"
-        outputModules.append(process.out)
-
+def customisePAT(process, runOnMC, outputModules = []):
     ## Load PAT
     process.load("PhysicsTools.PatAlgos.patSequences_cff")
 
@@ -108,6 +73,44 @@ def initialise(runOnMC, decayMode, doOutModule=False, doPAT=True):
     process.patElectronsPFlow.isolationValues.pfPUChargedHadrons = cms.InputTag('elPFIsoValuePU03PFIdPFlow')
     process.patElectronsPFlow.isolationValues.pfPhotons          = cms.InputTag('elPFIsoValueGamma03PFIdPFlow')
     process.patElectronsPFlow.isolationValues.pfChargedHadrons   = cms.InputTag('elPFIsoValueCharged03PFIdPFlow')
+
+def initialise(runOnMC, decayMode, doOutModule=False, doPAT=True):
+    process = cms.Process("KrAFT")
+
+    process.load("Configuration.StandardSequences.Services_cff")
+    process.load("Configuration.Geometry.GeometryDB_cff")
+    process.load("Configuration.StandardSequences.MagneticField_cff")
+    process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+
+    process.load("FWCore.MessageLogger.MessageLogger_cfi")
+    process.MessageLogger.cerr.FwkReport.reportEvery = 10000
+
+    process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
+
+    process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+    from Configuration.AlCa.autoCond import autoCond
+    if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
+    else: process.GlobalTag.globaltag = autoCond['com10']
+
+    outputModuleForTriggerMatch = ""
+    outputModules = []
+    if doOutModule:
+        from PhysicsTools.PatAlgos.patEventContent_cff import patEventContentNoCleaning
+        process.out = cms.OutputModule("PoolOutputModule",
+            fileName = cms.untracked.string("out.root"),
+            outputCommands = cms.untracked.vstring(
+                'drop *',
+                'keep recoPFCandidates_particleFlow_*_*',
+                *patEventContentNoCleaning
+            )
+        )
+        process.outPath = cms.EndPath(process.out)
+
+        outputModuleForTriggerMatch = "out"
+        outputModules.append(process.out)
+
+    customisePAT(process, runOnMC, outputModules)
 
     ## Add common filters
     process.load( "TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi" )

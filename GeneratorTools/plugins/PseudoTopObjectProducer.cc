@@ -113,9 +113,8 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
   //// Prepare input particle list
   std::vector<fastjet::PseudoJet> fjLepInputs;
   fjLepInputs.reserve(leptonIdxs.size());
-  for ( size_t i=0, n=leptonIdxs.size(); i<n; ++i )
+  for ( auto index : leptonIdxs )
   {
-    const size_t index = leptonIdxs[i];
     const reco::GenParticle& p = srcHandle->at(index);
     if ( std::isnan(p.pt()) or p.pt() <= 0 ) continue;
 
@@ -130,18 +129,16 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
   //// Build dressed lepton objects from the FJ output
   leptons->reserve(fjLepJets.size());
   std::set<size_t> lepDauIdxs; // keep lepton constituents to remove from GenJet construction
-  for ( size_t i=0, n=fjLepJets.size(); i<n; ++i )
+  for ( auto& fjJet : fjLepJets )
   {
-    const fastjet::PseudoJet& fjJet = fjLepJets[i];
-
     // Get jet constituents from fastJet
     const std::vector<fastjet::PseudoJet> fjConstituents = fastjet::sorted_by_pt(fjJet.constituents());
     // Convert to CandidatePtr
     std::vector<reco::CandidatePtr> constituents;
     int pdgId = 0;
-    for ( size_t j=0, m=fjConstituents.size(); j<m; ++j )
+    for ( auto& fjConstituent : fjConstituents )
     {
-      const size_t index = fjConstituents[j].user_index();
+      const size_t index = fjConstituent.user_index();
       reco::CandidatePtr cand = srcHandle->ptrAt(index);
       const int absPdgId = abs(cand->pdgId());
       if ( absPdgId == 11 or absPdgId == 13 ) pdgId = cand->pdgId();
@@ -161,9 +158,9 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
     leptons->push_back(lepJet);
 
     // Keep constituent indices to be used in the next step.
-    for ( size_t j=0, m=fjConstituents.size(); j<m; ++j )
+    for ( auto& fjConstituent : fjConstituents )
     {
-      lepDauIdxs.insert(fjConstituents[j].user_index());
+      lepDauIdxs.insert(fjConstituent.user_index());
     }
   }
 
@@ -185,10 +182,8 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
     fjJetInputs.back().set_user_index(i);
   }
   //// Also don't forget to put B hadrons
-  for ( std::set<size_t>::const_iterator itr = bHadronIdxs.begin();
-        itr != bHadronIdxs.end(); ++itr )
+  for ( auto index : bHadronIdxs )
   {
-    const size_t index = *itr;
     const reco::GenParticle& p = srcHandle->at(index);
     if ( std::isnan(p.pt()) or p.pt() <= 0 ) continue;
 
@@ -230,7 +225,6 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
 
     jets->push_back(genJet);
   }
-  
 
   event.put(neutrinos, "neutrinos");
   event.put(leptons, "leptons");

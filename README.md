@@ -31,5 +31,7 @@ git checkout
 
 # Continue to build whole package
 cd ..
+scram setup lhapdffull # Necessary to speed up PDF weight calculation
+scram b clean
 scram b -j8
 ```

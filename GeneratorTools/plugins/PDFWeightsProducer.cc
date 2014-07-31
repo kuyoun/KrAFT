@@ -34,7 +34,6 @@ private:
 
 PDFWeightsProducer::PDFWeightsProducer(const edm::ParameterSet& pset)
 {
-  //genInfoLabel_ = pset.getParameter<edm::InputTag>("genEventInfo");
   genInfoLabel_ = edm::InputTag("generator");
   pdfName_ = pset.getParameter<std::string>("pdfName");
   altPdfNames_ = pset.getParameter<std::vector<std::string> >("altPdfNames");
@@ -93,4 +92,3 @@ void PDFWeightsProducer::produce(edm::Event& event, const edm::EventSetup& event
 
 DEFINE_FWK_MODULE(PDFWeightsProducer);
 
-  

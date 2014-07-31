@@ -9,7 +9,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 10000
 from Configuration.AlCa.autoCond import autoCond
 if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
@@ -28,7 +28,7 @@ process.out = cms.OutputModule("PoolOutputModule",
         'drop *',
         'keep *_TriggerResults_*_HLT',
         'keep edmMergeableCounter_*_*_*',
-        'keep *_prunedGenParticles_*_*',
+        'keep *_partons_*_*',
         #'keep *_pseudoTop_*_*',
         'keep *_pileupWeight_*_*',
         'keep *_pdfWeight_*_*',
@@ -62,6 +62,15 @@ process.load("KrAFT.GenericNtuple.flatEventInfo_cfi")
 process.load("KrAFT.GenericNtuple.flatCands_cfi")
 process.goodJets.isMC = runOnMC
 
+process.partons = cms.EDProducer("GenParticlePruner",
+    src = cms.InputTag("genParticles"),
+    select = cms.vstring(
+        "drop *",
+        "drop pt <= 0",
+        "keep status = 3", # For the pythia
+    ),
+)
+
 process.analysisObjectSequence = cms.Sequence(
     process.pileupWeight + process.pdfWeight
   + process.goodMuons + process.goodElectrons * process.goodJets
@@ -74,6 +83,7 @@ process.analysisObjectSequence = cms.Sequence(
 
 process.pGen = cms.Path(
     process.pseudoTop
+  + process.partons
   * process.flatPseudoTopLepton + process.flatPseudoTopNu + process.flatPseudoTopJet
 )
 

@@ -56,6 +56,14 @@ flatJpsiElEl = cms.EDProducer("FlatCandProducer",
 )
 
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
+    weights = cms.PSet(
+        puWeight   = cms.PSet(src = cms.InputTag("pileupWeight")),
+        puWeightUp = cms.PSet(src = cms.InputTag("pileupWeight", "up")),
+        puWeightDn = cms.PSet(src = cms.InputTag("pileupWeight", "dn")),
+    ),
+    vWeights = cms.PSet(
+        pdfWeight = cms.PSet(src = cms.InputTag("pdfWeight")),
+    ),
     cands = cms.PSet(
         muons = cms.PSet(
             src = cms.InputTag("flatMuons"),

@@ -13,15 +13,15 @@
 <use name="SimDataFormats/PileupSummaryInfo" />
 <use name="RecoVertex/VertexTools" />
 <use name="RecoJets/JetProducers" />
+<use name="CommonTools/UtilAlgos" />
 
 <use name="KrAFT/GeneratorTools" />
 
 <use name="root" />
 <use name="lhapdf" />
 <use name="boost" />
-<use name="fastjet" />
 
-<library file="*.cc" name="KrAFTGeneratorToolsPlugins">
+<library file="*.cc" name="KrAFTTTbarDileptonPlugins">
   <flags EDM_PLUGIN="1" />
 </library>
 

@@ -9,7 +9,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 10000
 from Configuration.AlCa.autoCond import autoCond
 if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
@@ -26,7 +26,12 @@ process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string("out.root"),
     outputCommands = cms.untracked.vstring(
         'drop *',
+        'keep *_TriggerResults_*_HLT',
         'keep edmMergeableCounter_*_*_*',
+        'keep *_prunedGenParticles_*_*',
+        #'keep *_pseudoTop_*_*',
+        'keep *_pileupWeight_*_*',
+        'keep *_pdfWeight_*_*',
         'keep *_flat*_*_*',
     ),
 )
@@ -42,8 +47,6 @@ process.trackingFailureFilter.VertexSource = cms.InputTag('goodOfflinePrimaryVer
 if runOnMC: process.eventCleaning += process.eventCleaningMC
 else: process.eventCleaning += process.eventCleaningData
 
-#addNtupleStep(process, runOnMC=runOnMC)
-
 process.nEventsTotal = cms.EDProducer("EventCountProducer")
 process.nEventsClean = cms.EDProducer("EventCountProducer")
 process.nEventsPAT   = cms.EDProducer("EventCountProducer")
@@ -55,24 +58,27 @@ process.load("KrAFT.GeneratorTools.pseudoTop_cfi")
 process.load("KrAFT.RecoSelectorTools.leptonSelector_cfi")
 process.load("KrAFT.RecoSelectorTools.jetSelector_cfi")
 process.load("KrAFT.RecoSelectorTools.jpsiSelector_cfi")
+process.load("KrAFT.GenericNtuple.flatEventInfo_cfi")
 process.load("KrAFT.GenericNtuple.flatCands_cfi")
 process.goodJets.isMC = runOnMC
-
-process.genObjectSequence = cms.Sequence(
-    process.pseudoTop
-)
 
 process.analysisObjectSequence = cms.Sequence(
     process.pileupWeight + process.pdfWeight
   + process.goodMuons + process.goodElectrons * process.goodJets
   * process.jpsiToMuMu + process.jpsiToElEl
+
+  + process.flatEventInfo
   * process.flatMuons + process.flatElectrons + process.flatJets
   + process.flatJpsiMuMu + process.flatJpsiElEl
 )
 
+process.pGen = cms.Path(
+    process.pseudoTop
+  * process.flatPseudoTopLepton + process.flatPseudoTopNu + process.flatPseudoTopJet
+)
+
 process.p = cms.Path(
     process.nEventsTotal
-  + process.genObjectSequence
   + process.goodOfflinePrimaryVertices + process.eventCleaning + process.nEventsClean
   + process.patPF2PATSequencePFlow + process.nEventsPAT
   + process.analysisObjectSequence

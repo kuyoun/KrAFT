@@ -3,6 +3,7 @@
 <use name="FWCore/ParameterSet" />
 
 <use name="DataFormats/TrackReco" />
+<use name="DataFormats/VertexReco" />
 <use name="DataFormats/Candidate" />
 <use name="DataFormats/PatCandidates" />
 <use name="PhysicsTools/CandUtils" />

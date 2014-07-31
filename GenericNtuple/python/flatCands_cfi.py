@@ -55,6 +55,27 @@ flatJpsiElEl = cms.EDProducer("FlatCandProducer",
     ),
 )
 
+flatPseudoTopLepton = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("pseudoTop", "leptons"),
+    variables = cms.PSet(
+        pdgId = cms.string("pdgId"),
+    )
+)
+
+flatPseudoTopNu = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("pseudoTop", "neutrinos"),
+    variables = cms.PSet(
+        pdgId = cms.string("pdgId"),
+    )
+)
+
+flatPseudoTopJet = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("pseudoTop", "jets"),
+    variables = cms.PSet(
+        pdgId = cms.string("pdgId"),
+    )
+)
+
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
     weights = cms.PSet(
         puWeight   = cms.PSet(src = cms.InputTag("pileupWeight")),

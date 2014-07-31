@@ -1,21 +1,82 @@
-from KrAFT.Configuration.customise_cff import *
+import FWCore.ParameterSet.Config as cms
+
 runOnMC = True
-process = initialise(decayMode="dilepton", runOnMC=runOnMC)
-process.load("KrAFT.GenericNtuple.flatCands_cfi")
-addNtupleStep(process, runOnMC=runOnMC)
-process.options.wantSummary = False
-process.maxEvents.input = 100
-process.source.fileNames = [
-        '/store/relval//CMSSW_5_3_12_patch2/RelValProdTTbar/GEN-SIM-RECO/START53_LV2-v1/00000/5E865D62-AA2B-E311-AA04-002618943962.root',
-        '/store/relval//CMSSW_5_3_12_patch2/RelValProdTTbar/GEN-SIM-RECO/START53_LV2-v1/00000/92EB24DF-C72B-E311-8AA2-00261894390E.root',
-]
+
+process = cms.Process("KrAFT")
+process.load("Configuration.StandardSequences.Services_cff")
+process.load("Configuration.Geometry.GeometryDB_cff")
+process.load("Configuration.StandardSequences.MagneticField_cff")
+process.load("FWCore.MessageLogger.MessageLogger_cfi")
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.MessageLogger.cerr.FwkReport.reportEvery = 10000
+from Configuration.AlCa.autoCond import autoCond
+if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
+else: process.GlobalTag.globaltag = autoCond['com10']
+
+process.source = cms.Source("PoolSource",
+    fileNames = cms.untracked.vstring(
+        '/store/relval/CMSSW_5_3_12_patch2/RelValProdTTbar/GEN-SIM-RECO/START53_LV2-v1/00000/5E865D62-AA2B-E311-AA04-002618943962.root',
+        '/store/relval/CMSSW_5_3_12_patch2/RelValProdTTbar/GEN-SIM-RECO/START53_LV2-v1/00000/92EB24DF-C72B-E311-8AA2-00261894390E.root',
+    ),
+)
+
 process.out = cms.OutputModule("PoolOutputModule",
-                fileName = cms.untracked.string("out.root"),
-                outputCommands = cms.untracked.vstring(['drop *', 'keep *_flat*_*_*'])
-  )
+    fileName = cms.untracked.string("out.root"),
+    outputCommands = cms.untracked.vstring(
+        'drop *',
+        'keep edmMergeableCounter_*_*_*',
+        'keep *_flat*_*_*',
+    ),
+)
 
-process.maxEvents.input = 100
+from KrAFT.Configuration.customise_cff import *
+customisePAT(process, runOnMC=runOnMC, outputModules=[])
 
-process.pMuMu += cms.Sequence(process.flatMuons+process.flatJpsiMuMu+process.flatJpsiElEl)
+process.load("TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi")
+process.goodOfflinePrimaryVertices.filter = True
+
+process.load( 'TopQuarkAnalysis.Configuration.patRefSel_eventCleaning_cff' )
+process.trackingFailureFilter.VertexSource = cms.InputTag('goodOfflinePrimaryVertices')
+if runOnMC: process.eventCleaning += process.eventCleaningMC
+else: process.eventCleaning += process.eventCleaningData
+
+#addNtupleStep(process, runOnMC=runOnMC)
+
+process.nEventsTotal = cms.EDProducer("EventCountProducer")
+process.nEventsClean = cms.EDProducer("EventCountProducer")
+process.nEventsPAT   = cms.EDProducer("EventCountProducer")
+
+## Default path
+process.load("KrAFT.GeneratorTools.pileupWeight_cff")
+process.load("KrAFT.GeneratorTools.pdfWeight_cff")
+process.load("KrAFT.GeneratorTools.pseudoTop_cfi")
+process.load("KrAFT.RecoSelectorTools.leptonSelector_cfi")
+process.load("KrAFT.RecoSelectorTools.jetSelector_cfi")
+process.load("KrAFT.RecoSelectorTools.jpsiSelector_cfi")
+process.load("KrAFT.GenericNtuple.flatCands_cfi")
+process.goodJets.isMC = runOnMC
+
+process.genObjectSequence = cms.Sequence(
+    process.pseudoTop
+)
+
+process.analysisObjectSequence = cms.Sequence(
+    process.pileupWeight + process.pdfWeight
+  + process.goodMuons + process.goodElectrons * process.goodJets
+  * process.jpsiToMuMu + process.jpsiToElEl
+  * process.flatMuons + process.flatElectrons + process.flatJets
+  + process.flatJpsiMuMu + process.flatJpsiElEl
+)
+
+process.p = cms.Path(
+    process.nEventsTotal
+  + process.genObjectSequence
+  + process.goodOfflinePrimaryVertices + process.eventCleaning + process.nEventsClean
+  + process.patPF2PATSequencePFlow + process.nEventsPAT
+  + process.analysisObjectSequence
+)
+
 process.output = cms.EndPath(process.out)
 

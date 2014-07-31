@@ -2,7 +2,9 @@ KrAFT
 =====
 
 Korea CMS Analysis Framwork for Top quark physics
-
+  * Documentation and project overview : https://twiki.cern.ch/twiki/bin/viewauth/CMS/KrAFT
+  * PAT recipe : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATReleaseNotes52X
+  * TQAF recipe : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideTQAFRecipes
 
 ## Installation
 

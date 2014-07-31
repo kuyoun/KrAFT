@@ -7,6 +7,7 @@ Korea CMS Analysis Framwork for Top quark physics
 ## Installation
 
 ```sh
+# Fresh install your workarea, baseline release is set to 5_3_20
 cmsrel CMSSW_5_3_20
 cd CMSSW_5_3_20/src
 cmsenv
@@ -17,14 +18,16 @@ cd EgammaAnalysis/ElectronTools/data
 cat download.url | xargs wget
 cd -
 
+# Install KrAFT
 git clone https://github.com/cms-kr/KrAFT
 
-# In case you already forked this project and wanting to put your contributions...
+# In case you already forked this project and you will put your contributions...
 cd KrAFT
 git remote add $USER git@github.com:$(git-config user.github)/KrAFT
 git fetch $USER
 git checkout
 
+# Continue to build whole package
 cd ..
 scram b -j8
 ```

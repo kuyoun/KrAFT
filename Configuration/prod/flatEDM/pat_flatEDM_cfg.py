@@ -78,6 +78,8 @@ process.analysisObjectSequence = cms.Sequence(
 
   + process.flatEventInfo
   * process.flatMuons + process.flatElectrons + process.flatJets
+  + process.flatMETs + process.flatMETsUp + process.flatMETsDn
+  + process.flatMETsRes + process.flatMETsResUp + process.flatMETsResDn
   + process.flatJpsiMuMu + process.flatJpsiElEl
 )
 

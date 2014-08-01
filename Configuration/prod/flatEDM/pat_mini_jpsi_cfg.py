@@ -16,7 +16,7 @@ isMC = True
 process.load("KrAFT.Configuration.commonFilters_cff")
 process.load("KrAFT.RecoSelectorTools.leptonSelector_cfi")
 process.load("KrAFT.RecoSelectorTools.jetSelector_cfi")
-process.load("KrAFT.RecoSelectorTools.jpsiToMuMu_cfi")
+process.load("KrAFT.RecoSelectorTools.jpsiSelector_cfi")
 
 process.load("Configuration.Geometry.GeometryIdeal_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
@@ -57,7 +57,6 @@ process.out.outputCommands = ['drop *', 'keep *_flat*_*_*',]
 process.out.fileName = "out.root"
 process.outPath = cms.EndPath(process.out)
 
-process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("ntuple.root"),
-)
-process.p = cms.Path(process.fEvent)
+## Temporary fixes
+delattr(process, 'jpsiToElEl')
+delattr(process, 'flatJpsiElEl')

@@ -93,4 +93,3 @@ void PDFWeightsProducer::produce(edm::Event& event, const edm::EventSetup& event
 
 DEFINE_FWK_MODULE(PDFWeightsProducer);
 
-  

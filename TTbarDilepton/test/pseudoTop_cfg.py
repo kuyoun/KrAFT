@@ -18,7 +18,9 @@ process.source.fileNames = [
 ]
 
 process.load("KrAFT.GeneratorTools.genJetAssociation_cff")
-process.load("KrAFT.GeneratorTools.lumiWeight_cff")
+process.load("KrAFT.GeneratorTools.pileupWeight_cff")
+process.load("KrAFT.GeneratorTools.pdfWeight_cff")
+process.load("KrAFT.GeneratorTools.pseudoTop_cfi")
 
 process.out = cms.OutputModule("PoolOutputModule", 
     fileName = cms.untracked.string("out.root"),
@@ -28,11 +30,31 @@ process.out = cms.OutputModule("PoolOutputModule",
     )
 )
 
-process.outPath = cms.EndPath(process.out)
+#process.outPath = cms.EndPath(process.out)
+
+process.wlnu = cms.EDFilter("CandViewSelector",
+    src = cms.InputTag("genParticles"),
+    cut = cms.string("status == 3 && (abs(pdgId) == 11 || abs(pdgId) == 13) && abs(mother.pdgId) == 24"),
+)
+
+process.dileptonFilter = cms.EDFilter("CandViewCountFilter",
+    src = cms.InputTag("wlnu"),
+    minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(1),
+)
+
+process.genAna = cms.EDAnalyzer("PseudoTopAnalyzer",
+    genParticles = cms.InputTag("genParticles"),
+    genJets = cms.InputTag("ak5GenJets"),
+    pseudoTop = cms.InputTag("pseudoTop"),
+)
+
+process.TFileService = cms.Service("TFileService",
+    fileName = cms.string("ntuple.root"),
+)
 
 process.p = cms.Path(
-    process.recoToGenJet
-  + process.genJetToPartons
-  + process.lumiWeight
+    process.wlnu * process.dileptonFilter
+  + process.pseudoTop * process.genAna
 )
 

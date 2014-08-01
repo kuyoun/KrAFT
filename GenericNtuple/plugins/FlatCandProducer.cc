@@ -16,6 +16,7 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 
 #include "CommonTools/Utils/interface/StringObjectFunction.h"
+#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 
 #include <memory>
 #include <vector>
@@ -45,6 +46,7 @@ private:
   edm::EDGetTokenT<CandView> srcToken_;
   std::vector<StringObjectFunction<reco::Candidate,true> > exprs_;
   std::vector<edm::EDGetTokenT<edm::ValueMap<double> > > vmapTokens_;
+  std::vector<StringCutObjectSelector<reco::Candidate,true> > selectors_;
 
   strings varNames_;
   std::vector<doubles> values_;
@@ -57,28 +59,35 @@ FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
   edm::ParameterSet vars = pset.getParameter<edm::ParameterSet>("variables");
 
   const strings strVars = vars.getParameterNamesForType<std::string>();
-  for ( int i=0, n=strVars.size(); i<n; ++i )
+  for ( auto& varName : strVars )
   {
-    const string& varName = strVars[i];
     const string& varExpr = vars.getParameter<string>(varName);
     exprs_.push_back(StringObjectFunction<reco::Candidate,true>(varExpr));
     varNames_.push_back(varName);
   }
   const strings vmapNames = vars.getParameterNamesForType<edm::InputTag>();
-  for ( int i=0, n=vmapNames.size(); i<n; ++i )
+  for ( auto& vmapName : vmapNames )
   {
-    const string& vmapName = vmapNames[i];
     edm::InputTag vmapLabel = vars.getParameter<edm::InputTag>(vmapName);
     vmapTokens_.push_back(consumes<edm::ValueMap<double> >(vmapLabel));
     varNames_.push_back(vmapName);
   }
 
+  edm::ParameterSet sels = pset.getParameter<edm::ParameterSet>("selections");
+  const strings strSels = sels.getParameterNamesForType<std::string>();
+  for ( auto& selName : strSels )
+  {
+    const string& selection = sels.getParameter<string>(selName);
+    selectors_.push_back(StringCutObjectSelector<reco::Candidate,true>(selection));
+    varNames_.push_back(selName);
+  }
+
   values_.resize(varNames_.size());
 
   produces<Cands>();
-  for ( int i=0, n=varNames_.size(); i<n; ++i )
+  for ( auto& varName : varNames_ )
   {
-    produces<CandValueMap>(varNames_[i]);
+    produces<CandValueMap>(varName);
   }
 }
 
@@ -89,6 +98,7 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
 
   const size_t nExpr = exprs_.size();
   const size_t nVmap = vmapTokens_.size();
+  const size_t nSele = selectors_.size();
   std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVmap);
   for ( size_t i=0; i<nVmap; ++i )
   {
@@ -102,6 +112,7 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
   {
     edm::Ref<edm::View<reco::Candidate> > candRef(srcHandle, i);
     reco::LeafCandidate cand(candRef->charge(), candRef->p4());
+    cand.setPdgId(candRef->pdgId());
     cands->push_back(cand);
     for ( size_t j=0; j<nExpr; ++j )
     {
@@ -111,10 +122,14 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
     {
       values_[j+nExpr].push_back((*vmapHandles[j])[candRef]);
     }
+    for ( size_t j=0; j<nSele; ++j )
+    {
+      values_[j+nExpr+nVmap].push_back(selectors_[j](*candRef));
+    }
   }
 
   edm::OrphanHandle<Cands> outHandle = event.put(cands);
-  for ( size_t i=0, n=nExpr+nVmap; i<n; ++i )
+  for ( size_t i=0, n=nExpr+nVmap+nSele; i<n; ++i )
   {
     std::auto_ptr<CandValueMap> vmap(new CandValueMap);
     CandValueMap::Filler filler(*vmap);

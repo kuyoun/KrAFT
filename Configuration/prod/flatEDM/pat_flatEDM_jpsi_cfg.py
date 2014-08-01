@@ -49,7 +49,3 @@ process.out.outputCommands = ['drop *','keep *_flat*_*_*']
 process.out.fileName = "out.root"
 process.outPath = cms.EndPath(process.out)
 
-process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("ntuple.root"),
-)
-process.p = cms.Path(process.fEvent)

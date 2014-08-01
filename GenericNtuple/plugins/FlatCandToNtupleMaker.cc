@@ -47,8 +47,13 @@ private:
 
   std::vector<CandToken> candTokens_;
   std::vector<std::vector<VmapToken> > vmapTokens_;
+  std::vector<edm::EDGetTokenT<double> > weightTokens_;
+  std::vector<edm::EDGetTokenT<doubles> > vWeightTokens_;
 
   TTree* tree_;
+  int runNumber_, lumiNumber_, eventNumber_;
+  std::vector<double*> weights_;
+  std::vector<doubles*> vWeights_;
   std::vector<doubles*> candPt_, candEta_, candPhi_, candM_;
   std::vector<std::vector<doubles*> > candVars_;
 
@@ -60,14 +65,39 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
   edm::Service<TFileService> fs;
   tree_ = fs->make<TTree>("event", "event");
 
+  tree_->Branch("run"  , &runNumber_  , "run/I"  );
+  tree_->Branch("lumi" , &lumiNumber_ , "lumi/I" );
+  tree_->Branch("event", &eventNumber_, "event/I");
+
+  edm::ParameterSet weightPSets = pset.getParameter<edm::ParameterSet>("weight");
+  const strings weightNames = weightPSets.getParameterNamesForType<edm::ParameterSet>();
+  for ( auto& weightName : weightNames )
+  {
+    edm::ParameterSet weightPSet = weightPSets.getParameter<edm::ParameterSet>(weightName);
+    weightTokens_.push_back(consumes<double>(weightPSet.getParameter<edm::InputTag>("src")));
+
+    weights_.push_back(new double);
+    tree_->Branch(weightName.c_str(), weights_.back(), (weightName+"/D").c_str());
+  }
+
+  edm::ParameterSet vWeightPSets = pset.getParameter<edm::ParameterSet>("vWeight");
+  const strings vWeightNames = vWeightPSets.getParameterNamesForType<edm::ParameterSet>();
+  for ( auto& vWeightName : vWeightNames )
+  {
+    edm::ParameterSet vWeightPSet = vWeightPSets.getParameter<edm::ParameterSet>(vWeightName);
+    vWeightTokens_.push_back(consumes<doubles>(vWeightPSet.getParameter<edm::InputTag>("src")));
+
+    vWeights_.push_back(new doubles);
+    tree_->Branch(vWeightName.c_str(), vWeights_.back());
+  }
+
   edm::ParameterSet candPSets = pset.getParameter<edm::ParameterSet>("cands");
   const strings candNames = candPSets.getParameterNamesForType<edm::ParameterSet>();
-  for ( size_t i=0, n=candNames.size(); i<n; ++i )
+  for ( auto& candName : candNames )
   {
-    const string& candName = candNames[i];
     edm::ParameterSet candPSet = candPSets.getParameter<edm::ParameterSet>(candName);
-    edm::InputTag candLabel = candPSet.getParameter<edm::InputTag>("src");
-    candTokens_.push_back(consumes<CandView>(candLabel));
+    edm::InputTag candToken = candPSet.getParameter<edm::InputTag>("src");
+    candTokens_.push_back(consumes<CandView>(candToken));
 
     candPt_ .push_back(new doubles);
     candEta_.push_back(new doubles);
@@ -81,15 +111,14 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
     vmapTokens_.push_back(std::vector<VmapToken>());
     candVars_.push_back(std::vector<doubles*>());
-    const string candLabelName = candLabel.label();
+    const string candTokenName = candToken.label();
     const strings vmapNames = candPSet.getParameter<strings>("vmaps");
-    for ( size_t j=0, m=vmapNames.size(); j<m; ++j )
+    for ( auto& vmapName : vmapNames )
     {
-      const string& vmapName = vmapNames[j];
       candVars_.back().push_back(new doubles);
 
-      edm::InputTag vmapLabel(candLabelName, vmapName);
-      vmapTokens_.back().push_back(consumes<Vmap>(vmapLabel));
+      edm::InputTag vmapToken(candTokenName, vmapName);
+      vmapTokens_.back().push_back(consumes<Vmap>(vmapToken));
 
       tree_->Branch((candName+"_"+vmapName).c_str(), candVars_.back().back());
     }
@@ -99,6 +128,30 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
 void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
+  runNumber_ = event.run();
+  lumiNumber_ = event.luminosityBlock();
+  eventNumber_ = event.id().event();
+
+  runNumber_   = event.run();
+  lumiNumber_  = event.luminosityBlock();
+  eventNumber_ = event.id().event();
+
+  for ( size_t i=0, n=weightTokens_.size(); i<n; ++i )
+  {
+    edm::Handle<double> weightHandle;
+    event.getByToken(weightTokens_[i], weightHandle);
+
+    *weights_[i] = *weightHandle;
+  }
+
+  for ( size_t i=0, n=vWeightTokens_.size(); i<n; ++i )
+  {
+    edm::Handle<doubles> vWeightHandle;
+    event.getByToken(vWeightTokens_[i], vWeightHandle);
+
+    vWeights_[i]->insert(vWeights_[i]->begin(), vWeightHandle->begin(), vWeightHandle->end());
+  }
+
   const size_t nCand = candTokens_.size();
   for ( size_t iCand=0; iCand < nCand; ++iCand )
   {
@@ -131,6 +184,14 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
   }
 
   tree_->Fill();
+  for ( size_t i=0, n=vWeightTokens_.size(); i<n; ++i )
+  {
+    edm::Handle<doubles> vWeightHandle;
+    event.getByToken(vWeightTokens_[i], vWeightHandle);
+
+    vWeights_[i]->clear();
+  }
+
   for ( size_t iCand=0; iCand<nCand; ++iCand )
   {
     candPt_ [iCand]->clear();

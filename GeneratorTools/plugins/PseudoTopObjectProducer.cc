@@ -135,22 +135,23 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
     const std::vector<fastjet::PseudoJet> fjConstituents = fastjet::sorted_by_pt(fjJet.constituents());
     // Convert to CandidatePtr
     std::vector<reco::CandidatePtr> constituents;
-    int pdgId = 0;
+    reco::CandidatePtr lepCand;
     for ( auto& fjConstituent : fjConstituents )
     {
       const size_t index = fjConstituent.user_index();
       reco::CandidatePtr cand = srcHandle->ptrAt(index);
       const int absPdgId = abs(cand->pdgId());
-      if ( absPdgId == 11 or absPdgId == 13 ) pdgId = cand->pdgId();
+      if ( absPdgId == 11 or absPdgId == 13 ) lepCand = cand;;
       constituents.push_back(cand);
     }
-    if ( pdgId == 0 ) continue;
+    if ( lepCand.isNull() ) continue;
 
     const reco::Particle::LorentzVector jetP4(fjJet.px(), fjJet.py(), fjJet.pz(), fjJet.E());
     reco::GenJet lepJet;
     reco::writeSpecific(lepJet, jetP4, genVertex_, constituents, eventSetup);
 
-    lepJet.setPdgId(pdgId);
+    lepJet.setPdgId(lepCand->pdgId());
+    lepJet.setCharge(lepCand->charge());
 
     const double jetArea = fjJet.has_area() ? fjJet.area() : 0;
     lepJet.setJetArea(jetArea);

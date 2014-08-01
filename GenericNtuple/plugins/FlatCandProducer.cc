@@ -111,6 +111,7 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
   {
     edm::Ref<edm::View<reco::Candidate> > candRef(srcHandle, i);
     reco::LeafCandidate cand(candRef->charge(), candRef->p4());
+    cand.setPdgId(candRef->pdgId());
     cands->push_back(cand);
     for ( size_t j=0; j<nExpr; ++j )
     {

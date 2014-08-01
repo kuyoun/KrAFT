@@ -76,11 +76,8 @@ void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eve
 
   if ( !event.isRealData() and puHandle.isValid() )
   {
-    const int nBX = puHandle->size();
-    for ( int i=0; i<nBX; ++i )
+    for ( auto& puInfo : *puHandle )
     {
-      const PileupSummaryInfo& puInfo = puHandle->at(i);
-
       //const int nIntr = puInfo.getPU_NumInteractions();
       const int bx = puInfo.getBunchCrossing();
 
@@ -88,7 +85,6 @@ void PileupWeightProducer::produce(edm::Event& event, const edm::EventSetup& eve
       {
         *nTrueIntr = puInfo.getTrueNumInteractions();
       }
-
     }
     
     if ( *nTrueIntr > 0 )

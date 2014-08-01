@@ -38,15 +38,7 @@ bool GenParticleCountFilter::filter(edm::Event& event, const edm::EventSetup& ev
   event.getByToken(srcToken_, genParticleHandle);
 
   unsigned int nMatch = 0;
-  for ( int i=0, n=genParticleHandle->size(); i<n; ++i )
-  {
-    const reco::GenParticle& p = genParticleHandle->at(i);
-
-    if ( !(*select_)(p) ) continue;
-
-    ++nMatch;
-
-  }
+  for ( auto& p : *genParticleHandle ) { if ( (*select_)(p) ) ++nMatch; }
   if ( nMatch < minNumber_ or nMatch > maxNumber_ ) return false;
 
   return true;

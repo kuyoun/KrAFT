@@ -64,9 +64,8 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
   edm::ParameterSet candPSets = pset.getParameter<edm::ParameterSet>("cands");
   const strings candNames = candPSets.getParameterNamesForType<edm::ParameterSet>();
-  for ( size_t i=0, n=candNames.size(); i<n; ++i )
+  for ( auto& candName : candNames )
   {
-    const string& candName = candNames[i];
     edm::ParameterSet candPSet = candPSets.getParameter<edm::ParameterSet>(candName);
     edm::InputTag candLabel = candPSet.getParameter<edm::InputTag>("src");
     candTokens_.push_back(consumes<CandView>(candLabel));
@@ -85,9 +84,8 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
     candVars_.push_back(std::vector<doubles*>());
     const string candLabelName = candLabel.label();
     const strings vmapNames = candPSet.getParameter<strings>("vmaps");
-    for ( size_t j=0, m=vmapNames.size(); j<m; ++j )
+    for ( auto& vmapName : vmapNames )
     {
-      const string& vmapName = vmapNames[j];
       candVars_.back().push_back(new doubles);
 
       edm::InputTag vmapLabel(candLabelName, vmapName);

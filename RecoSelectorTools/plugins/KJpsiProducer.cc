@@ -46,6 +46,7 @@ private:
 private:
   constexpr static double muonMass_ = 0.1056583715;
   constexpr static double electronMass_ = 0.0005;
+
   edm::EDGetTokenT<std::vector<T> > leptonToken_;
   edm::EDGetTokenT<std::vector<pat::Jet> > jetToken_;
   edm::EDGetTokenT<reco::VertexCollection> goodPrimaryVertexToken_;

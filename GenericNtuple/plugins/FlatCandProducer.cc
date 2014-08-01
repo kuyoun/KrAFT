@@ -57,17 +57,15 @@ FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
   edm::ParameterSet vars = pset.getParameter<edm::ParameterSet>("variables");
 
   const strings strVars = vars.getParameterNamesForType<std::string>();
-  for ( int i=0, n=strVars.size(); i<n; ++i )
+  for ( auto& varName : strVars )
   {
-    const string& varName = strVars[i];
     const string& varExpr = vars.getParameter<string>(varName);
     exprs_.push_back(StringObjectFunction<reco::Candidate,true>(varExpr));
     varNames_.push_back(varName);
   }
   const strings vmapNames = vars.getParameterNamesForType<edm::InputTag>();
-  for ( int i=0, n=vmapNames.size(); i<n; ++i )
+  for ( auto& vmapName : vmapNames )
   {
-    const string& vmapName = vmapNames[i];
     edm::InputTag vmapLabel = vars.getParameter<edm::InputTag>(vmapName);
     vmapTokens_.push_back(consumes<edm::ValueMap<double> >(vmapLabel));
     varNames_.push_back(vmapName);
@@ -76,9 +74,9 @@ FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
   values_.resize(varNames_.size());
 
   produces<Cands>();
-  for ( int i=0, n=varNames_.size(); i<n; ++i )
+  for ( auto& varName : varNames_ )
   {
-    produces<CandValueMap>(varNames_[i]);
+    produces<CandValueMap>(varName);
   }
 }
 

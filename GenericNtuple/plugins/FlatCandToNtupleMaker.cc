@@ -17,8 +17,6 @@
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/Candidate/interface/LeafCandidate.h"
 
-#include "KrAFT/GenericNtuple/interface/GenericEvent.h"
-
 #include "TTree.h"
 #include "TH1F.h"
 
@@ -51,7 +49,7 @@ private:
   int runNumber_, lumiNumber_, eventNumber_;
   std::vector<double*> weights_;
   std::vector<doubles*> vWeights_;
-  std::vector<doubles*> candPt_, candEta_, candPhi_, candM_;
+  std::vector<doubles*> candPt_, candEta_, candPhi_, candM_, candQ_, candPdg_;
   std::vector<std::vector<doubles*> > candVars_;
 
 };
@@ -93,22 +91,33 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
   for ( auto& candName : candNames )
   {
     edm::ParameterSet candPSet = candPSets.getParameter<edm::ParameterSet>(candName);
+    const bool fillPt  = candPSet.getUntrackedParameter<bool>("fillPt" , true);
+    const bool fillEta = candPSet.getUntrackedParameter<bool>("fillEta", true);
+    const bool fillPhi = candPSet.getUntrackedParameter<bool>("fillPhi", true);
+    const bool fillM   = candPSet.getUntrackedParameter<bool>("fillM"  , true);
+    const bool fillQ   = candPSet.getUntrackedParameter<bool>("fillQ"  , true);
+    const bool fillPdg = candPSet.getUntrackedParameter<bool>("fillPdg", true);
+
     candLabels_.push_back(candPSet.getParameter<edm::InputTag>("src"));
 
     candPt_ .push_back(new doubles);
     candEta_.push_back(new doubles);
     candPhi_.push_back(new doubles);
     candM_  .push_back(new doubles);
+    candQ_  .push_back(new doubles);
+    candPdg_.push_back(new doubles);
 
-    tree_->Branch((candName+"_pt" ).c_str(), candPt_ .back());
-    tree_->Branch((candName+"_eta").c_str(), candEta_.back());
-    tree_->Branch((candName+"_phi").c_str(), candPhi_.back());
-    tree_->Branch((candName+"_m"  ).c_str(), candM_  .back());
+    if ( fillPt  ) tree_->Branch((candName+"_pt" ).c_str(), candPt_ .back());
+    if ( fillEta ) tree_->Branch((candName+"_eta").c_str(), candEta_.back());
+    if ( fillPhi ) tree_->Branch((candName+"_phi").c_str(), candPhi_.back());
+    if ( fillM   ) tree_->Branch((candName+"_m"  ).c_str(), candM_  .back());
+    if ( fillQ   ) tree_->Branch((candName+"_q"  ).c_str(), candQ_  .back());
+    if ( fillPdg ) tree_->Branch((candName+"_pdgId").c_str(), candPdg_.back());
 
     vmapLabels_.push_back(VInputTag());
     candVars_.push_back(std::vector<doubles*>());
     const string candLabelName = candLabels_.back().label();
-    const strings vmapNames = candPSet.getParameter<strings>("vmaps");
+    const strings vmapNames = candPSet.getUntrackedParameter<strings>("vmaps", strings());
     for ( auto& vmapName : vmapNames )
     {
       candVars_.back().push_back(new doubles);
@@ -165,6 +174,8 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
       candEta_[iCand]->push_back(candRef->eta());
       candPhi_[iCand]->push_back(candRef->phi());
       candM_[iCand]->push_back(candRef->mass());
+      candQ_[iCand]->push_back(candRef->charge());
+      candPdg_[iCand]->push_back(candRef->pdgId());
 
       for ( size_t iVar=0; iVar<nVar; ++iVar )
       {
@@ -189,6 +200,8 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
     candEta_[iCand]->clear();
     candPhi_[iCand]->clear();
     candM_  [iCand]->clear();
+    candQ_  [iCand]->clear();
+    candPdg_[iCand]->clear();
     const size_t nVar = candVars_[iCand].size();
     for ( size_t iVar=0; iVar<nVar; ++iVar )
     {

@@ -9,6 +9,8 @@ process.source = cms.Source("PoolSource",
 )
 
 process.load("KrAFT.GenericNtuple.flatNtuple_cfi")
+delattr(process.fEvent.cands, 'jpsiElEl')
+
 process.p = cms.Path(process.fEvent)
 
 process.TFileService = cms.Service("TFileService",

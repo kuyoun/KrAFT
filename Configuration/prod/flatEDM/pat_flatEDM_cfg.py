@@ -23,6 +23,9 @@ process.source = cms.Source("PoolSource",
 )
 
 process.out = cms.OutputModule("PoolOutputModule",
+    compressionLevel = cms.untracked.int32(4),
+    compressionAlgorithm = cms.untracked.string('LZMA'),
+    eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
     fileName = cms.untracked.string("out.root"),
     outputCommands = cms.untracked.vstring(
         'drop *',

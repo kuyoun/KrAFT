@@ -27,6 +27,9 @@ process.source = cms.Source("PoolSource",
 )
 
 process.out = cms.OutputModule("PoolOutputModule",
+    compressionLevel = cms.untracked.int32(4),
+    compressionAlgorithm = cms.untracked.string('LZMA'),
+    eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
     fileName = cms.untracked.string("out.root"),
     outputCommands = cms.untracked.vstring(
         'drop *',
@@ -83,11 +86,13 @@ process.partons = cms.EDProducer("GenParticlePruner",
 process.analysisObjectSequence = cms.Sequence(
     process.pileupWeight + process.pdfWeight
   + process.goodMuons + process.goodElectrons * process.goodJets
-  * process.jpsiToMuMu + process.jpsiToElEl
+  * process.jpsiToMuMu# + process.jpsiToElEl
 
   + process.flatEventInfo
   * process.flatMuons + process.flatElectrons + process.flatJets
-  + process.flatJpsiMuMu + process.flatJpsiElEl
+  + process.flatMETs + process.flatMETsUp + process.flatMETsDn
+  + process.flatMETsRes + process.flatMETsResUp + process.flatMETsResDn
+  + process.flatJpsiMuMu# + process.flatJpsiElEl
 )
 
 process.pGen = cms.Path(

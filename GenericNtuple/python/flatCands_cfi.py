@@ -1,5 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 
+flatDummy = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag(""),
+    variables = cms.PSet(),
+    selections = cms.PSet(),
+)
+
 flatMuons = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("goodMuons"),
     variables = cms.PSet(
@@ -51,6 +57,13 @@ flatJpsiMuMu = cms.EDProducer("FlatCandProducer",
 )
 
 
+flatMETs    = flatDummy.clone(src = cms.InputTag("patMETsPFlow"))
+flatMETsUp  = flatDummy.clone(src = cms.InputTag("goodJets", "up"))
+flatMETsDn  = flatDummy.clone(src = cms.InputTag("goodJets", "dn"))
+flatMETsRes = flatDummy.clone(src = cms.InputTag("goodJets", "res"))
+flatMETsResUp = flatDummy.clone(src = cms.InputTag("goodJets", "resDn"))
+flatMETsResDn = flatDummy.clone(src = cms.InputTag("goodJets", "resUp"))
+
 flatJpsiMuMu = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("jpsiToMuMu"),
     variables = cms.PSet(
@@ -69,6 +82,24 @@ flatJpsiElEl = cms.EDProducer("FlatCandProducer",
       jetDR = cms.InputTag("jpsiToElEl", "jetDR"),
       vProb = cms.InputTag("jpsiToElEl", "vProb"),
     ),
+    selections = cms.PSet(),
+)
+
+flatPseudoTopLepton = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("pseudoTop", "leptons"),
+    variables = cms.PSet(),
+    selections = cms.PSet(),
+)
+
+flatPseudoTopNu = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("pseudoTop", "neutrinos"),
+    variables = cms.PSet(),
+    selections = cms.PSet(),
+)
+
+flatPseudoTopJet = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("pseudoTop", "jets"),
+    variables = cms.PSet(),
     selections = cms.PSet(),
 )
 

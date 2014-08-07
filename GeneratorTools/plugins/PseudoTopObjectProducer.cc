@@ -40,24 +40,24 @@ private:
   bool isBHadron(const unsigned int pdgId) const;
 
 private:
-  edm::EDGetTokenT<reco::GenParticleCollection> srcToken_;
+  edm::EDGetTokenT<edm::View<reco::GenParticle> > srcToken_;
   double leptonMinPt_, jetMinPt_;
 
   typedef fastjet::JetDefinition JetDef;
-  boost::shared_ptr<JetDef> fjLepDef_, fjJetDef_;
+  std::shared_ptr<JetDef> fjLepDef_, fjJetDef_;
   reco::Particle::Point genVertex_;
 };
 
 PseudoTopObjectProducer::PseudoTopObjectProducer(const edm::ParameterSet& pset)
 {
-  srcToken_ = consumes<reco::GenParticleCollection>(pset.getParameter<edm::InputTag>("src"));
+  srcToken_ = consumes<edm::View<reco::GenParticle> >(pset.getParameter<edm::InputTag>("src"));
   leptonMinPt_ = pset.getParameter<double>("leptonMinPt");
   jetMinPt_ = pset.getParameter<double>("jetMinPt");
 
   const double leptonConeSize = pset.getParameter<double>("leptonConeSize");
   const double jetConeSize = pset.getParameter<double>("jetConeSize");
-  fjLepDef_ = boost::shared_ptr<JetDef>(new JetDef(fastjet::antikt_algorithm, leptonConeSize));
-  fjJetDef_ = boost::shared_ptr<JetDef>(new JetDef(fastjet::antikt_algorithm, jetConeSize));
+  fjLepDef_ = std::shared_ptr<JetDef>(new JetDef(fastjet::antikt_algorithm, leptonConeSize));
+  fjJetDef_ = std::shared_ptr<JetDef>(new JetDef(fastjet::antikt_algorithm, jetConeSize));
 
   genVertex_ = reco::Particle::Point(0,0,0);
 
@@ -135,22 +135,23 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
     const std::vector<fastjet::PseudoJet> fjConstituents = fastjet::sorted_by_pt(fjJet.constituents());
     // Convert to CandidatePtr
     std::vector<reco::CandidatePtr> constituents;
-    int pdgId = 0;
+    reco::CandidatePtr lepCand;
     for ( auto& fjConstituent : fjConstituents )
     {
       const size_t index = fjConstituent.user_index();
       reco::CandidatePtr cand = srcHandle->ptrAt(index);
       const int absPdgId = abs(cand->pdgId());
-      if ( absPdgId == 11 or absPdgId == 13 ) pdgId = cand->pdgId();
+      if ( absPdgId == 11 or absPdgId == 13 ) lepCand = cand;;
       constituents.push_back(cand);
     }
-    if ( pdgId == 0 ) continue;
+    if ( lepCand.isNull() ) continue;
 
     const reco::Particle::LorentzVector jetP4(fjJet.px(), fjJet.py(), fjJet.pz(), fjJet.E());
     reco::GenJet lepJet;
     reco::writeSpecific(lepJet, jetP4, genVertex_, constituents, eventSetup);
 
-    lepJet.setPdgId(pdgId);
+    lepJet.setPdgId(lepCand->pdgId());
+    lepJet.setCharge(lepCand->charge());
 
     const double jetArea = fjJet.has_area() ? fjJet.area() : 0;
     lepJet.setJetArea(jetArea);

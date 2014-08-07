@@ -16,6 +16,7 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 
 #include "CommonTools/Utils/interface/StringObjectFunction.h"
+#include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 
 #include <memory>
 #include <vector>
@@ -43,6 +44,7 @@ private:
 
   edm::InputTag srcLabel_;
   std::vector<StringObjectFunction<reco::Candidate,true> > exprs_;
+  std::vector<StringCutObjectSelector<reco::Candidate,true> > selectors_;
   std::vector<edm::InputTag> vmapLabels_;
 
   strings varNames_;
@@ -70,6 +72,15 @@ FlatCandProducer::FlatCandProducer(const edm::ParameterSet& pset)
     varNames_.push_back(vmapName);
   }
 
+  edm::ParameterSet sels = pset.getParameter<edm::ParameterSet>("selections");
+  const strings strSels = sels.getParameterNamesForType<std::string>();
+  for ( auto& selName : strSels )
+  {
+    const string& selection = sels.getParameter<string>(selName);
+    selectors_.push_back(StringCutObjectSelector<reco::Candidate,true>(selection));
+    varNames_.push_back(selName);
+  }
+
   values_.resize(varNames_.size());
 
   produces<Cands>();
@@ -85,6 +96,7 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
   event.getByLabel(srcLabel_, srcHandle);
 
   const size_t nExpr = exprs_.size();
+  const size_t nSele = selectors_.size();
   const size_t nVmap = vmapLabels_.size();
   std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVmap);
   for ( size_t i=0; i<nVmap; ++i )
@@ -99,6 +111,7 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
   {
     edm::Ref<edm::View<reco::Candidate> > candRef(srcHandle, i);
     reco::LeafCandidate cand(candRef->charge(), candRef->p4());
+    cand.setPdgId(candRef->pdgId());
     cands->push_back(cand);
     for ( size_t j=0; j<nExpr; ++j )
     {
@@ -108,10 +121,14 @@ void FlatCandProducer::produce(edm::Event& event, const edm::EventSetup& eventSe
     {
       values_[j+nExpr].push_back((*vmapHandles[j])[candRef]);
     }
+    for ( size_t j=0; j<nSele; ++j )
+    {
+      values_[j+nExpr+nVmap].push_back(selectors_[j](*candRef));
+    }
   }
 
   edm::OrphanHandle<Cands> outHandle = event.put(cands);
-  for ( size_t i=0, n=nExpr+nVmap; i<n; ++i )
+  for ( size_t i=0, n=nExpr+nVmap+nSele; i<n; ++i )
   {
     std::auto_ptr<CandValueMap> vmap(new CandValueMap);
     CandValueMap::Filler filler(*vmap);

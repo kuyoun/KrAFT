@@ -76,33 +76,33 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
   skipFailedEvent_ = pset.getUntrackedParameter<bool>("skipFailedEvent", true);
 
-  edm::ParameterSet weightPSets = pset.getParameter<edm::ParameterSet>("weight");
-  const strings weightNames = weightPSets.getParameterNamesForType<edm::ParameterSet>();
+  PSet weightPSets = pset.getParameter<PSet>("weight");
+  const strings weightNames = weightPSets.getParameterNamesForType<PSet>();
   for ( auto& weightName : weightNames )
   {
-    edm::ParameterSet weightPSet = weightPSets.getParameter<edm::ParameterSet>(weightName);
+    PSet weightPSet = weightPSets.getParameter<PSet>(weightName);
     weightLabels_.push_back(weightPSet.getParameter<edm::InputTag>("src"));
 
     weights_.push_back(new double);
     tree_->Branch(weightName.c_str(), weights_.back(), (weightName+"/D").c_str());
   }
 
-  edm::ParameterSet vWeightPSets = pset.getParameter<edm::ParameterSet>("vWeight");
-  const strings vWeightNames = vWeightPSets.getParameterNamesForType<edm::ParameterSet>();
+  PSet vWeightPSets = pset.getParameter<PSet>("vWeight");
+  const strings vWeightNames = vWeightPSets.getParameterNamesForType<PSet>();
   for ( auto& vWeightName : vWeightNames )
   {
-    edm::ParameterSet vWeightPSet = vWeightPSets.getParameter<edm::ParameterSet>(vWeightName);
+    PSet vWeightPSet = vWeightPSets.getParameter<PSet>(vWeightName);
     vWeightLabels_.push_back(vWeightPSet.getParameter<edm::InputTag>("src"));
 
     vWeights_.push_back(new doubles);
     tree_->Branch(vWeightName.c_str(), vWeights_.back());
   }
 
-  edm::ParameterSet candPSets = pset.getParameter<edm::ParameterSet>("cands");
-  const strings candNames = candPSets.getParameterNamesForType<edm::ParameterSet>();
+  PSet candPSets = pset.getParameter<PSet>("cands");
+  const strings candNames = candPSets.getParameterNamesForType<PSet>();
   for ( auto& candName : candNames )
   {
-    edm::ParameterSet candPSet = candPSets.getParameter<edm::ParameterSet>(candName);
+    PSet candPSet = candPSets.getParameter<PSet>(candName);
 
     candLabels_.push_back(candPSet.getParameter<edm::InputTag>("src"));
 
@@ -174,8 +174,8 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
     event.getByLabel(candLabels_[iCand], srcHandle);
     if ( skipFailedEvent_ and !srcHandle.isValid() ) return;
 
-    const vector<CandFtn>& exprs = exprs_[iCand];
-    const vector<CandSel>& selectors = selectors_[iCand];
+    const std::vector<CandFtn>& exprs = exprs_[iCand];
+    const std::vector<CandSel>& selectors = selectors_[iCand];
     VInputTag& vmapLabels = vmapLabels_[iCand];
     const size_t nExpr = exprs.size();
     const size_t nSels = selectors.size();

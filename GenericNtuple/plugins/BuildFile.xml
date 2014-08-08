@@ -10,6 +10,7 @@
 <use name="PhysicsTools/UtilAlgos" />
 <use name="PhysicsTools/RecoUtils" />
 <use name="RecoVertex/VertexTools" />
+<use name="HLTrigger/HLTcore" />
 
 <use name="KrAFT/GenericNtuple" />
 

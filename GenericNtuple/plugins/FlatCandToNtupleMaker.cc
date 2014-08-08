@@ -48,10 +48,9 @@ private:
   typedef edm::EDGetTokenT<CandView> CandToken;
   typedef edm::EDGetTokenT<Vmap> VmapToken;
 
-  bool skipFailedEvent_;
-
   std::vector<CandToken> candTokens_;
   std::vector<std::vector<VmapToken> > vmapTokens_;
+  std::vector<edm::EDGetTokenT<int> > intTokens_;
   std::vector<edm::EDGetTokenT<double> > weightTokens_;
   std::vector<edm::EDGetTokenT<doubles> > vWeightTokens_;
 
@@ -63,6 +62,7 @@ private:
 
   TTree* tree_;
   int runNumber_, lumiNumber_, eventNumber_;
+  std::vector<int*> ints_;
   std::vector<double*> weights_;
   std::vector<doubles*> vWeights_;
   std::vector<std::vector<doubles*> > candVars_;
@@ -79,7 +79,16 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
   tree_->Branch("lumi" , &lumiNumber_ , "lumi/I" );
   tree_->Branch("event", &eventNumber_, "event/I");
 
-  skipFailedEvent_ = pset.getUntrackedParameter<bool>("skipFailedEvent", true);
+  PSet intPSets = pset.getParameter<PSet>("int");
+  const strings intNames = intPSets.getParameterNamesForType<PSet>();
+  for ( auto& intName : intNames )
+  {
+    PSet intPSet = intPSets.getParameter<PSet>(intName);
+    intTokens_.push_back(consumes<int>(intPSet.getParameter<edm::InputTag>("src")));
+
+    ints_.push_back(new int);
+    tree_->Branch(intName.c_str(), ints_.back(), (intName+"/I").c_str());
+  }
 
   PSet weightPSets = pset.getParameter<PSet>("weight");
   const strings weightNames = weightPSets.getParameterNamesForType<PSet>();
@@ -154,26 +163,32 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
   lumiNumber_ = event.luminosityBlock();
   eventNumber_ = event.id().event();
 
-  runNumber_   = event.run();
-  lumiNumber_  = event.luminosityBlock();
-  eventNumber_ = event.id().event();
+  for ( size_t i=0, n=intTokens_.size(); i<n; ++i )
+  {
+    edm::Handle<int> intHandle;
+    event.getByToken(intTokens_[i], intHandle);
+    if ( intHandle.isValid() ) *ints_[i] = *intHandle;
+    else *ints_[i] = 0;
+  }
 
   for ( size_t i=0, n=weightTokens_.size(); i<n; ++i )
   {
     edm::Handle<double> weightHandle;
     event.getByToken(weightTokens_[i], weightHandle);
-    if ( skipFailedEvent_ and !weightHandle.isValid() ) return;
 
-    *weights_[i] = *weightHandle;
+    if ( weightHandle.isValid() ) *weights_[i] = *weightHandle;
+    else *weights_[i] = 0;
   }
 
   for ( size_t i=0, n=vWeightTokens_.size(); i<n; ++i )
   {
     edm::Handle<doubles> vWeightHandle;
     event.getByToken(vWeightTokens_[i], vWeightHandle);
-    if ( skipFailedEvent_ and !vWeightHandle.isValid() ) return;
 
-    vWeights_[i]->insert(vWeights_[i]->begin(), vWeightHandle->begin(), vWeightHandle->end());
+    if ( vWeightHandle.isValid() )
+    {
+      vWeights_[i]->insert(vWeights_[i]->begin(), vWeightHandle->begin(), vWeightHandle->end());
+    }
   }
 
   const size_t nCand = candTokens_.size();
@@ -181,7 +196,7 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
   {
     edm::Handle<CandView> srcHandle;
     event.getByToken(candTokens_[iCand], srcHandle);
-    if ( skipFailedEvent_ and !srcHandle.isValid() ) return;
+    if ( !srcHandle.isValid() ) continue;
 
     const std::vector<CandFtn>& exprs = exprs_[iCand];
     const std::vector<CandSel>& selectors = selectors_[iCand];
@@ -192,9 +207,7 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
     std::vector<edm::Handle<edm::ValueMap<double> > > vmapHandles(nVmap);
     for ( size_t iVar=0; iVar<nVmap; ++iVar )
     {
-      VmapToken& vmapToken = vmapTokens[iVar];
-      event.getByToken(vmapToken, vmapHandles[iVar]);
-      if ( skipFailedEvent_ and !vmapHandles[iVar].isValid() ) return;
+      event.getByToken(vmapTokens[iVar], vmapHandles[iVar]);
     }
 
     for ( size_t i=0, n=srcHandle->size(); i<n; ++i )
@@ -213,7 +226,8 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
       }
       for ( size_t j=0; j<nVmap; ++j )
       {
-        const double val = (*vmapHandles[j])[candRef];
+        double val = 0;
+        if ( vmapHandles[j].isValid() ) val = (*vmapHandles[j])[candRef];
         candVars_[iCand][j+nExpr+nSels]->push_back(val);
       }
     }

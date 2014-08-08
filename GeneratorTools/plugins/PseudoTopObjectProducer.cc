@@ -239,11 +239,10 @@ bool PseudoTopObjectProducer::isFromHadron(const reco::Candidate& p, const int d
   for ( int i=0, n=p.numberOfMothers(); i<n; ++i )
   {
     const reco::Candidate& mother = *p.mother(i);
+    if ( mother.status() != 2 ) continue;
     const int pdgId = abs(mother.pdgId());
 
-    if ( pdgId == 23 or pdgId == 24 or pdgId == 35 ) return false;
-    else if ( pdgId == 22 or pdgId < 6 ) return true;
-    else if ( pdgId > 100 ) return true;
+    if ( pdgId > 100 ) return true;
     else if ( isFromHadron(mother, depth-1) ) return true;
   }
   return false;

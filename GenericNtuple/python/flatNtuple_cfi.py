@@ -1,5 +1,14 @@
 import FWCore.ParameterSet.Config as cms
 
+p4Set = cms.untracked.PSet(
+    pt = cms.string("pt"),
+    eta = cms.string("eta"),
+    phi = cms.string("phi"),
+    m = cms.string("mass"),
+    q = cms.string("charge"),
+    pdgId = cms.string("pdgId"),
+)
+
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
     weight = cms.PSet(
         puWeight   = cms.PSet(src = cms.InputTag("pileupWeight")),
@@ -12,35 +21,73 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
     cands = cms.PSet(
         muons = cms.PSet(
             src = cms.InputTag("flatMuons"),
-            vmaps = cms.vstring("isTight", "isLoose", "relIso", "dxy", "dz", ),
+            exprs = p4Set.clone(),
+            vmaps = cms.untracked.vstring("isTight", "isLoose", "relIso", "dxy", "dz", ),
         ),
         electrons = cms.PSet(
             src = cms.InputTag("flatElectrons"),
-            vmaps = cms.vstring("mva", "scEta", "relIso", "dxy", "dz", "chargeIDFull",),
+            exprs = p4Set.clone(),
+            vmaps = cms.untracked.vstring("mva", "scEta", "relIso", "dxy", "dz", "chargeIDFull",),
         ),
         jets = cms.PSet(
             src = cms.InputTag("flatJets"),
-            vmaps = cms.vstring("bTagCSV", "up", "dn", "res", "resUp", "resDn"),
+            exprs = p4Set.clone(),
+            vmaps = cms.untracked.vstring("bTagCSV", "up", "dn", "res", "resUp", "resDn"),
+        ),
+        mets = cms.PSet(
+            src = cms.InputTag("flatMETs"),
+            exprs = cms.untracked.PSet(pt = cms.string("pt"), phi = cms.string("phi")),
+        ),
+        metsUp = cms.PSet(
+            src = cms.InputTag("flatMETsUp"),
+            exprs = cms.untracked.PSet(pt = cms.string("pt"), phi = cms.string("phi")),
+        ),
+        metsDn = cms.PSet(
+            src = cms.InputTag("flatMETsDn"),
+            exprs = cms.untracked.PSet(pt = cms.string("pt"), phi = cms.string("phi")),
+        ),
+        metsRes = cms.PSet(
+            src = cms.InputTag("flatMETsRes"),
+            exprs = cms.untracked.PSet(pt = cms.string("pt"), phi = cms.string("phi")),
+        ),
+        metsResUp = cms.PSet(
+            src = cms.InputTag("flatMETsResUp"),
+            exprs = cms.untracked.PSet(pt = cms.string("pt"), phi = cms.string("phi")),
+        ),
+        metsResDn = cms.PSet(
+            src = cms.InputTag("flatMETsResDn"),
         ),
         jpsiMuMu = cms.PSet(
             src = cms.InputTag("flatJpsiMuMu"),
-            vmaps = cms.vstring("lxy", "l3D", "jetDR", "vProb"),
+            exprs = p4Set.clone(),
+            vmaps = cms.untracked.vstring("lxy", "l3D", "jetDR", "vProb"),
         ),
         jpsiElEl = cms.PSet(
             src = cms.InputTag("flatJpsiElEl"),
-            vmaps = cms.vstring("lxy", "l3D", "jetDR", "vProb"),
+            exprs = p4Set.clone(),
+            vmaps = cms.untracked.vstring("lxy", "l3D", "jetDR", "vProb"),
         ),
         pseudoTopLepton = cms.PSet(
             src = cms.InputTag("flatPseudoTopLepton"),
-            vmaps = cms.vstring(),
+            exprs = p4Set.clone(),
         ),
         pseudoTopNu = cms.PSet(
             src = cms.InputTag("flatPseudoTopNu"),
-            vmaps = cms.vstring(),
+            exprs = p4Set.clone(),
         ),
         pseudoTopJet = cms.PSet(
             src = cms.InputTag("flatPseudoTopJet"),
-            vmaps = cms.vstring(),
+            exprs = p4Set.clone(),
         ),
     ),
 )
+
+delattr(fEvent.cands.muons.exprs, 'pdgId')
+delattr(fEvent.cands.electrons.exprs, 'pdgId')
+delattr(fEvent.cands.jpsiMuMu.exprs, 'pdgId')
+delattr(fEvent.cands.jpsiMuMu.exprs, 'q')
+delattr(fEvent.cands.jpsiElEl.exprs, 'pdgId')
+delattr(fEvent.cands.jpsiElEl.exprs, 'q')
+delattr(fEvent.cands.pseudoTopNu.exprs, 'm')
+delattr(fEvent.cands.pseudoTopNu.exprs, 'q')
+delattr(fEvent.cands.pseudoTopJet.exprs, 'q')

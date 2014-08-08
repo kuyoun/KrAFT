@@ -143,8 +143,7 @@ void FlatEventInfoProducer::produce(edm::Event& event, const edm::EventSetup& ev
       const unsigned int trigIndex = hltConfig_.triggerIndex(trigName);
       if ( trigIndex < hltHandle->size() )
       {
-        isPassed = true;
-        break;
+        if ( hltHandle->accept(trigIndex) ) { isPassed = true; break; }
       }
       //const int psValue = hltConfig_.prescaleValue(event, eventSetup, trigName);
     }

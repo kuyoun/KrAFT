@@ -10,6 +10,9 @@ p4Set = cms.untracked.PSet(
 )
 
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
+    int = cms.PSet(
+        nVertex = cms.PSet(src = cms.InputTag("flatEventInfo", "pvN")),
+    ),
     weight = cms.PSet(
         puWeight   = cms.PSet(src = cms.InputTag("pileupWeight")),
         puWeightUp = cms.PSet(src = cms.InputTag("pileupWeight", "up")),

@@ -15,8 +15,9 @@
 
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
-//#include "FWCore/Common/interface/TriggerNames.h"
-//#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
 #include <memory>
 #include <vector>
@@ -27,7 +28,7 @@ class FlatEventInfoProducer : public edm::EDProducer
 public:
   FlatEventInfoProducer(const edm::ParameterSet& pset);
   void produce(edm::Event& event, const edm::EventSetup& eventSetup);
-  //void beginRun(edm::Event& event, const edm::EventSetup& eventSetup);
+  void beginRun(edm::Run& run, const edm::EventSetup& eventSetup);
 
 private:
   typedef std::vector<double> doubles;
@@ -35,8 +36,11 @@ private:
 
   edm::InputTag vertexLabel_;
   edm::InputTag genInfoLabel_;
-  //strings hltPaths_ // TODO : implement HLT info
-  //HLTConfigProducer hltConfig_;
+  edm::InputTag hltLabel_;
+
+  std::string processName_;
+  std::map<std::string, strings> hltGroup_;
+  HLTConfigProvider hltConfig_;
 
 };
 
@@ -44,7 +48,7 @@ FlatEventInfoProducer::FlatEventInfoProducer(const edm::ParameterSet& pset)
 {
   vertexLabel_ = pset.getParameter<edm::InputTag>("vertex");
   genInfoLabel_ = pset.getParameter<edm::InputTag>("genInfo");
-  //hltPaths_ = pset.getParameter<strings>("hltPaths");
+  processName_ = pset.getParameter<std::string>("hltProcessName");
 
   produces<int>("pvN");
   produces<double>("pvX");
@@ -57,12 +61,34 @@ FlatEventInfoProducer::FlatEventInfoProducer(const edm::ParameterSet& pset)
   produces<double>("pdfX2");
   produces<double>("pdfQ");
 
-/*
-  for ( auto& hltPath : hltPaths_ )
+  edm::ParameterSet hltSet = pset.getParameter<edm::ParameterSet>("HLT");
+  for ( auto& hltSetName : hltSet.getParameterNamesForType<strings>() )
   {
-    produces<bool>(hltPath);
+    const std::string hltGroupName = hltSetName;
+    strings& hltPaths = hltGroup_[hltGroupName];
+    hltPaths = hltSet.getParameter<strings>(hltGroupName);
+    for ( auto& hltPath : hltPaths )
+    {
+      hltPath = HLTConfigProvider::removeVersion(hltPath);
+    }
+
+    produces<int>("HLT"+hltSetName);
   }
-*/
+}
+
+void FlatEventInfoProducer::beginRun(edm::Run& run, const edm::EventSetup& eventSetup)
+{
+  bool changed = true;
+  if ( !hltConfig_.init(run, eventSetup, processName_, changed) ) 
+  {
+    edm::LogError("FlatEventInfoProducer") << "HLT config extraction failure with process name " << processName_;
+  }
+
+  //if ( changed ) 
+  //{
+  //  // The HLT config has actually changed wrt the previous Run, hence rebook your
+  //  // histograms or do anything else dependent on the revised HLT config
+  //}
 }
 
 void FlatEventInfoProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
@@ -101,14 +127,28 @@ void FlatEventInfoProducer::produce(edm::Event& event, const edm::EventSetup& ev
     event.put(std::auto_ptr<double>(new double(q)), "pdfQ");
   }
 
-/*
   edm::Handle<edm::TriggerResults> hltHandle;
-  event.getByLabel(edm::InputTag("TriggerResults"), hltHandle);
-  for ( auto& hltPath : hltPaths_ )
+  event.getByLabel(edm::InputTag("TriggerResults", "", processName_), hltHandle);
+  for ( auto key = hltGroup_.begin(); key != hltGroup_.end(); ++key )
   {
-    
+    const std::string& hltGroupName = key->first;
+    const strings& hltPaths = key->second;
+
+    bool isPassed = false;
+    for ( auto& hltPath : hltPaths )
+    {
+      const strings hltPathsWithV = HLTConfigProvider::restoreVersion(hltConfig_.triggerNames(), hltPath);
+      if ( hltPathsWithV.empty() ) continue;
+      const std::string& trigName = hltPathsWithV[0];
+      const unsigned int trigIndex = hltConfig_.triggerIndex(trigName);
+      if ( trigIndex < hltHandle->size() )
+      {
+        if ( hltHandle->accept(trigIndex) ) { isPassed = true; break; }
+      }
+      //const int psValue = hltConfig_.prescaleValue(event, eventSetup, trigName);
+    }
+    event.put(std::auto_ptr<int>(new int(isPassed)), "HLT"+hltGroupName);
   }
-*/
 
 }
 

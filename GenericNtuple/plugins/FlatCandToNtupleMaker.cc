@@ -58,6 +58,7 @@ private:
 
   TTree* tree_;
   int runNumber_, lumiNumber_, eventNumber_;
+  std::vector<int*> ints_;
   std::vector<double*> weights_;
   std::vector<doubles*> vWeights_;
   std::vector<std::vector<doubles*> > candVars_;
@@ -75,6 +76,17 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
   tree_->Branch("event", &eventNumber_, "event/I");
 
   skipFailedEvent_ = pset.getUntrackedParameter<bool>("skipFailedEvent", true);
+
+  PSet intPSets = pset.getParameter<PSet>("int");
+  const strings intNames = intPSets.getParameterNamesForType<PSet>();
+  for ( auto& intName : intNames )
+  {
+    PSet intPSet = intPSets.getParameter<PSet>(intName);
+    intLabels_.push_back(intPSet.getParameter<edm::InputTag>("src"));
+
+    ints_.push_back(new int);
+    tree_->Branch(intName.c_str(), ints_.back(), (intName+"/I").c_str());
+  }
 
   PSet weightPSets = pset.getParameter<PSet>("weight");
   const strings weightNames = weightPSets.getParameterNamesForType<PSet>();
@@ -148,6 +160,15 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
   runNumber_   = event.run();
   lumiNumber_  = event.luminosityBlock();
   eventNumber_ = event.id().event();
+
+  for ( size_t i=0, n=intLabels_.size(); i<n; ++i )
+  {
+    edm::Handle<int> intHandle;
+    event.getByLabel(intLabels_[i], intHandle);
+    if ( skipFailedEvent_ and !intHandle.isValid() ) return;
+
+    *ints_[i] = *intHandle;
+  }
 
   for ( size_t i=0, n=weightLabels_.size(); i<n; ++i )
   {

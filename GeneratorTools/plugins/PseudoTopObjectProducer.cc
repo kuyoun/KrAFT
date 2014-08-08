@@ -40,7 +40,7 @@ private:
   bool isBHadron(const unsigned int pdgId) const;
 
 private:
-  edm::EDGetTokenT<reco::GenParticleCollection> srcToken_;
+  edm::EDGetTokenT<edm::View<reco::GenParticle> > srcToken_;
   double leptonMinPt_, jetMinPt_;
 
   typedef fastjet::JetDefinition JetDef;
@@ -50,7 +50,7 @@ private:
 
 PseudoTopObjectProducer::PseudoTopObjectProducer(const edm::ParameterSet& pset)
 {
-  srcToken_ = consumes<reco::GenParticleCollection>(pset.getParameter<edm::InputTag>("src"));
+  srcToken_ = consumes<edm::View<reco::GenParticle> >(pset.getParameter<edm::InputTag>("src"));
   leptonMinPt_ = pset.getParameter<double>("leptonMinPt");
   jetMinPt_ = pset.getParameter<double>("jetMinPt");
 

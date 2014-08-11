@@ -17,8 +17,8 @@ else: process.GlobalTag.globaltag = autoCond['com10']
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/relval/CMSSW_5_3_12_patch2/RelValProdTTbar/GEN-SIM-RECO/START53_LV2-v1/00000/5E865D62-AA2B-E311-AA04-002618943962.root',
-        '/store/relval/CMSSW_5_3_12_patch2/RelValProdTTbar/GEN-SIM-RECO/START53_LV2-v1/00000/92EB24DF-C72B-E311-8AA2-00261894390E.root',
+        '/store/relval/CMSSW_5_3_12_patch2/RelValZMM/GEN-SIM-RECO/START53_LV2-v1/00000/28D552C4-A82B-E311-952C-002590596486.root',
+        '/store/relval/CMSSW_5_3_12_patch2/RelValZMM/GEN-SIM-RECO/START53_LV2-v1/00000/EA8973F4-A92B-E311-A0A6-00261894396D.root',
     ),
 )
 
@@ -32,14 +32,14 @@ process.out = cms.OutputModule("PoolOutputModule",
         'keep *_TriggerResults_*_HLT',
         'keep edmMergeableCounter_*_*_*',
         'keep *_partons_*_*',
-        #'keep *_pseudoTop_*_*',
+        'keep *_pseudoTop_*_*',
         'keep *_pileupWeight_*_*',
         'keep *_pdfWeight_*_*',
         'keep *_flat*_*_*',
         'keep *_TriggerResults_*_%s' % process.process,
     ),
     SelectEvents = cms.untracked.PSet(
-        SelectEvents = cms.vstring("GEN", "CANDSEL"),
+        SelectEvents = cms.vstring("CANDSEL"),
     ),
 )
 
@@ -90,17 +90,12 @@ process.analysisObjectSequence = cms.Sequence(
   + process.flatJpsiMuMu# + process.flatJpsiElEl
 )
 
-process.GEN = cms.Path(
-    process.pseudoTop
-  + process.partons
-  * process.flatPseudoTopLepton + process.flatPseudoTopNu + process.flatPseudoTopJet
-)
-
 process.CANDSEL = cms.Path(
     process.nEventsTotal
   + process.goodOfflinePrimaryVertices + process.eventCleaning + process.nEventsClean
   + process.patPF2PATSequencePFlow + process.nEventsPAT
   + process.analysisObjectSequence
+  + process.partons
 )
 
 process.output = cms.EndPath(process.out)

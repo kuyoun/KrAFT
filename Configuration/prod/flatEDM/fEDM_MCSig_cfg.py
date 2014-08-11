@@ -10,7 +10,7 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-process.MessageLogger.cerr.FwkReport.reportEvery = 10000
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 from Configuration.AlCa.autoCond import autoCond
 if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
 else: process.GlobalTag.globaltag = autoCond['com10']
@@ -32,10 +32,14 @@ process.out = cms.OutputModule("PoolOutputModule",
         'keep *_TriggerResults_*_HLT',
         'keep edmMergeableCounter_*_*_*',
         'keep *_partons_*_*',
-        #'keep *_pseudoTop_*_*',
+        'keep *_pseudoTop_*_*',
         'keep *_pileupWeight_*_*',
         'keep *_pdfWeight_*_*',
         'keep *_flat*_*_*',
+        'keep *_TriggerResults_*_%s' % process.process,
+    ),
+    SelectEvents = cms.untracked.PSet(
+        SelectEvents = cms.vstring("GEN", "CANDSEL"),
     ),
 )
 
@@ -86,13 +90,13 @@ process.analysisObjectSequence = cms.Sequence(
   + process.flatJpsiMuMu# + process.flatJpsiElEl
 )
 
-process.pGen = cms.Path(
+process.GEN = cms.Path(
     process.pseudoTop
   + process.partons
   * process.flatPseudoTopLepton + process.flatPseudoTopNu + process.flatPseudoTopJet
 )
 
-process.p = cms.Path(
+process.CANDSEL = cms.Path(
     process.nEventsTotal
   + process.goodOfflinePrimaryVertices + process.eventCleaning + process.nEventsClean
   + process.patPF2PATSequencePFlow + process.nEventsPAT

@@ -11,6 +11,17 @@ process.source = cms.Source("PoolSource",
 process.load("KrAFT.GenericNtuple.flatNtuple_cfi")
 delattr(process.fEvent.cands, 'jpsiElEl')
 
+process.passFEDM = cms.EDFilter("HLTHighLevel",
+    eventSetupPathsKey = cms.string(''),
+    TriggerResultsTag = cms.InputTag("TriggerResults","","KrAFT"),
+    HLTPaths = cms.vstring(
+        "CANDSEL",
+    ),
+    throw = cms.bool(False),
+    andOr = cms.bool(True)
+)
+
+#process.p = cms.Path(process.passFEDM+process.fEvent)
 process.p = cms.Path(process.fEvent)
 
 process.TFileService = cms.Service("TFileService",

@@ -1,0 +1,22 @@
+import FWCore.ParameterSet.Config as cms
+
+from KrAFT.RecoSelectorTools.leptonSelector_cfi import *
+from KrAFT.RecoSelectorTools.jetSelector_cfi import *
+from KrAFT.RecoSelectorTools.jpsiSelector_cfi import *
+from KrAFT.GenericNtuple.flatEventInfo_cfi import *
+from KrAFT.GenericNtuple.flatCands_cfi import *
+
+analysisObjectSequence = cms.Sequence(
+    goodMuons + goodElectrons * goodJets
+  * jpsiToMuMu# + process.jpsiToElEl
+
+  + flatEventInfo
+  * flatMuons + flatElectrons + flatJets
+  + flatMETs + flatMETsUp + flatMETsDn
+  + flatJpsiMuMu# + process.flatJpsiElEl
+)
+
+goodJets.isMC = False
+delattr(flatJets.variables, "res")
+delattr(flatJets.variables, "resUp")
+delattr(flatJets.variables, "resDn")

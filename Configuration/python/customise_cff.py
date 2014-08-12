@@ -27,6 +27,10 @@ def customisePAT(process, runOnMC, outputModules = []):
               jetAlgo="AK5", jetCorrections=("AK5PFchs", jecLevels),
               typeIMetCorrections=True)
 
+    #put event counter at the end of the seqeuence
+    process.nEventsPAT   = cms.EDProducer("EventCountProducer")
+    process.patPF2PATSequencePFlow += process.nEventsPAT
+
     # top projections in PF2PAT:
     process.pfNoPileUpPFlow.enable = True
     process.pfNoMuonPFlow.enable = True

@@ -71,7 +71,7 @@ process.partons = cms.EDProducer("GenParticlePruner",
         "drop *",
         "drop pt <= 0",
         "keep status = 3", # For the pythia
-				"+keep pdgId = 443" 
+				"+keep pdgId = 443", 
 				"keep+ pdgId = 443" 
     ),
 )

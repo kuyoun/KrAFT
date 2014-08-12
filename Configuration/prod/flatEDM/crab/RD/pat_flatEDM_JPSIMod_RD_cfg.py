@@ -17,8 +17,7 @@ else: process.GlobalTag.globaltag = autoCond['com10']
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/relval/CMSSW_5_3_12_patch2/RelValProdTTbar/GEN-SIM-RECO/START53_LV2-v1/00000/5E865D62-AA2B-E311-AA04-002618943962.root',
-        '/store/relval/CMSSW_5_3_12_patch2/RelValProdTTbar/GEN-SIM-RECO/START53_LV2-v1/00000/92EB24DF-C72B-E311-8AA2-00261894390E.root',
+				'/store/data/Run2012D/DoubleElectron/AOD/22Jan2013-v1/10000/0014C5C0-1A8F-E211-AD90-0026189438A9.root',
     ),
 )
 

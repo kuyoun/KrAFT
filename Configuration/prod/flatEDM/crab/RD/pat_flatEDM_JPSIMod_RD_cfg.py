@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-runOnMC = True
+runOnMC = False
 
 process = cms.Process("KrAFT")
 process.load("Configuration.StandardSequences.Services_cff")

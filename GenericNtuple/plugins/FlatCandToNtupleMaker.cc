@@ -62,10 +62,22 @@ private:
   std::vector<doubles*> vWeights_;
   std::vector<std::vector<doubles*> > candVars_;
 
+  struct FAILUREMODE
+  {
+    enum { KEEP, SKIP, ERROR };
+  };
+  int failureMode_;
 };
 
 FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 {
+  std::string failureMode = pset.getUntrackedParameter<std::string>("failureMode", "keep");
+  std::transform(failureMode.begin(), failureMode.end(), failureMode.begin(), ::tolower);
+  if ( failureMode == "keep" ) failureMode_ = FAILUREMODE::KEEP;
+  else if ( failureMode == "skip" ) failureMode_ = FAILUREMODE::SKIP;
+  else if ( failureMode == "error" ) failureMode_ = FAILUREMODE::ERROR;
+  else throw cms::Exception("ConfigError") << "select one from \"keep\", \"skip\", \"error\"\n";
+
   // Output histograms and tree
   edm::Service<TFileService> fs;
   tree_ = fs->make<TTree>("event", "event");
@@ -154,6 +166,8 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
 {
   typedef edm::View<reco::LeafCandidate> Cands;
 
+  int nFailure = 0;
+
   runNumber_   = event.run();
   lumiNumber_  = event.luminosityBlock();
   eventNumber_ = event.id().event();
@@ -163,7 +177,11 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
     edm::Handle<int> intHandle;
     event.getByLabel(intLabels_[i], intHandle);
     if ( intHandle.isValid() ) *ints_[i] = *intHandle;
-    else *ints_[i] = 0;
+    else
+    {
+      *ints_[i] = 0;
+      ++nFailure;
+    }
   }
 
   for ( size_t i=0, n=weightLabels_.size(); i<n; ++i )
@@ -171,7 +189,11 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
     edm::Handle<double> weightHandle;
     event.getByLabel(weightLabels_[i], weightHandle);
     if ( weightHandle.isValid() ) *weights_[i] = *weightHandle;
-    else *weights_[i] = 0;
+    else
+    {
+      *weights_[i] = 0;
+      ++nFailure;
+    }
   }
 
   for ( size_t i=0, n=vWeightLabels_.size(); i<n; ++i )
@@ -182,6 +204,10 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
     {
       vWeights_[i]->insert(vWeights_[i]->begin(), vWeightHandle->begin(), vWeightHandle->end());
     }
+    else
+    {
+      ++nFailure;
+    }
   }
 
   const size_t nCand = candLabels_.size();
@@ -189,7 +215,11 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
   {
     edm::Handle<Cands> srcHandle;
     event.getByLabel(candLabels_[iCand], srcHandle);
-    if ( !srcHandle.isValid() ) continue;
+    if ( !srcHandle.isValid() )
+    {
+      ++nFailure;
+      continue;
+    }
 
     const std::vector<CandFtn>& exprs = exprs_[iCand];
     const std::vector<CandSel>& selectors = selectors_[iCand];
@@ -226,7 +256,14 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
     }
   }
 
-  tree_->Fill();
+  if ( failureMode_ == FAILUREMODE::KEEP ) tree_->Fill();
+  //else if ( failureMode_ == FAILUREMODE::SKIP ); // don't fill and continue memory cleanup
+  else if ( nFailure > 0 and failureMode_ == FAILUREMODE::ERROR )
+  {
+    edm::LogError("FlatCandToNtupleMaker") << "Failed to get " << nFailure << " items";
+    throw cms::Exception("DataError") << "Cannot get object from data";
+  }
+
   for ( auto& vWeight : vWeights_ )
   {
     vWeight->clear();

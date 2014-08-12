@@ -62,6 +62,12 @@ process.load("KrAFT.RecoSelectorTools.jpsiSelector_cfi")
 process.load("KrAFT.GenericNtuple.flatEventInfo_cfi")
 process.load("KrAFT.GenericNtuple.flatCands_cfi")
 process.goodJets.isMC = runOnMC
+delattr(process.flatJets.variables, 'res')
+delattr(process.flatJets.variables, 'resUp')
+delattr(process.flatJets.variables, 'resDn')
+delattr(process, 'flatMETsRes')
+delattr(process, 'flatMETsResUp')
+delattr(process, 'flatMETsResDn')
 
 process.analysisObjectSequence = cms.Sequence(
     process.goodMuons + process.goodElectrons * process.goodJets

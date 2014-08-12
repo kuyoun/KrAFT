@@ -78,7 +78,7 @@ process.partons = cms.EDProducer("GenParticlePruner",
 process.analysisObjectSequence = cms.Sequence(
     process.pileupWeight + process.pdfWeight
   + process.goodMuons + process.goodElectrons * process.goodJets
-  * process.jpsiToMuMu  process.jpsiToElEl
+  * process.jpsiToMuMu + process.jpsiToElEl
 
   + process.flatEventInfo
   * process.flatMuons + process.flatElectrons + process.flatJets

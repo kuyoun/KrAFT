@@ -31,12 +31,12 @@ def customisePAT(process, runOnMC, outputModules = []):
     process.nEventsPAT   = cms.EDProducer("EventCountProducer")
     process.patPF2PATSequencePFlow += process.nEventsPAT
 
-    # top projections in PF2PAT:
+    # top projections in PF2PAT: we are turning off top projection
     process.pfNoPileUpPFlow.enable = True
-    process.pfNoMuonPFlow.enable = True
-    process.pfNoElectronPFlow.enable = True
+    process.pfNoMuonPFlow.enable = False #True
+    process.pfNoElectronPFlow.enable = False #True
     process.pfNoTauPFlow.enable = False
-    process.pfNoJetPFlow.enable = True
+    process.pfNoJetPFlow.enable = False #True
 
     # verbose flags for the PF2PAT modules
     process.pfNoMuonPFlow.verbose = False

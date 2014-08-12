@@ -46,7 +46,7 @@ process.out = cms.OutputModule("PoolOutputModule",
 from KrAFT.Configuration.customise_cff import *
 customisePAT(process, runOnMC=runOnMC, outputModules=[])
 
-process.load("KrAFT.Configration.flatEDM_MC_cff")
+process.load("KrAFT.Configuration.flatEDM_MC_cff")
 process.load("KrAFT.Configuration.commonFilters_MC_cff")
 
 process.partons = cms.EDProducer("GenParticlePruner",

@@ -117,7 +117,7 @@ def initialize(runOnMC, processName="KrAFT"):
         process.out.outputCommands.extend([
             'keep edmMergeableCounter_*_*_*',
             'keep *_partons_*_*',
-            'keep *_pseudoTop_*_*',
+            #'keep *_pseudoTop_*_*', # recoGenJets/GenParticles from pseudoTop producer
             'keep *_pileupWeight_*_*',
             'keep *_pdfWeight_*_*',
         ])

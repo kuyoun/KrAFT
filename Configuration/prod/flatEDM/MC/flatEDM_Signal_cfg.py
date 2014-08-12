@@ -46,28 +46,8 @@ process.out = cms.OutputModule("PoolOutputModule",
 from KrAFT.Configuration.customise_cff import *
 customisePAT(process, runOnMC=runOnMC, outputModules=[])
 
-process.load("TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi")
-process.goodOfflinePrimaryVertices.filter = True
-
-process.load( 'TopQuarkAnalysis.Configuration.patRefSel_eventCleaning_cff' )
-process.trackingFailureFilter.VertexSource = cms.InputTag('goodOfflinePrimaryVertices')
-if runOnMC: process.eventCleaning += process.eventCleaningMC
-else: process.eventCleaning += process.eventCleaningData
-
-process.nEventsTotal = cms.EDProducer("EventCountProducer")
-process.nEventsClean = cms.EDProducer("EventCountProducer")
-process.nEventsPAT   = cms.EDProducer("EventCountProducer")
-
-## Default path
-process.load("KrAFT.GeneratorTools.pileupWeight_cff")
-process.load("KrAFT.GeneratorTools.pdfWeight_cff")
-process.load("KrAFT.GeneratorTools.pseudoTop_cfi")
-process.load("KrAFT.RecoSelectorTools.leptonSelector_cfi")
-process.load("KrAFT.RecoSelectorTools.jetSelector_cfi")
-process.load("KrAFT.RecoSelectorTools.jpsiSelector_cfi")
-process.load("KrAFT.GenericNtuple.flatEventInfo_cfi")
-process.load("KrAFT.GenericNtuple.flatCands_cfi")
-process.goodJets.isMC = runOnMC
+process.load("KrAFT.Configuration.flatEDM_MC_cff")
+process.load("KrAFT.Configuration.commonFilters_MC_cff")
 
 process.partons = cms.EDProducer("GenParticlePruner",
     src = cms.InputTag("genParticles"),
@@ -78,18 +58,6 @@ process.partons = cms.EDProducer("GenParticlePruner",
     ),
 )
 
-process.analysisObjectSequence = cms.Sequence(
-    process.pileupWeight + process.pdfWeight
-  + process.goodMuons + process.goodElectrons * process.goodJets
-  * process.jpsiToMuMu# + process.jpsiToElEl
-
-  + process.flatEventInfo
-  * process.flatMuons + process.flatElectrons + process.flatJets
-  + process.flatMETs + process.flatMETsUp + process.flatMETsDn
-  + process.flatMETsRes + process.flatMETsResUp + process.flatMETsResDn
-  + process.flatJpsiMuMu# + process.flatJpsiElEl
-)
-
 process.GEN = cms.Path(
     process.pseudoTop
   + process.partons
@@ -97,9 +65,8 @@ process.GEN = cms.Path(
 )
 
 process.CANDSEL = cms.Path(
-    process.nEventsTotal
-  + process.goodOfflinePrimaryVertices + process.eventCleaning + process.nEventsClean
-  + process.patPF2PATSequencePFlow + process.nEventsPAT
+    process.preFilterSequence
+  + process.patPF2PATSequencePFlow
   + process.analysisObjectSequence
 )
 

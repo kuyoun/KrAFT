@@ -106,6 +106,7 @@ def initialize(runOnMC, processName="KrAFT"):
             'drop *',
             'keep *_TriggerResults_*_HLT',
             'keep *_TriggerResults_*_%s' % processName,
+            'keep edmMergeableCounter_*_*_*',
             'keep *_flat*_*_*',
         ),
         SelectEvents = cms.untracked.PSet(
@@ -115,7 +116,6 @@ def initialize(runOnMC, processName="KrAFT"):
 
     if runOnMC:
         process.out.outputCommands.extend([
-            'keep edmMergeableCounter_*_*_*',
             'keep *_partons_*_*',
             #'keep *_pseudoTop_*_*', # recoGenJets/GenParticles from pseudoTop producer
             'keep *_pileupWeight_*_*',

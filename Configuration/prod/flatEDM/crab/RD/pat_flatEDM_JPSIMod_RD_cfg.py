@@ -87,11 +87,13 @@ process.analysisObjectSequence = cms.Sequence(
   + process.flatJpsiMuMu + process.flatJpsiElEl
 )
 
-process.pGen = cms.Path(
-    process.pseudoTop
-  + process.partons
-  * process.flatPseudoTopLepton + process.flatPseudoTopNu + process.flatPseudoTopJet
-)
+if runOnMC is True : 
+
+	process.pGen = cms.Path(
+  	  process.pseudoTop
+	  + process.partons
+	  * process.flatPseudoTopLepton + process.flatPseudoTopNu + process.flatPseudoTopJet
+	)
 
 process.p = cms.Path(
     process.nEventsTotal

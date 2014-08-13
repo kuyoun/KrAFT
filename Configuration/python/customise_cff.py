@@ -31,12 +31,12 @@ def customisePAT(process, runOnMC, outputModules = []):
     process.nEventsPAT   = cms.EDProducer("EventCountProducer")
     process.patPF2PATSequencePFlow += process.nEventsPAT
 
-    # top projections in PF2PAT:
+    # top projections in PF2PAT: we are turning off top projection
     process.pfNoPileUpPFlow.enable = True
-    process.pfNoMuonPFlow.enable = True
-    process.pfNoElectronPFlow.enable = True
+    process.pfNoMuonPFlow.enable = False #True
+    process.pfNoElectronPFlow.enable = False #True
     process.pfNoTauPFlow.enable = False
-    process.pfNoJetPFlow.enable = True
+    process.pfNoJetPFlow.enable = False #True
 
     # verbose flags for the PF2PAT modules
     process.pfNoMuonPFlow.verbose = False
@@ -77,4 +77,50 @@ def customisePAT(process, runOnMC, outputModules = []):
     process.patElectronsPFlow.isolationValues.pfPUChargedHadrons = cms.InputTag('elPFIsoValuePU03PFIdPFlow')
     process.patElectronsPFlow.isolationValues.pfPhotons          = cms.InputTag('elPFIsoValueGamma03PFIdPFlow')
     process.patElectronsPFlow.isolationValues.pfChargedHadrons   = cms.InputTag('elPFIsoValueCharged03PFIdPFlow')
+
+def initialize(runOnMC, processName="KrAFT"):
+    process = cms.Process(processName)
+
+    process.load("Configuration.StandardSequences.Services_cff")
+    process.load("Configuration.Geometry.GeometryDB_cff")
+    process.load("Configuration.StandardSequences.MagneticField_cff")
+    process.load("FWCore.MessageLogger.MessageLogger_cfi")
+    process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+    process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
+    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+    process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+    from Configuration.AlCa.autoCond import autoCond
+    if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
+    else: process.GlobalTag.globaltag = autoCond['com10']
+
+    process.source = cms.Source("PoolSource",
+        fileNames = cms.untracked.vstring()
+    )
+
+    process.out = cms.OutputModule("PoolOutputModule",
+        compressionLevel = cms.untracked.int32(4),
+        compressionAlgorithm = cms.untracked.string('LZMA'),
+        eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
+        fileName = cms.untracked.string("out.root"),
+        outputCommands = cms.untracked.vstring(
+            'drop *',
+            'keep *_TriggerResults_*_HLT',
+            'keep *_TriggerResults_*_%s' % processName,
+            'keep *_flat*_*_*',
+        ),
+        SelectEvents = cms.untracked.PSet(
+            SelectEvents = cms.vstring("CANDSEL"),
+        ),
+    )
+
+    if runOnMC:
+        process.out.outputCommands.extend([
+            'keep edmMergeableCounter_*_*_*',
+            'keep *_partons_*_*',
+            #'keep *_pseudoTop_*_*', # recoGenJets/GenParticles from pseudoTop producer
+            'keep *_pileupWeight_*_*',
+            'keep *_pdfWeight_*_*',
+        ])
+
+    return process
 

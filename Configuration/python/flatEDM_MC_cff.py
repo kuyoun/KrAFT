@@ -3,6 +3,7 @@ import FWCore.ParameterSet.Config as cms
 from KrAFT.GeneratorTools.pileupWeight_cff import *
 from KrAFT.GeneratorTools.pdfWeight_cff import *
 from KrAFT.GeneratorTools.pseudoTop_cfi import *
+from KrAFT.GeneratorTools.partons_cff import *
 from KrAFT.RecoSelectorTools.leptonSelector_cfi import *
 from KrAFT.RecoSelectorTools.jetSelector_cfi import *
 from KrAFT.RecoSelectorTools.jpsiSelector_cfi import *

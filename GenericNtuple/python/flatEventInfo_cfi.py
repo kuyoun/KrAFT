@@ -16,7 +16,7 @@ flatEventInfo = cms.EDProducer("FlatEventInfoProducer",
             "HLT_Mu8_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*",
         ),
         MuJet = cms.vstring(
-            "HLT_IsoMu17_eta2p1_*Central*", "HLT_Mu17_eta2p1_*Central*",
+            "HLT_IsoMu24_eta2p1_v*",
         ),
         ElJet = cms.vstring(
             "HLT_Ele25_CaloIdVL_*", "HLT_Ele25_CaloIdVT_*",

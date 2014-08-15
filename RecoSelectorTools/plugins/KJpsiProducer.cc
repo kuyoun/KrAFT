@@ -176,9 +176,9 @@ bool KJpsiProducer<T>::filter(edm::Event& event, const edm::EventSetup& eventSet
       if ( dca < 0. || dca > cut_DCA_ ) continue;
       GlobalPoint cxPt = cApp.crossingPoint();
       if (std::hypot(cxPt.x(), cxPt.y()) > 120. || std::abs(cxPt.z()) > 300.) continue;
-      TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
-      TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
-      if ( !caState1.isValid() or !caState2.isValid() ) continue;
+      //TrajectoryStateClosestToPoint caState1 = transTrack1.trajectoryStateClosestToPoint(cxPt);
+      //TrajectoryStateClosestToPoint caState2 = transTrack2.trajectoryStateClosestToPoint(cxPt);
+      //if ( !caState1.isValid() or !caState2.isValid() ) continue;
 
       // Build Vertex
       std::vector<TransientTrack> transTracks;

@@ -70,7 +70,7 @@ FlatEventInfoProducer::FlatEventInfoProducer(const edm::ParameterSet& pset)
     const std::string hltGroupName = hltSetName;
     strings& hltPaths = hltGroup_[hltGroupName];
     hltPaths = hltSet.getParameter<strings>(hltGroupName);
-    for ( std::string& hltPath : hltPaths )
+    for ( auto& hltPath : hltPaths )
     {
       hltPath = boost::regex_replace(hltPath, matchVersion, "");
     }

@@ -19,6 +19,8 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
+#include <boost/regex.hpp>
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -62,14 +64,15 @@ FlatEventInfoProducer::FlatEventInfoProducer(const edm::ParameterSet& pset)
   produces<double>("pdfQ");
 
   edm::ParameterSet hltSet = pset.getParameter<edm::ParameterSet>("HLT");
+  const boost::regex matchVersion("_v[0-9\\*]+$"); // regexp from HLTrigger/HLTCore/HLTConfigProvider
   for ( auto& hltSetName : hltSet.getParameterNamesForType<strings>() )
   {
     const std::string hltGroupName = hltSetName;
     strings& hltPaths = hltGroup_[hltGroupName];
     hltPaths = hltSet.getParameter<strings>(hltGroupName);
-    for ( auto& hltPath : hltPaths )
+    for ( std::string& hltPath : hltPaths )
     {
-      hltPath = HLTConfigProvider::removeVersion(hltPath);
+      hltPath = boost::regex_replace(hltPath, matchVersion, "");
     }
 
     produces<int>("HLT"+hltSetName);

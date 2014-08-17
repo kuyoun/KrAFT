@@ -8,12 +8,12 @@ from KrAFT.GenericNtuple.flatCands_cfi import *
 
 analysisObjectSequence = cms.Sequence(
     goodMuons + goodElectrons * goodJets
-  * jpsiToMuMu# + process.jpsiToElEl
+  * jpsiToMuMu + jpsiToElEl
 
   + flatEventInfo
   * flatMuons + flatElectrons + flatJets
   + flatMETs + flatMETsUp + flatMETsDn
-  + flatJpsiMuMu# + process.flatJpsiElEl
+  + flatJpsiMuMu + flatJpsiElEl
 )
 
 goodJets.isMC = False

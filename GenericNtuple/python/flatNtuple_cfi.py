@@ -10,6 +10,8 @@ p4Set = cms.untracked.PSet(
 )
 
 fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
+    failureMode = cms.untracked.string("keep"), # choose one among keep/skip/error
+    eventCounters = cms.vstring("nEventsTotal", "nEventsClean", "nEventsPAT"),
     int = cms.PSet(
         nVertex = cms.PSet(src = cms.InputTag("flatEventInfo", "pvN")),
     ),

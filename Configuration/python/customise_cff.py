@@ -27,12 +27,16 @@ def customisePAT(process, runOnMC, outputModules = []):
               jetAlgo="AK5", jetCorrections=("AK5PFchs", jecLevels),
               typeIMetCorrections=True)
 
-    # top projections in PF2PAT:
+    #put event counter at the end of the seqeuence
+    process.nEventsPAT   = cms.EDProducer("EventCountProducer")
+    process.patPF2PATSequencePFlow += process.nEventsPAT
+
+    # top projections in PF2PAT: we are turning off top projection
     process.pfNoPileUpPFlow.enable = True
-    process.pfNoMuonPFlow.enable = True
-    process.pfNoElectronPFlow.enable = True
+    process.pfNoMuonPFlow.enable = False #True
+    process.pfNoElectronPFlow.enable = False #True
     process.pfNoTauPFlow.enable = False
-    process.pfNoJetPFlow.enable = True
+    process.pfNoJetPFlow.enable = False #True
 
     # verbose flags for the PF2PAT modules
     process.pfNoMuonPFlow.verbose = False
@@ -70,160 +74,49 @@ def customisePAT(process, runOnMC, outputModules = []):
     process.patElectronsPFlow.isolationValues.pfPhotons          = cms.InputTag('elPFIsoValueGamma03PFIdPFlow')
     process.patElectronsPFlow.isolationValues.pfChargedHadrons   = cms.InputTag('elPFIsoValueCharged03PFIdPFlow')
 
-def initialise(runOnMC, decayMode, doOutModule=False, doPAT=True):
-    process = cms.Process("KrAFT")
+def initialize(runOnMC, processName="KrAFT"):
+    process = cms.Process(processName)
 
     process.load("Configuration.StandardSequences.Services_cff")
     process.load("Configuration.Geometry.GeometryDB_cff")
     process.load("Configuration.StandardSequences.MagneticField_cff")
-    process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
-    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-
     process.load("FWCore.MessageLogger.MessageLogger_cfi")
-    process.MessageLogger.cerr.FwkReport.reportEvery = 10000
-
-    process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring())
-
     process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+    process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
+    process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+    process.MessageLogger.cerr.FwkReport.reportEvery = 1000
     from Configuration.AlCa.autoCond import autoCond
     if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
     else: process.GlobalTag.globaltag = autoCond['com10']
 
-    outputModuleForTriggerMatch = ""
-    outputModules = []
-    if doOutModule:
-        from PhysicsTools.PatAlgos.patEventContent_cff import patEventContentNoCleaning
-        process.out = cms.OutputModule("PoolOutputModule",
-            fileName = cms.untracked.string("out.root"),
-            outputCommands = cms.untracked.vstring(
-                'drop *',
-                'keep recoPFCandidates_particleFlow_*_*',
-                *patEventContentNoCleaning
-            )
-        )
-        process.outPath = cms.EndPath(process.out)
-
-        outputModuleForTriggerMatch = "out"
-        outputModules.append(process.out)
-
-    customisePAT(process, runOnMC, outputModules)
-
-    ## Add common filters
-    process.load( "TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi" )
-    process.goodOfflinePrimaryVertices.filter = True
-
-    process.load( 'TopQuarkAnalysis.Configuration.patRefSel_eventCleaning_cff' )
-    process.trackingFailureFilter.VertexSource = cms.InputTag('goodOfflinePrimaryVertices')
-    if runOnMC: process.eventCleaning += process.eventCleaningMC
-    else: process.eventCleaning += process.eventCleaningData
-
-    ## Lepton veto filters for L+J channels
-    process.muonVetoFilter = cms.EDFilter("PATCandViewCountFilter",
-        src = cms.InputTag("selectedPatMuonsPFlow"),
-        maxNumber = cms.uint32(0),
-        minNumber = cms.uint32(0),
-    )
-    process.electronVetoFilter = cms.EDFilter("PATCandViewCountFilter",
-        src = cms.InputTag("selectedPatElectronsPFlow"),
-        maxNumber = cms.uint32(0),
-        minNumber = cms.uint32(0),
+    process.source = cms.Source("PoolSource",
+        fileNames = cms.untracked.vstring()
     )
 
-    # event counters
-    process.nEventsTotal = cms.EDProducer("EventCountProducer")
-    process.nEventsClean = cms.EDProducer("EventCountProducer")
-    process.nEventsPAT   = cms.EDProducer("EventCountProducer")
-    process.nEventsHLTElEl = cms.EDProducer("EventCountProducer")
-    process.nEventsHLTMuMu = cms.EDProducer("EventCountProducer")
-    process.nEventsHLTMuEl = cms.EDProducer("EventCountProducer")
-    process.nEventsHLTMuJets = cms.EDProducer("EventCountProducer")
-    process.nEventsHLTElJets = cms.EDProducer("EventCountProducer")
-
-    process.commonFilterSequence = cms.Sequence(
-        process.goodOfflinePrimaryVertices
-      #* process.eventCleaning
-      + process.nEventsClean
+    process.out = cms.OutputModule("PoolOutputModule",
+        compressionLevel = cms.untracked.int32(4),
+        compressionAlgorithm = cms.untracked.string('LZMA'),
+        eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
+        fileName = cms.untracked.string("out.root"),
+        outputCommands = cms.untracked.vstring(
+            'drop *',
+            'keep *_TriggerResults_*_HLT',
+            'keep *_TriggerResults_*_%s' % processName,
+            'keep edmMergeableCounter_*_*_*',
+            'keep *_flat*_*_*',
+        ),
+        SelectEvents = cms.untracked.PSet(
+            SelectEvents = cms.vstring("CANDSEL"),
+        ),
     )
 
-    process.patSequenceComplete = cms.Sequence(
-    #  + process.patDefaultSequence
-    #  + process.patPFBRECOSequencePFlow
-        process.patPF2PATSequencePFlow
-      + process.nEventsPAT
-    )
-
-    ## Defile paths
-    if decayMode in ("all", "dilepton", "ElEl", "ee"):
-        process.pElEl = cms.Path(
-            process.nEventsTotal
-          + process.commonFilterSequence
-          + process.hltElEl + process.nEventsHLTElEl
-        )
-        if doPAT: process.pElEl += process.patSequenceComplete
-    if decayMode in ("all", "dilepton", "MuMu", "mumu"):
-        process.pMuMu = cms.Path(
-            process.nEventsTotal
-          + process.commonFilterSequence
-          + process.hltMuMu + process.nEventsHLTMuMu
-        )
-        if doPAT: process.pMuMu += process.patSequenceComplete
-    if decayMode in ("all", "dilepton", "MuEl", "emu"):
-        process.pMuEl = cms.Path(
-            process.nEventsTotal
-          + process.commonFilterSequence
-          + process.hltMuEl + process.nEventsHLTMuEl
-        )
-        if doPAT: process.pMuEl += process.patSequenceComplete
-    if decayMode in ("all", "MuJets"):
-        process.selectedPatMuonsPFlow.cut = 'isPFMuon && (isGlobalMuon || isTrackerMuon) && pt > 10 && abs(eta) < 2.5 && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
-        process.selectedPatElectronsPFlow.cut = 'pt > 20 && abs(eta) < 2.5 && electronID("mvaTrigV0") > 0. && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
-        process.muonVetoFilter.maxNumber = 1
-
-        process.pMuJets = cms.Path(
-            process.nEventsTotal
-          + process.commonFilterSequence
-          + process.hltMuJets + process.nEventsHLTMuJets
-        )
-        if doPAT: process.pMuJets += process.patSequenceComplete
-        process.pMuJets *= process.muonVetoFilter
-        process.pMuJets += process.electronVetoFilter
-
-        if runOnMC: process.pMuJets.remove(process.hltMuJets)
-    if decayMode in ("all", "ElJets"):
-        process.selectedPatMuonsPFlow.cut = 'isPFMuon && (isGlobalMuon || isTrackerMuon) && pt > 10 && abs(eta) < 2.5 && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
-        process.selectedPatElectronsPFlow.cut = 'pt > 20 && abs(eta) < 2.5 && electronID("mvaTrigV0") > 0. && (chargedHadronIso + max(0.,neutralHadronIso+photonIso-0.5*puChargedHadronIso))/pt < 0.15'
-        process.electronVetoFilter.maxNumber = 1
-
-        process.pElJets = cms.Path(
-            process.nEventsTotal
-          + process.commonFilterSequence
-          + process.hltElJets + process.nEventsHLTElJets
-        )
-        if doPAT: process.pElJets += process.patSequenceComplete
-        process.pElJets *= process.muonVetoFilter
-        process.pElJets += process.electronVetoFilter
-
-        if runOnMC: process.pElJets.remove(process.hltElJets)
+    if runOnMC:
+        process.out.outputCommands.extend([
+            'keep *_partons_*_*',
+            #'keep *_pseudoTop_*_*', # recoGenJets/GenParticles from pseudoTop producer
+            'keep *_pileupWeight_*_*',
+            'keep *_pdfWeight_*_*',
+        ])
 
     return process
-
-def addNtupleStep(process, runOnMC):
-    # Add ntuple production
-    process.load("KrAFT.Configuration.ntuple_template_cff")
-    process.goodJets.isMC = runOnMC
-
-    for mode in ('ElEl', 'MuMu', 'MuEl', 'ElJets', 'MuJets'):
-        if not hasattr(process, 'p'+mode): continue
-
-        getattr(process, mode).isMC = runOnMC
-        p = getattr(process, 'p'+mode)
-        ntupleStep = getattr(process, 'ntupleSequence'+mode)
-        if not runOnMC:
-            ntupleStep.remove(process.pdfWeight)
-            ntupleStep.remove(process.pileupWeight)
-        p += ntupleStep
-
-        getattr(process, mode).eventCounters.extend([
-            "nEventsHLT%s" % mode, "nEventsNtuple%s" % mode,
-        ])
 

@@ -1,23 +1,22 @@
 import FWCore.ParameterSet.Config as cms
 
-from CommonTools.RecoAlgos.HBHENoiseFilter_cfi import *
+from TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi import *
+goodOfflinePrimaryVertices.filter = True
 
-noscraping = cms.EDFilter("FilterOutScraping",
-    applyfilter = cms.untracked.bool(True),
-    debugOn = cms.untracked.bool(False),
-    numtrack = cms.untracked.uint32(10),
-    thresh = cms.untracked.double(0.25),
+from TopQuarkAnalysis.Configuration.patRefSel_eventCleaning_cff import *
+trackingFailureFilter.VertexSource = 'goodOfflinePrimaryVertices'
+eventCleaning += eventCleaningData
+
+nEventsTotal = cms.EDProducer("EventCountProducer")
+nEventsClean = cms.EDProducer("EventCountProducer")
+
+preFilterSequence = cms.Sequence(
+    nEventsTotal
+  + goodOfflinePrimaryVertices + eventCleaning
+  + nEventsClean
 )
 
-goodOfflinePrimaryVertices = cms.EDFilter("PrimaryVertexObjectFilter", 
-    src = cms.InputTag('offlinePrimaryVertices'),
-    filterParams =  cms.PSet(
-        minNdof = cms.double(4.),
-        maxZ    = cms.double(24.), 
-        maxRho  = cms.double(2.)
-    ),
-    filter = cms.bool(True),
-)
+"""
 
 selectedMuons = cms.EDFilter("CandViewSelector",
     src = cms.InputTag("muons"),
@@ -144,3 +143,4 @@ filterSingleElectronSequence = cms.Sequence(
     selectedSingleElectron * nElectronFilterSingleLepton
   + selectedJets * nJetFilterSingleLepton
 )
+"""

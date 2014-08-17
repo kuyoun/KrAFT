@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-runOnMC = True
+runOnMC = False
 
 process = cms.Process("KrAFT")
 process.load("Configuration.StandardSequences.Services_cff")
@@ -15,14 +15,9 @@ from Configuration.AlCa.autoCond import autoCond
 if runOnMC: process.GlobalTag.globaltag = autoCond['startup']
 else: process.GlobalTag.globaltag = autoCond['com10']
 
-#process.Tracer = cms.Service("Tracer")
-process.options.allowUnscheduled = cms.untracked.bool(True)
-
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/relval/CMSSW_7_0_6/RelValTTbarLepton_13/GEN-SIM-RECO/PLS170_V7AN1-v1/00000/4EA445A2-3BFA-E311-B066-0026189438BA.root',
-        '/store/relval/CMSSW_7_0_6/RelValTTbarLepton_13/GEN-SIM-RECO/PLS170_V7AN1-v1/00000/F0AADC82-39FA-E311-8050-002354EF3BD0.root',
-        '/store/relval/CMSSW_7_0_6/RelValTTbarLepton_13/GEN-SIM-RECO/PLS170_V7AN1-v1/00000/FC321902-35FA-E311-B1FE-002618943957.root',
+				'/store/data/Run2012D/DoubleElectron/AOD/22Jan2013-v1/10000/0014C5C0-1A8F-E211-AD90-0026189438A9.root',
     ),
 )
 
@@ -59,7 +54,6 @@ process.nEventsClean = cms.EDProducer("EventCountProducer")
 process.nEventsPAT   = cms.EDProducer("EventCountProducer")
 
 ## Default path
-#process.load("KrAFT.Configuration.commonFilters_cff")
 process.load("KrAFT.GeneratorTools.pileupWeight_cff")
 process.load("KrAFT.GeneratorTools.pdfWeight_cff")
 process.load("KrAFT.GeneratorTools.pseudoTop_cfi")
@@ -68,9 +62,6 @@ process.load("KrAFT.RecoSelectorTools.jetSelector_cfi")
 process.load("KrAFT.RecoSelectorTools.jpsiSelector_cfi")
 process.load("KrAFT.GenericNtuple.flatEventInfo_cfi")
 process.load("KrAFT.GenericNtuple.flatCands_cfi")
-
-process.goodMuons.rho = "fixedGridRhoFastjetAll"
-process.goodElectrons.rho = "fixedGridRhoFastjetAll"
 process.goodJets.isMC = runOnMC
 
 process.partons = cms.EDProducer("GenParticlePruner",
@@ -79,27 +70,30 @@ process.partons = cms.EDProducer("GenParticlePruner",
         "drop *",
         "drop pt <= 0",
         "keep status = 3", # For the pythia
+				"+keep pdgId = 443", 
+				"keep+ pdgId = 443" 
     ),
 )
 
-"""
 process.analysisObjectSequence = cms.Sequence(
     process.pileupWeight + process.pdfWeight
   + process.goodMuons + process.goodElectrons * process.goodJets
-  * process.jpsiToMuMu# + process.jpsiToElEl
+  * process.jpsiToMuMu + process.jpsiToElEl
 
   + process.flatEventInfo
   * process.flatMuons + process.flatElectrons + process.flatJets
   + process.flatMETs + process.flatMETsUp + process.flatMETsDn
   + process.flatMETsRes + process.flatMETsResUp + process.flatMETsResDn
-  + process.flatJpsiMuMu# + process.flatJpsiElEl
+  + process.flatJpsiMuMu + process.flatJpsiElEl
 )
 
-process.pGen = cms.Path(
-    process.pseudoTop
-  + process.partons
-  * process.flatPseudoTopLepton + process.flatPseudoTopNu + process.flatPseudoTopJet
-)
+if runOnMC is True : 
+
+	process.pGen = cms.Path(
+  	  process.pseudoTop
+	  + process.partons
+	  * process.flatPseudoTopLepton + process.flatPseudoTopNu + process.flatPseudoTopJet
+	)
 
 process.p = cms.Path(
     process.nEventsTotal
@@ -107,6 +101,6 @@ process.p = cms.Path(
   + process.patPF2PATSequencePFlow + process.nEventsPAT
   + process.analysisObjectSequence
 )
-"""
 
 process.output = cms.EndPath(process.out)
+

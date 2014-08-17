@@ -9,7 +9,6 @@ process.source = cms.Source("PoolSource",
 )
 
 process.load("KrAFT.GenericNtuple.flatNtuple_cfi")
-delattr(process.fEvent.cands, 'jpsiElEl')
 
 process.passFEDM = cms.EDFilter("HLTHighLevel",
     eventSetupPathsKey = cms.string(''),

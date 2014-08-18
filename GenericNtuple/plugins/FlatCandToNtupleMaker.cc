@@ -38,6 +38,7 @@ public:
   ~FlatCandToNtupleMaker() {};
 
   void analyze(const edm::Event& event, const edm::EventSetup& eventSetup);
+  void endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup);
 
 private:
   typedef edm::ParameterSet PSet;
@@ -47,6 +48,7 @@ private:
   typedef StringObjectFunction<reco::Candidate,true> CandFtn;
   typedef StringCutObjectSelector<reco::Candidate,true> CandSel;
 
+  std::vector<edm::InputTag> eventCounterLabels_;
   std::vector<edm::InputTag> intLabels_;
   std::vector<edm::InputTag> weightLabels_;
   std::vector<edm::InputTag> vWeightLabels_;
@@ -54,6 +56,8 @@ private:
   std::vector<std::vector<CandFtn> > exprs_;
   std::vector<std::vector<CandSel> > selectors_;
   std::vector<VInputTag> vmapLabels_;
+
+  TH1F* hNEvent_;
 
   TTree* tree_;
   int runNumber_, lumiNumber_, eventNumber_;
@@ -158,6 +162,15 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
 
       tree_->Branch((candName+"_"+vmapName).c_str(), candVars_.back().back());
     }
+  }
+
+  const strings eventCounters = pset.getParameter<strings>("eventCounters");
+  const size_t nEventCounter = eventCounters.size();
+  hNEvent_ = fs->make<TH1F>("hNEvent", "NEvent", nEventCounter, 0, nEventCounter);
+  for ( size_t i=0; i<nEventCounter; ++i )
+  {
+    hNEvent_->GetXaxis()->SetBinLabel(i+1, eventCounters[i].c_str());
+    eventCounterLabels_.push_back(edm::InputTag(eventCounters[i]));
   }
 
 }
@@ -278,6 +291,20 @@ void FlatCandToNtupleMaker::analyze(const edm::Event& event, const edm::EventSet
     }
   }
 }
+
+void FlatCandToNtupleMaker::endLuminosityBlock(const edm::LuminosityBlock& lumi, const edm::EventSetup& eventSetup)
+{
+  for ( size_t i=0, n=eventCounterLabels_.size(); i<n; ++i )
+  {
+    edm::Handle<edm::MergeableCounter> eventCounterHandle;
+    if ( lumi.getByLabel(eventCounterLabels_[i], eventCounterHandle) )
+    {
+      hNEvent_->Fill(i, double(eventCounterHandle->value));
+    }
+else cout << "CANNOT LOAD" << eventCounterLabels_[i] << endl;
+  }
+}
+
 
 DEFINE_FWK_MODULE(FlatCandToNtupleMaker);
 

@@ -25,7 +25,7 @@ process.p = cms.Path(process.fEvent)
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
-
+)
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
 )

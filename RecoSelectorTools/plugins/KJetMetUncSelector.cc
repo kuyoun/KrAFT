@@ -187,6 +187,8 @@ bool KJetMetUncSelector::filter(edm::Event& event, const edm::EventSetup& eventS
     const double jetPt = jetP4.pt();
     const double jetEta = jetP4.eta();
 
+    if ( abs(jetEta) > 5 ) continue;
+
     // Calculate JEC uncertanties
     double fJECUp, fJECDn;
     loadJEC(jetPt, jetEta, fJECUp, fJECDn);

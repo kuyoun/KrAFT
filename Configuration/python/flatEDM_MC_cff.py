@@ -12,7 +12,8 @@ from KrAFT.GenericNtuple.flatCands_cfi import *
 
 analysisObjectSequence = cms.Sequence(
     pileupWeight + pdfWeight
-  + goodMuons + goodElectrons * goodJets
+  + goodMuons + goodElectrons
+  + jetUncertainties * goodJets
   * jpsiToMuMu + jpsiToElEl
 
   + flatEventInfo
@@ -22,4 +23,3 @@ analysisObjectSequence = cms.Sequence(
   + flatJpsiMuMu + flatJpsiElEl
 )
 
-goodJets.isMC = True

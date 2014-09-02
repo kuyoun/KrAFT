@@ -52,7 +52,9 @@ private:
   void loadJEC(const double jetPt, const double jetEta,
                JetCorrectionUncertainty* jecCalc, double& fJECUp, double& fJECDn)
   {
+    fJECUp = fJECDn = 1;
     if ( !jecCalc ) return;
+    if ( abs(jetEta) > 5 ) return;
 
     jecCalc->setJetPt(jetPt);
     jecCalc->setJetEta(jetEta);
@@ -110,7 +112,7 @@ KJetMetUncProducer::KJetMetUncProducer(const edm::ParameterSet& pset)
   jecByFlav_[22] = new JetCorrectionUncertainty(JetCorrectorParameters(jecFilePath, "FlavorPureGluon"));
   jecByFlav_[ 5] = new JetCorrectionUncertainty(JetCorrectorParameters(jecFilePath, "FlavorPureBottom"));
   jecByFlav_[ 4] = new JetCorrectionUncertainty(JetCorrectorParameters(jecFilePath, "FlavorPureCharm"));
-  jecByFlav_[ 0] = new JetCorrectionUncertainty(JetCorrectorParameters(jecFilePath, "FlavourPureQuark"));
+  jecByFlav_[ 0] = new JetCorrectionUncertainty(JetCorrectorParameters(jecFilePath, "FlavorPureQuark"));
   jecByFlav_[1] = jecByFlav_[2] = jecByFlav_[3] = jecByFlav_[0];
   fJECsUp_["Flavor"] = std::vector<double>();
   fJECsDn_["Flavor"] = std::vector<double>();
@@ -169,10 +171,8 @@ void KJetMetUncProducer::produce(edm::Event& event, const edm::EventSetup& event
     const double jetPt = jetP4.pt();
     const double jetEta = jetP4.eta();
 
-    if ( abs(jetEta) > 5 ) continue;
-
     // Calculate JEC uncertanties
-    double fJECUp, fJECDn;
+    double fJECUp = 1, fJECDn = 1;
     for ( auto& jecLevel : jecLevels_ )
     {
       loadJEC(jetPt, jetEta, jecCalc_[jecLevel], fJECUp, fJECDn);
@@ -208,31 +208,31 @@ void KJetMetUncProducer::produce(edm::Event& event, const edm::EventSetup& event
       fJER   = max(0., (genJetPt+dPt*cJER  )/jetPt);
       fJERUp = max(0., (genJetPt+dPt*cJERUp)/jetPt);
       fJERDn = max(0., (genJetPt+dPt*cJERDn)/jetPt);
-
-      fJERs.push_back(fJER);
-      fJERsUp.push_back(fJERUp);
-      fJERsDn.push_back(fJERDn);
-
-      const math::XYZTLorentzVector& rawJetP4 = jet.correctedP4(0);
-      const double rawPx = rawJetP4.px();
-      const double rawPy = rawJetP4.py();
-
-      const double metDx   = rawPx*(1-fJER  );
-      const double metDxUp = rawPx*(1-fJERUp);
-      const double metDxDn = rawPx*(1-fJERDn);
-
-      const double metDy   = rawPy*(1-fJER  );
-      const double metDyUp = rawPy*(1-fJERUp);
-      const double metDyDn = rawPy*(1-fJERDn);
-
-      // Correct MET
-      //metDnX    += metDx  ; metDnY    += metDy  ;
-      //metUpX    += metDx  ; metUpY    += metDy  ;
-      metResX   += metDx  ; metResY   += metDy  ;
-      metResUpX += metDxUp; metResUpY += metDyUp;
-      metResDnX += metDxDn; metResDnY += metDyDn;
-
     }
+
+    fJERs.push_back(fJER);
+    fJERsUp.push_back(fJERUp);
+    fJERsDn.push_back(fJERDn);
+
+    const math::XYZTLorentzVector& rawJetP4 = jet.correctedP4(0);
+    const double rawPx = rawJetP4.px();
+    const double rawPy = rawJetP4.py();
+
+    const double metDx   = rawPx*(1-fJER  );
+    const double metDxUp = rawPx*(1-fJERUp);
+    const double metDxDn = rawPx*(1-fJERDn);
+
+    const double metDy   = rawPy*(1-fJER  );
+    const double metDyUp = rawPy*(1-fJERUp);
+    const double metDyDn = rawPy*(1-fJERDn);
+
+    // Correct MET
+    //metDnX    += metDx  ; metDnY    += metDy  ;
+    //metUpX    += metDx  ; metUpY    += metDy  ;
+    metResX   += metDx  ; metResY   += metDy  ;
+    metResUpX += metDxUp; metResUpY += metDyUp;
+    metResDnX += metDxDn; metResDnY += metDyDn;
+
   }
 
   for ( auto key = fJECsUp_.begin(); key != fJECsUp_.end(); ++key )

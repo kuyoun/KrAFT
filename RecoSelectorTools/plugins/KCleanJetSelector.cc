@@ -42,6 +42,7 @@ private:
   unsigned int minNumber_;
   unsigned int maxNumber_;
 
+  std::vector<edm::InputTag> jesLabels_;
   strings jesLevels_;
   int iJER_, iJERDn_, iJERUp_, nJES_;
   edm::InputTag jetLabel_;
@@ -56,7 +57,7 @@ private:
 KCleanJetSelector::KCleanJetSelector(const edm::ParameterSet& pset)
 {
   jetLabel_ = pset.getParameter<edm::InputTag>("jet");
-  jesLevels_ = pset.getParameter<strings>("jesLevels");
+  jesLabels_ = pset.getParameter<std::vector<edm::InputTag> >("jes");
 
   // Selection cuts
   edm::ParameterSet selectionPSet = pset.getParameter<edm::ParameterSet>("selection");
@@ -78,10 +79,12 @@ KCleanJetSelector::KCleanJetSelector(const edm::ParameterSet& pset)
   maxNumber_ = pset.getParameter<unsigned int>("maxNumber");
 
   produces<std::vector<pat::Jet> >();
-  nJES_ = jesLevels_.size();
+  nJES_ = jesLabels_.size();
   for ( int i=0; i<nJES_; ++i )
   {
-    auto& jesLevel = jesLevels_[i];
+    auto& jesLevel = jesLabels_[i].instance();
+    jesLevels_.push_back(jesLevel);
+    produces<pat::JetToValue>(jesLevel);
     if ( jesLevel.find("resDn") != string::npos ) iJERDn_ = i;
     else if ( jesLevel.find("resUp") != string::npos ) iJERUp_ = i;
     else if ( jesLevel.find("res") != string::npos ) iJER_ = i;
@@ -96,10 +99,10 @@ bool KCleanJetSelector::filter(edm::Event& event, const edm::EventSetup& eventSe
   // Collect jes factors
   std::vector<edm::Handle<pat::JetToValue> > jesHandles;
   std::vector<std::vector<double> > fJECs;
-  for ( auto& jesLevel : jesLevels_ )
+  for ( auto& jesLabel: jesLabels_ )
   {
     edm::Handle<pat::JetToValue> jesHandle;
-    event.getByLabel(edm::InputTag(jetLabel_.label(), jesLevel), jesHandle);
+    event.getByLabel(jesLabel, jesHandle);
     jesHandles.push_back(jesHandle);
     fJECs.push_back(std::vector<double>());
   }

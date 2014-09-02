@@ -38,8 +38,8 @@ flatJets = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("goodJets"),
     variables = cms.PSet(
         bTagCSV = cms.string("bDiscriminator('combinedSecondaryVertexBJetTags')"),
-        up = cms.InputTag("goodJets", "up"),
-        dn = cms.InputTag("goodJets", "dn"),
+        up = cms.InputTag("goodJets", "TotalUp"),
+        dn = cms.InputTag("goodJets", "TotalDn"),
         res = cms.InputTag("goodJets", "res"),
         resUp = cms.InputTag("goodJets", "resUp"),
         resDn = cms.InputTag("goodJets", "resDn"),
@@ -48,11 +48,11 @@ flatJets = cms.EDProducer("FlatCandProducer",
 )
 
 flatMETs    = flatDummy.clone(src = cms.InputTag("patMETsPFlow"))
-flatMETsUp  = flatDummy.clone(src = cms.InputTag("goodJets", "up"))
-flatMETsDn  = flatDummy.clone(src = cms.InputTag("goodJets", "dn"))
-flatMETsRes = flatDummy.clone(src = cms.InputTag("goodJets", "res"))
-flatMETsResUp = flatDummy.clone(src = cms.InputTag("goodJets", "resDn"))
-flatMETsResDn = flatDummy.clone(src = cms.InputTag("goodJets", "resUp"))
+flatMETsUp  = flatDummy.clone(src = cms.InputTag("jetUncertainties", "TotalUp"))
+flatMETsDn  = flatDummy.clone(src = cms.InputTag("jetUncertainties", "TotalDn"))
+flatMETsRes = flatDummy.clone(src = cms.InputTag("jetUncertainties", "res"))
+flatMETsResUp = flatDummy.clone(src = cms.InputTag("jetUncertainties", "resDn"))
+flatMETsResDn = flatDummy.clone(src = cms.InputTag("jetUncertainties", "resUp"))
 
 flatJpsiMuMu = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("jpsiToMuMu"),

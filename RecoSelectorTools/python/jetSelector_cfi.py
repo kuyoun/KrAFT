@@ -6,15 +6,17 @@ jetUncertainties = cms.EDProducer("KJetMetUncProducer",
     met = cms.InputTag("patMETsPFlow"),
 
     jecFile = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_UncertaintySources_AK5PFchs.txt"),
-    jecLevels = cms.vstring("Total", "Absolute", "RelativeJEREC1", "RelativeJEREC2", "RelativePtBB", "RelativePtEC1", "RelativePtEC2", "RelativeFSR", "PileUpDataMC", "PileUpPtBB", "PileUpPtEC", "PileUpPtHF", "SubTotalPileUp", "SubTotalRelative", ),
+    jecLevels = cms.vstring("Total", "Absolute", 
+        "RelativeJEREC1", "RelativeJEREC2",
+        "RelativePtBB", "RelativePtEC1", "RelativePtEC2", "RelativeFSR",
+        "PileUpDataMC", "PileUpPtBB", "PileUpPtEC", "PileUpPtHF",
+        "SubTotalPileUp", "SubTotalRelative",
+    ),
 )
 
 goodJets = cms.EDFilter("KCleanJetSelector",
     jet = cms.InputTag("patJetsPFlow"),
-    jes = cms.VInputTag(
-        [cms.InputTag("jetUncertainties", x+"Up") for x in jetUncertainties.jecLevels]+
-        [cms.InputTag("jetUncertainties", x+"Dn") for x in jetUncertainties.jecLevels]+
-        [cms.InputTag("jetUncertainties", "res"), cms.InputTag("jetUncertainties", "resUp"), cms.InputTag("jetUncertainties", "resDn")]),
+    jes = cms.VInputTag(),
 
     selection = cms.PSet(
         jetId = pfJetIDSelector,

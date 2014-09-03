@@ -7,16 +7,13 @@ from KrAFT.GenericNtuple.flatEventInfo_cfi import *
 from KrAFT.GenericNtuple.flatCands_cfi import *
 
 analysisObjectSequence = cms.Sequence(
-    goodMuons + goodElectrons * goodJets
+    goodMuons + goodElectrons
+  * goodJets
   * jpsiToMuMu + jpsiToElEl
 
   + flatEventInfo
   * flatMuons + flatElectrons + flatJets
-  + flatMETs + flatMETsUp + flatMETsDn
+  + flatMETs
   + flatJpsiMuMu + flatJpsiElEl
 )
 
-goodJets.isMC = False
-delattr(flatJets.variables, "res")
-delattr(flatJets.variables, "resUp")
-delattr(flatJets.variables, "resDn")

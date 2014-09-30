@@ -31,6 +31,10 @@ def customisePAT(process, runOnMC, outputModules = []):
     process.nEventsPAT   = cms.EDProducer("EventCountProducer")
     process.patPF2PATSequencePFlow += process.nEventsPAT
 
+    # In order to avoid over-subtracting high pT tracks from jets for 2012.
+    process.pfPileUpPFlow.checkClosestZVertex = False
+    process.pfPileUpPFlow.Vertices = cms.InputTag("goodofflinePrimaryVertices")
+
     # top projections in PF2PAT: we are turning off top projection
     process.pfNoPileUpPFlow.enable = True
     process.pfNoMuonPFlow.enable = False #True

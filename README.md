@@ -36,6 +36,6 @@ scram b clean
 scram b -j8
 
 # Patch missing module
-cd TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py
+cd TopQuarkAnalysis/Configuration/python
 patch -p0 < ../../../KrAFT/missing.patch
 ```

@@ -33,7 +33,7 @@ def customisePAT(process, runOnMC, outputModules = []):
 
     # In order to avoid over-subtracting high pT tracks from jets for 2012.
     process.pfPileUpPFlow.checkClosestZVertex = False
-    process.pfPileUpPFlow.Vertices = cms.InputTag("goodofflinePrimaryVertices")
+    process.pfPileUpPFlow.Vertices = cms.InputTag("goodOfflinePrimaryVertices")
 
     # top projections in PF2PAT: we are turning off top projection
     process.pfNoPileUpPFlow.enable = True

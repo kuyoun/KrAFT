@@ -32,7 +32,7 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
         electrons = cms.PSet(
             src = cms.InputTag("flatElectrons"),
             exprs = p4Set.clone(),
-            vmaps = cms.untracked.vstring("mva", "scEta", "relIso", "dxy", "dz", "chargeIDFull",),
+            vmaps = cms.untracked.vstring("mva", "scEta", "relIso", "dxy", "dz", "chargeIDFull","conversionVeto","isPF"),
         ),
         jets = cms.PSet(
             src = cms.InputTag("flatJets"),

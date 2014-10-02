@@ -13,7 +13,10 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
     failureMode = cms.untracked.string("keep"), # choose one among keep/skip/error
     eventCounters = cms.vstring("nEventsTotal", "nEventsClean", "nEventsPAT"),
     int = cms.PSet(
-        nVertex = cms.PSet(src = cms.InputTag("flatEventInfo", "pvN")),
+        nVertex = cms.PSet( src = cms.InputTag("flatEventInfo", "pvN")),
+        HLTMuMu = cms.PSet( src = cms.InputTag("flatEventInfo","HLTDoubleMu")),
+        HLTElEl = cms.PSet( src = cms.InputTag("flatEventInfo","HLTDoubleElectron")),
+        HLTMuEG = cms.PSet( src = cms.InputTag("flatEventInfo","HLTMuEG")),
     ),
     weight = cms.PSet(
         puWeight   = cms.PSet(src = cms.InputTag("pileupWeight")),

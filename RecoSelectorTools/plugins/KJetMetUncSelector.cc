@@ -67,11 +67,21 @@ private:
 
   void loadJER(const double jetEta, double& cJER, double& cJERUp, double& cJERDn) const
   {
-    if      ( jetEta < 0.5 ) { cJER = 1.052; cJERUp = 1.115; cJERDn = 0.990; }
-    else if ( jetEta < 1.1 ) { cJER = 1.057; cJERUp = 1.114; cJERDn = 1.001; }
-    else if ( jetEta < 1.7 ) { cJER = 1.096; cJERUp = 1.161; cJERDn = 1.032; }
-    else if ( jetEta < 2.3 ) { cJER = 1.134; cJERUp = 1.228; cJERDn = 1.042; }
-    else if ( jetEta < 5.0 ) { cJER = 1.288; cJERUp = 1.488; cJERDn = 1.089; }
+    const double absEta = std::abs(jetEta);
+    if      ( absEta < 0.5 ) { cJER = 1.079; cJERUp = 1.105; cJERDn = 1.053; }
+    else if ( absEta < 1.1 ) { cJER = 1.099; cJERUp = 1.127; cJERDn = 1.071; }
+    else if ( absEta < 1.7 ) { cJER = 1.121; cJERUp = 1.150; cJERDn = 1.092; }
+    else if ( absEta < 2.3 ) { cJER = 1.208; cJERUp = 1.254; cJERDn = 1.162; }
+    else if ( absEta < 2.8 ) { cJER = 1.254; cJERUp = 1.316; cJERDn = 1.192; }
+    else if ( absEta < 3.2 ) { cJER = 1.395; cJERUp = 1.458; cJERDn = 1.332; }
+    else if ( absEta < 5.0 ) { cJER = 1.056; cJERUp = 1.247; cJERDn = 0.865; }
+/* // These values are from 2011
+    if      ( absEta < 0.5 ) { cJER = 1.052; cJERUp = 1.115; cJERDn = 0.990; }
+    else if ( absEta < 1.1 ) { cJER = 1.057; cJERUp = 1.114; cJERDn = 1.001; }
+    else if ( absEta < 1.7 ) { cJER = 1.096; cJERUp = 1.161; cJERDn = 1.032; }
+    else if ( absEta < 2.3 ) { cJER = 1.134; cJERUp = 1.228; cJERDn = 1.042; }
+    else if ( absEta < 5.0 ) { cJER = 1.288; cJERUp = 1.488; cJERDn = 1.089; }
+*/
     else { cJER = cJERUp = cJERDn = 1; }
   };
 

@@ -103,3 +103,4 @@ flatPseudoTopJet = cms.EDProducer("FlatCandProducer",
     selections = cms.PSet(),
 )
 
+flatDummy = None

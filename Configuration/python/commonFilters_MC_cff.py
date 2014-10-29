@@ -1,10 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 
-from TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi import *
-goodOfflinePrimaryVertices.filter = True
+#from TopQuarkAnalysis.Configuration.patRefSel_goodVertex_cfi import *
+#goodOfflinePrimaryVertices.filter = True
 
 from TopQuarkAnalysis.Configuration.patRefSel_eventCleaning_cff import *
 trackingFailureFilter.VertexSource = 'goodOfflinePrimaryVertices'
+trackingFailureFilter.JetSource = 'ak4PFJetsCHS'
 eventCleaning += eventCleaningMC
 
 nEventsTotal = cms.EDProducer("EventCountProducer")
@@ -12,7 +13,8 @@ nEventsClean = cms.EDProducer("EventCountProducer")
 
 preFilterSequence = cms.Sequence(
     nEventsTotal
-  + goodOfflinePrimaryVertices + eventCleaning
+  #+ goodOfflinePrimaryVertices
+  + eventCleaning
   + nEventsClean
 )
 

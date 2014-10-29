@@ -11,6 +11,11 @@ def customisePAT(process, runOnMC, outputModules = []):
     process.patElectrons.electronIDSources.mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0")
     #process.patDefaultSequence.replace( process.patElectrons, process.eidMVASequence * process.patElectrons )
 
+    ### Customise for 7XY
+    process.mvaTrigV0.electronTag = 'gedGsfElectrons'
+    process.mvaTrigNoIPV0.electronTag = 'gedGsfElectrons'
+    process.mvaNonTrigV0.electronTag = 'gedGsfElectrons'
+
     ## Load trigger matching
     process.load("KrAFT.Configuration.hltFilters_cff")
     #from PhysicsTools.PatAlgos.tools.trigTools import *

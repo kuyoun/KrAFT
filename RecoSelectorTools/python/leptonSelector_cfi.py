@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 goodMuons = cms.EDFilter("KMuonSelector",
-    rho = cms.InputTag("kt6PFJets", "rho"),
+    rho = cms.InputTag("fixedGridRhoAll"),
     src = cms.InputTag("patMuonsPFlow"),
 
     precut = cms.string("pt > 20 && abs(eta) < 2.5"),
@@ -17,7 +17,7 @@ goodMuons = cms.EDFilter("KMuonSelector",
 )
 
 goodElectrons = cms.EDFilter("KElectronSelector",
-    rho = cms.InputTag("kt6PFJets", "rho"),
+    rho = cms.InputTag("fixedGridRhoAll"),
     src = cms.InputTag("patElectronsPFlow"),
 
     precut = cms.string("pt > 20 && abs(eta) < 2.5"),

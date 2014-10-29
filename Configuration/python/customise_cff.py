@@ -6,10 +6,10 @@ def customisePAT(process, runOnMC, outputModules = []):
 
     ## Apply MVA
     process.load('EgammaAnalysis.ElectronTools.electronIdMVAProducer_cfi')
-    process.eidMVASequence = cms.Sequence(  process.mvaTrigV0 + process.mvaNonTrigV0 )
+    #process.eidMVASequence = cms.Sequence(  process.mvaTrigV0 + process.mvaNonTrigV0 )
     process.patElectrons.electronIDSources.mvaTrigV0    = cms.InputTag("mvaTrigV0")
     process.patElectrons.electronIDSources.mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0")
-    process.patDefaultSequence.replace( process.patElectrons, process.eidMVASequence * process.patElectrons )
+    #process.patDefaultSequence.replace( process.patElectrons, process.eidMVASequence * process.patElectrons )
 
     ## Load trigger matching
     process.load("KrAFT.Configuration.hltFilters_cff")
@@ -24,12 +24,12 @@ def customisePAT(process, runOnMC, outputModules = []):
     #usePFBRECO(process,runPFBRECO=True,
     usePF2PAT(process, runPF2PAT=True,
               runOnMC=runOnMC, outputModules = outputModules, postfix="PFlow",
-              jetAlgo="AK5", jetCorrections=("AK5PFchs", jecLevels),
+              jetAlgo="AK4", jetCorrections=("AK4PFchs", jecLevels),
               typeIMetCorrections=True)
 
     #put event counter at the end of the seqeuence
     process.nEventsPAT   = cms.EDProducer("EventCountProducer")
-    process.patPF2PATSequencePFlow += process.nEventsPAT
+    #process.patPF2PATSequencePFlow += process.nEventsPAT
 
     # top projections in PF2PAT: we are turning off top projection
     process.pfNoPileUpPFlow.enable = True

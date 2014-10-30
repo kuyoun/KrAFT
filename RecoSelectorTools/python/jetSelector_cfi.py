@@ -1,11 +1,22 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
 
-goodJets = cms.EDFilter("KJetMetUncSelector",
-    isMC = cms.bool(False),
-
+jetUncertainties = cms.EDProducer("KJetMetUncProducer",
     jet = cms.InputTag("patJetsPFlow"),
     met = cms.InputTag("patMETsPFlow"),
+
+    jecFile = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_UncertaintySources_AK5PFchs.txt"),
+    jecLevels = cms.vstring("Total", "Absolute", 
+        "RelativeJEREC1", "RelativeJEREC2",
+        "RelativePtBB", "RelativePtEC1", "RelativePtEC2", "RelativeFSR",
+        "PileUpDataMC", "PileUpPtBB", "PileUpPtEC", "PileUpPtHF",
+        "SubTotalPileUp", "SubTotalRelative",
+    ),
+)
+
+goodJets = cms.EDFilter("KCleanJetSelector",
+    jet = cms.InputTag("patJetsPFlow"),
+    jes = cms.VInputTag(),
 
     selection = cms.PSet(
         jetId = pfJetIDSelector,
@@ -22,11 +33,7 @@ goodJets = cms.EDFilter("KJetMetUncSelector",
         ),
     ),
 
-    jecFile = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_UncertaintySources_AK5PFchs.txt"),
-    jecLevel = cms.string("Total"),
-    #jecFile = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_DATA_Uncertainty_AK5PFchs.txt"),
-    #jecFile = cms.string("KrAFT/RecoSelectorTools/data/JEC/Summer13_V4/Summer13_V4_MC_Uncertainty_AK5PFchs.txt"),
-
     minNumber = cms.uint32(0),
     maxNumber = cms.uint32(999),
 )
+

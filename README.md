@@ -40,4 +40,8 @@ cd ..
 scram setup lhapdffull # Necessary to speed up PDF weight calculation
 scram b clean
 scram b -j8
+
+# Patch missing module
+cd TopQuarkAnalysis/Configuration/python
+patch -p0 < ../../../KrAFT/missing.patch
 ```

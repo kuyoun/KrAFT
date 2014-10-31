@@ -4,11 +4,11 @@ runOnMC = True
 
 from KrAFT.Configuration.customise_cff import *
 process = initialize(runOnMC)
+process.options.allowUnscheduled = cms.untracked.bool(True)
 customisePAT(process, runOnMC=runOnMC, outputModules=[])
 
 process.source.fileNames = [
-    '/store/relval/CMSSW_5_3_12_patch2/RelValZMM/GEN-SIM-RECO/START53_LV2-v1/00000/28D552C4-A82B-E311-952C-002590596486.root',
-    '/store/relval/CMSSW_5_3_12_patch2/RelValZMM/GEN-SIM-RECO/START53_LV2-v1/00000/EA8973F4-A92B-E311-A0A6-00261894396D.root',
+    '/store/mc/Spring14dr/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/AODSIM/PU_S14_POSTLS170_V6-v1/00000/BC91BA37-E2F2-E311-A317-0025905A612E.root',
 ]
 
 process.load("KrAFT.Configuration.flatEDM_MC_cff")
@@ -16,7 +16,7 @@ process.load("KrAFT.Configuration.commonFilters_MC_cff")
 
 process.CANDSEL = cms.Path(
     process.preFilterSequence
-  + process.patPF2PATSequencePFlow
+#  + process.patPF2PATSequencePFlow
   + process.analysisObjectSequence
   + process.partons
 )

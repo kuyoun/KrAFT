@@ -9,9 +9,9 @@ Korea CMS Analysis Framwork for Top quark physics
 ## Installation
 
 ```sh
-# Fresh install your workarea, baseline release is set to 5_3_20
-cmsrel CMSSW_7_0_6_patch1
-cd CMSSW_7_0_6_patch1/src
+# Fresh install your workarea, baseline release is set to 7_X_Y
+cmsrel CMSSW_7_2_0
+cd CMSSW_7_2_0/src
 cmsenv
 git-cms-addpkg PhysicsTools/PatAlgos
 git-cms-addpkg EgammaAnalysis/ElectronTools
@@ -29,9 +29,19 @@ git remote add $USER git@github.com:$(git-config user.github)/KrAFT
 git fetch $USER
 git checkout 7_X_Y
 
+# Modify existing packages
+## Modify EgammaAnalysis/ElectronTools/plugins/ElectronIdMVAProducer.cc
+## kt6PFJets, rho -> fixedGridRhoAll
+## Modify TopQuarkAnalysis/Configuration/python/patRefSel_commonFilters_cff
+## METAnalysis/CSCHaloFilter_cff -> METFilters/CSCTightHaloFilters_cff
+
 # Continue to build whole package
 cd ..
 scram setup lhapdffull # Necessary to speed up PDF weight calculation
 scram b clean
 scram b -j8
+
+# Patch missing module
+cd TopQuarkAnalysis/Configuration/python
+patch -p0 < ../../../KrAFT/missing.patch
 ```

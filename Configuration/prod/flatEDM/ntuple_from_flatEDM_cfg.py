@@ -9,7 +9,6 @@ process.source = cms.Source("PoolSource",
 )
 
 process.load("KrAFT.GenericNtuple.flatNtuple_cfi")
-delattr(process.fEvent.cands, 'jpsiElEl')
 
 process.passFEDM = cms.EDFilter("HLTHighLevel",
     eventSetupPathsKey = cms.string(''),
@@ -24,6 +23,9 @@ process.passFEDM = cms.EDFilter("HLTHighLevel",
 #process.p = cms.Path(process.passFEDM+process.fEvent)
 process.p = cms.Path(process.fEvent)
 
+process.maxEvents = cms.untracked.PSet(
+    input = cms.untracked.int32(-1)
+)
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string("ntuple.root"),
 )

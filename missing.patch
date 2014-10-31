@@ -1,0 +1,11 @@
+--- patRefSel_eventCleaning_cff.py_orig	2014-09-03 17:52:47.102892963 +0900
++++ patRefSel_eventCleaning_cff.py	2014-09-03 17:49:44.836052368 +0900
+@@ -6,7 +6,7 @@
+ HBHENoiseFilter.minNumIsolatedNoiseChannels = 999999
+ HBHENoiseFilter.minIsolatedNoiseSumEt       = 999999.
+ 
+-from RecoMET.METAnalyzers.CSCHaloFilter_cfi import *
++from RecoMET.METFilters.CSCTightHaloFilter_cfi import *
+ 
+ from RecoMET.METFilters.hcalLaserEventFilter_cfi import *
+ hcalLaserEventFilter.vetoByRunEventNumber = cms.untracked.bool( False )

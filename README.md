@@ -28,20 +28,15 @@ cd KrAFT
 git remote add $USER git@github.com:$(git-config user.github)/KrAFT
 git fetch $USER
 git checkout 7_X_Y
+cd ..
 
 # Modify existing packages
-## Modify EgammaAnalysis/ElectronTools/plugins/ElectronIdMVAProducer.cc
-## kt6PFJets, rho -> fixedGridRhoAll
-## Modify TopQuarkAnalysis/Configuration/python/patRefSel_commonFilters_cff
-## METAnalysis/CSCHaloFilter_cff -> METFilters/CSCTightHaloFilters_cff
+git apply KrAFT/missing.patch
 
 # Continue to build whole package
-cd ..
 scram setup lhapdffull # Necessary to speed up PDF weight calculation
 scram b clean
 scram b -j8
 
 # Patch missing module
-cd TopQuarkAnalysis/Configuration/python
-patch -p0 < ../../../KrAFT/missing.patch
 ```

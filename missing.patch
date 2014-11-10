@@ -1,6 +1,21 @@
---- patRefSel_eventCleaning_cff.py_orig	2014-09-03 17:52:47.102892963 +0900
-+++ patRefSel_eventCleaning_cff.py	2014-09-03 17:49:44.836052368 +0900
-@@ -6,7 +6,7 @@
+diff --git a/EgammaAnalysis/ElectronTools/plugins/ElectronIdMVAProducer.cc b/EgammaAnalysis/ElectronTools/plugins/ElectronIdMVAProducer.cc
+index ab6822b..3dead63 100644
+--- a/EgammaAnalysis/ElectronTools/plugins/ElectronIdMVAProducer.cc
++++ b/EgammaAnalysis/ElectronTools/plugins/ElectronIdMVAProducer.cc
+@@ -63,7 +63,7 @@ ElectronIdMVAProducer::ElectronIdMVAProducer(const edm::ParameterSet& iConfig) {
+   verbose_ = iConfig.getUntrackedParameter<bool>("verbose", false);
+   vertexToken_ = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexTag"));
+   electronToken_ = consumes<reco::GsfElectronCollection>(iConfig.getParameter<edm::InputTag>("electronTag"));
+-  eventrhoToken_ = consumes<double>(edm::InputTag("kt6PFJets", "rho"));
++  eventrhoToken_ = consumes<double>(edm::InputTag("fixedGridRhoAll"));
+   reducedEBRecHitCollectionToken_ = consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("reducedEBRecHitCollection"));
+   reducedEERecHitCollectionToken_ = consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("reducedEERecHitCollection"));
+   method_ = iConfig.getParameter<string>("method");
+diff --git a/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py b/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py
+index fc4c64b..f6121d0 100644
+--- a/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py
++++ b/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py
+@@ -6,7 +6,7 @@ HBHENoiseFilter.minIsolatedNoiseSumE        = 999999.
  HBHENoiseFilter.minNumIsolatedNoiseChannels = 999999
  HBHENoiseFilter.minIsolatedNoiseSumEt       = 999999.
  

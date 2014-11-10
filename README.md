@@ -28,14 +28,14 @@ cd KrAFT
 git remote add $USER git@github.com:$(git-config user.github)/KrAFT
 git fetch $USER
 git checkout
+cd ..
+
+# Patch missing module
+git apply KrAFT/missing.patch
 
 # Continue to build whole package
-cd ..
 scram setup lhapdffull # Necessary to speed up PDF weight calculation
 scram b clean
 scram b -j8
 
-# Patch missing module
-cd TopQuarkAnalysis/Configuration/python
-patch -p0 < ../../../KrAFT/missing.patch
 ```

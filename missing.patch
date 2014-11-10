@@ -1,6 +1,8 @@
---- patRefSel_eventCleaning_cff.py_orig	2014-09-03 17:52:47.102892963 +0900
-+++ patRefSel_eventCleaning_cff.py	2014-09-03 17:49:44.836052368 +0900
-@@ -6,7 +6,7 @@
+diff --git a/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py b/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py
+index fc4c64b..f6121d0 100644
+--- a/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py
++++ b/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py
+@@ -6,7 +6,7 @@ HBHENoiseFilter.minIsolatedNoiseSumE        = 999999.
  HBHENoiseFilter.minNumIsolatedNoiseChannels = 999999
  HBHENoiseFilter.minIsolatedNoiseSumEt       = 999999.
  

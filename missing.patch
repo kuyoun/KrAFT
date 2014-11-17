@@ -11,6 +11,18 @@ index ab6822b..3dead63 100644
    reducedEBRecHitCollectionToken_ = consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("reducedEBRecHitCollection"));
    reducedEERecHitCollectionToken_ = consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("reducedEERecHitCollection"));
    method_ = iConfig.getParameter<string>("method");
+diff --git a/PhysicsTools/PatAlgos/python/tools/pfTools.py b/PhysicsTools/PatAlgos/python/tools/pfTools.py
+index 66639f3..7c18760 100644
+--- a/PhysicsTools/PatAlgos/python/tools/pfTools.py
++++ b/PhysicsTools/PatAlgos/python/tools/pfTools.py
+@@ -382,6 +382,7 @@ def switchToPFJets(process, input=cms.InputTag('pfNoTauClones'), algo='AK4', pos
+                         jetTrackAssociation=True,
+                         jetCorrections=inputJetCorrLabel,
+                         outputModules = outputModules,
++                        btagDiscriminators=['jetProbabilityBJetTags', 'combinedSecondaryVertexBJetTags', 'pfCombinedSecondaryVertexBJetTags', ],
+                         )
+ 
+     # check whether L1FastJet is in the list of correction levels or not
 diff --git a/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py b/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py
 index fc4c64b..f6121d0 100644
 --- a/TopQuarkAnalysis/Configuration/python/patRefSel_eventCleaning_cff.py

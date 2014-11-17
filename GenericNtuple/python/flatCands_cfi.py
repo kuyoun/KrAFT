@@ -29,7 +29,7 @@ flatElectrons = cms.EDProducer("FlatCandProducer",
         dz = cms.string("userFloat('dz')"),
     ),
     selections = cms.PSet(
-        conversionVeto = cms.string("passConversionVeto && gsfTrack.trackerExpectedHitsInner.numberOfHits <= 0"),
+        conversionVeto = cms.string("passConversionVeto && gsfTrack.hitPattern.numberOfLostHits('MISSING_INNER_HITS') <= 0"),
         chargeIDFull = cms.string("isGsfCtfScPixChargeConsistent"),
         #isGsfScPixChargeConsistent isGsfCtfChargeConsistent),
         isPF = cms.string("isPF"),

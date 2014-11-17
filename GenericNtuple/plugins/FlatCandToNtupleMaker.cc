@@ -177,7 +177,7 @@ FlatCandToNtupleMaker::FlatCandToNtupleMaker(const edm::ParameterSet& pset)
   for ( size_t i=0; i<nEventCounter; ++i )
   {
     hNEvent_->GetXaxis()->SetBinLabel(i+1, eventCounters[i].c_str());
-    eventCounterTokens_.push_back(consumes<edm::MergeableCounter>(edm::InputTag(eventCounters[i])));
+    eventCounterTokens_.push_back(consumes<edm::MergeableCounter, edm::InLumi>(edm::InputTag(eventCounters[i])));
   }
 
 }

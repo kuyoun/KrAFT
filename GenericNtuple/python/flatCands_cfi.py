@@ -40,6 +40,8 @@ flatJets = cms.EDProducer("FlatCandProducer",
     src = cms.InputTag("goodJets"),
     variables = cms.PSet(
         bTagCSV = cms.string("bDiscriminator('combinedSecondaryVertexBJetTags')"),
+        bTagPFCSV = cms.string("bDiscriminator('pfCombinedSecondaryVertexBJetTags')"),
+        bTagJP = cms.string("bDiscriminator('jetProbabilityBJetTags')"),
     ),
     selections = cms.PSet(),
 )

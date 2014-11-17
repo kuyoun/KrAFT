@@ -40,7 +40,7 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
         jets = cms.PSet(
             src = cms.InputTag("flatJets"),
             exprs = p4Set.clone(),
-            vmaps = cms.untracked.vstring("bTagCSV", "up", "dn", "res", "resUp", "resDn"),
+            vmaps = cms.untracked.vstring("bTagCSV", "up", "dn", "res", "resUp", "resDn", "bTagPFCSV", "bTagJP",),
         ),
         mets = cms.PSet(
             src = cms.InputTag("flatMETs"),

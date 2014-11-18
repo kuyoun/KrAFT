@@ -3,7 +3,7 @@ KrAFT
 
 Korea CMS Analysis Framwork for Top quark physics
   * Documentation and project overview : https://twiki.cern.ch/twiki/bin/viewauth/CMS/KrAFT
-  * PAT recipe : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATReleaseNotes52X
+  * PAT recipe : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATRecipes#CMSSW_7_2_X_dev2014
   * TQAF recipe : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideTQAFRecipes
 
 ## Installation
@@ -30,7 +30,7 @@ git fetch $USER
 git checkout 7_X_Y
 cd ..
 
-# Modify existing packages
+# Patch missing module
 git apply KrAFT/missing.patch
 
 # Continue to build whole package
@@ -38,5 +38,4 @@ scram setup lhapdffull # Necessary to speed up PDF weight calculation
 scram b clean
 scram b -j8
 
-# Patch missing module
 ```

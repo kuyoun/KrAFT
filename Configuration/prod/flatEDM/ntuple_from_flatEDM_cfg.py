@@ -4,7 +4,10 @@ process = cms.Process("Ntuple")
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'file:out.root',
+#        'file:MC/out.root',
+        'file:MC/crab_0_141118_160859/res/out_1_1_tO4.root',  
+        'file:MC/crab_0_141118_160859/res/out_3_1_uER.root',
+        'file:MC/crab_0_141118_160859/res/out_2_1_6Y8.root',
     ),
 )
 

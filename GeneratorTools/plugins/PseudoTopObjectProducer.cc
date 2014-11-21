@@ -38,6 +38,8 @@ private:
   bool isFromHadron(const reco::Candidate& p, const int depth=100) const;
   bool isBHadron(const reco::Candidate* p) const;
   bool isBHadron(const unsigned int pdgId) const;
+  bool isFromW(const reco::GenParticle&) const;
+  const reco::Candidate* getLast(const reco::Candidate& p);
 
 private:
   edm::EDGetTokenT<edm::View<reco::GenParticle> > srcToken_;
@@ -64,6 +66,8 @@ PseudoTopObjectProducer::PseudoTopObjectProducer(const edm::ParameterSet& pset)
   produces<reco::GenParticleCollection>("neutrinos");
   produces<reco::GenJetCollection>("leptons");
   produces<reco::GenJetCollection>("jets");
+  produces<reco::GenParticleCollection>("wdau");
+  
 }
 
 void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& eventSetup)
@@ -74,19 +78,48 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
   std::auto_ptr<reco::GenParticleCollection> neutrinos(new reco::GenParticleCollection);
   std::auto_ptr<reco::GenJetCollection> leptons(new reco::GenJetCollection);
   std::auto_ptr<reco::GenJetCollection> jets(new reco::GenJetCollection);
+  std::auto_ptr<reco::GenParticleCollection> wdau(new reco::GenParticleCollection);
 
   // Collect stable leptons and neutrinos
-  size_t nStables = 0;
+
+  size_t nStables = 0; int nw=0;
+  wdau->reserve(4);  
   std::vector<size_t> leptonIdxs;
   std::set<size_t> neutrinoIdxs, bHadronIdxs;
   for ( size_t i=0, n=srcHandle->size(); i<n; ++i )
   {
     const reco::GenParticle& p = srcHandle->at(i);
     const int absPdgId = abs(p.pdgId());
+
+    if((p.status()==3 || (p.status()>20 && p.status()<30)) && abs(p.pdgId())==24){
+      for(unsigned id=0; id<p.numberOfDaughters(); ++id){           
+        const reco::Candidate* dau = p.daughter(id);
+        if(abs(dau->pdgId())!=24){
+          for ( size_t ii=0; ii<srcHandle->size(); ++ii ){
+            const reco::GenParticle& rp = srcHandle->at(ii);
+            if(rp.pdgId()==dau->pdgId() && rp.status()==dau->status() && int(rp.pt()*100)==int(dau->pt()*100)){wdau->push_back(rp);nw++;}
+          }     
+        }
+        else{
+          const reco::Candidate* daugh = getLast(*dau);
+          for(unsigned id2=0; id2<daugh->numberOfDaughters(); ++id2){ 
+            const reco::Candidate* daugh2 = daugh->daughter(id2);
+            //test            
+            for ( size_t ii=0; ii<srcHandle->size(); ++ii ){
+              const reco::GenParticle& rp = srcHandle->at(ii);
+              if(rp.pdgId()==daugh2->pdgId() && rp.status()==daugh2->status() &&int(rp.pt()*100)==int(daugh2->pt()*100)){
+                wdau->push_back(rp);nw++;
+              } 
+            }
+          }
+        }
+      }
+    }
     if ( p.status() == 1 )
     {
       ++nStables;
-      if ( isFromHadron(p) ) continue;
+      //if ( !isFromHadron(p) ) continue;
+      if ( !isFromW(p) ) continue;
       switch ( absPdgId )
       {
         case 11: case 13: // Leptons
@@ -230,8 +263,44 @@ void PseudoTopObjectProducer::produce(edm::Event& event, const edm::EventSetup& 
   event.put(neutrinos, "neutrinos");
   event.put(leptons, "leptons");
   event.put(jets, "jets");
+  event.put(wdau,"wdau");
 }
 
+bool PseudoTopObjectProducer::isFromW( const reco::GenParticle& p) const{
+  bool out = false;
+
+  string pt = Form("%f", p.pt());
+  string pdgid = Form("%i",p.pdgId());
+  const reco::GenParticle* mother = dynamic_cast<const reco::GenParticle*>(p.mother());
+  while( mother != 0 ){
+    string id = Form("%i", mother->pdgId());
+    string mopt = Form("%f", mother->pt());
+    if( (mother->status()==3 || (mother->status()>20 && mother->status()<30)) && abs(mother->pdgId()) == 24 ) {
+      out = true;
+    }
+    mother = dynamic_cast<const reco::GenParticle*>(mother->mother());
+  }
+
+  return out;
+}
+
+const reco::Candidate* PseudoTopObjectProducer::getLast(const reco::Candidate& p){
+  const reco::Candidate* last = 0;
+  int id = abs(p.pdgId());
+  unsigned int nDaughters = p.numberOfDaughters();
+  if(nDaughters ==1){
+    const reco::Candidate* daugh = p.daughter(0);
+    if(abs(daugh->pdgId())==id){
+      last = getLast(*daugh);
+    }
+    else{
+      last = &p;
+    }
+  }else{
+    last = &p;
+  }
+  return last;
+}
 bool PseudoTopObjectProducer::isFromHadron(const reco::Candidate& p, const int depth) const
 {
   if ( depth <= 0 ) return false;

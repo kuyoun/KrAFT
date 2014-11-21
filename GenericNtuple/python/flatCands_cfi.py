@@ -96,5 +96,9 @@ flatPseudoTopJet = cms.EDProducer("FlatCandProducer",
     variables = cms.PSet(),
     selections = cms.PSet(),
 )
-
+flatPseudoTopWdau = cms.EDProducer("FlatCandProducer",
+    src = cms.InputTag("pseudoTop", "wdau"),
+    variables = cms.PSet(),
+    selections = cms.PSet(),
+)
 flatDummy = None

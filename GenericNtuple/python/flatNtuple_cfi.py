@@ -87,6 +87,14 @@ fEvent = cms.EDAnalyzer("FlatCandToNtupleMaker",
             src = cms.InputTag("flatPseudoTopJet"),
             exprs = p4Set.clone(),
         ),
+        pseudoTopWdau = cms.PSet(
+            src = cms.InputTag("flatPseudoTopWdau"),
+            exprs = p4Set.clone(),
+        ),
+        parton = cms.PSet(
+            src = cms.InputTag("partons"),
+            exprs = p4Set.clone(),
+        ),
     ),
 )
 
